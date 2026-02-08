@@ -13,3 +13,4 @@
 - Lettura fallback del token da `/run/secrets/supervisor_token`.
 - Avvio in modalità standalone se il token Supervisor non è disponibile.
 - Serviti asset statici Vite da `/assets` per evitare pagina bianca.
+- Endpoint debug `/api/assets` per verificare presenza file statici.

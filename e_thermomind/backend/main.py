@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -53,6 +54,14 @@ async def set_config(payload: dict):
 @app.get("/api/decision")
 async def decision():
     return JSONResponse(compute_decision(cfg, ha.states))
+
+@app.get("/api/assets")
+async def list_assets():
+    assets_dir = Path("/app/static/assets")
+    if not assets_dir.exists():
+        return JSONResponse({"exists": False, "files": []})
+    files = sorted([p.name for p in assets_dir.glob("*") if p.is_file()])
+    return JSONResponse({"exists": True, "files": files})
 
 @app.get("/api/setpoints")
 async def get_setpoints():
