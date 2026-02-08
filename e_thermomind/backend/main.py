@@ -20,7 +20,8 @@ async def on_startup():
     cfg = load_config()
     logging.basicConfig(level=str(cfg.get("log_level", "info")).upper())
     await ha.start()
-    ws_task = asyncio.create_task(ha.run())
+    if ha.enabled:
+        ws_task = asyncio.create_task(ha.run())
 
 @app.on_event("shutdown")
 async def on_shutdown():

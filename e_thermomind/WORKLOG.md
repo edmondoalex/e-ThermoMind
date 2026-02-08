@@ -11,3 +11,4 @@
 - Avvio server tramite `uvicorn` nel Dockerfile (binding su 0.0.0.0:8099).
 - Abilitati `homeassistant_api` e `hassio_api` per ottenere `SUPERVISOR_TOKEN`.
 - Lettura fallback del token da `/run/secrets/supervisor_token`.
+- Avvio in modalità standalone se il token Supervisor non è disponibile.

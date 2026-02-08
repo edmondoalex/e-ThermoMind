@@ -15,6 +15,7 @@ class HAClient:
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self.states: Dict[str, Dict[str, Any]] = {}
         self._log = logging.getLogger("ha_client")
+        self.enabled = bool(self._token)
 
     def _load_token(self) -> Optional[str]:
         env_token = os.environ.get("SUPERVISOR_TOKEN") or os.environ.get("HASSIO_TOKEN")
@@ -30,7 +31,9 @@ class HAClient:
 
     async def start(self):
         if not self._token:
-            raise RuntimeError("Missing SUPERVISOR_TOKEN / HASSIO_TOKEN env var")
+            self._log.warning("Missing SUPERVISOR_TOKEN / HASSIO_TOKEN; running in standalone mode.")
+            self.enabled = False
+            return
         self._session = aiohttp.ClientSession(
             headers={"Authorization": f"Bearer {self._token}", "Content-Type": "application/json"}
         )
