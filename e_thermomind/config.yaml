@@ -1,12 +1,14 @@
 name: e-ThermoMind
 slug: e_thermomind
 description: "PLC termico: orchestrazione ACS/Puffer/Volano/Solare con UI Admin/User (Vue)"
-version: "0.1.3"
+version: "0.1.4"
 arch: [amd64, aarch64, armv7]
 init: false
 startup: services
 boot: auto
 host_network: true
+homeassistant_api: true
+hassio_api: true
 panel_icon: mdi:thermostat
 panel_title: e-ThermoMind
 ingress: true
