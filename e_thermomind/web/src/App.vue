@@ -20,6 +20,13 @@
           <div class="kpi"><div class="k">Export rete</div><div class="v">{{ fmtW(d.inputs.grid_export_w) }}</div></div>
         </div>
 
+        <div class="statusline">
+          <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
+            {{ status?.ha_connected ? 'Online' : 'Offline' }}
+          </span>
+          <span class="muted">HA</span>
+        </div>
+
         <div v-if="d" class="card inner">
           <div class="row"><strong>Destinazione surplus:</strong> {{ d.computed.dest }}</div>
           <div class="muted">{{ d.computed.dest_reason }}</div>
@@ -39,6 +46,12 @@
       <section v-else class="card">
         <h2>Admin (v0.2)</h2>
         <p class="muted">Setpoint interni e mapping entità HA.</p>
+        <div class="statusline">
+          <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
+            {{ status?.ha_connected ? 'Online' : 'Offline' }}
+          </span>
+          <span class="muted">HA</span>
+        </div>
 
         <div v-if="sp" class="form">
           <h3 class="section">Setpoint</h3>
@@ -83,12 +96,14 @@ const tab = ref('user')
 const d = ref(null)
 const sp = ref(null)
 const ent = ref(null)
+const status = ref(null)
 
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}°C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
 
 async function refresh(){
   const r = await fetch('/api/decision'); d.value = await r.json()
+  const s = await fetch('/api/status'); status.value = await s.json()
 }
 async function load(){
   const r = await fetch('/api/setpoints'); sp.value = await r.json()
@@ -137,4 +152,8 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
 .field input{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0f1522;color:var(--text)}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.statusline{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0}
+.badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
+.badge.ok{color:#0b1f1c;background:var(--accent)}
+.badge.off{color:#f5f7fa;background:#3b3f46}
 </style>

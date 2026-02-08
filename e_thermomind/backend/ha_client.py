@@ -16,14 +16,17 @@ class HAClient:
         self.states: Dict[str, Dict[str, Any]] = {}
         self._log = logging.getLogger("ha_client")
         self.enabled = bool(self._token)
+        self.token_source = "env" if os.environ.get("SUPERVISOR_TOKEN") or os.environ.get("HASSIO_TOKEN") else "secret"
 
     def _load_token(self) -> Optional[str]:
         env_token = os.environ.get("SUPERVISOR_TOKEN") or os.environ.get("HASSIO_TOKEN")
         if env_token:
+            self.token_source = "env"
             return env_token
         secret_path = Path("/run/secrets/supervisor_token")
         if secret_path.exists():
             try:
+                self.token_source = "secret"
                 return secret_path.read_text(encoding="utf-8").strip()
             except Exception:
                 return None

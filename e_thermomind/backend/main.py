@@ -55,6 +55,13 @@ async def set_config(payload: dict):
 async def decision():
     return JSONResponse(compute_decision(cfg, ha.states))
 
+@app.get("/api/status")
+async def status():
+    return JSONResponse({
+        "ha_connected": bool(ha.enabled),
+        "token_source": getattr(ha, "token_source", None)
+    })
+
 @app.get("/api/assets")
 async def list_assets():
     assets_dir = Path("/app/static/assets")
