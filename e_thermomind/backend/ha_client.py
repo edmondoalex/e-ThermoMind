@@ -1,19 +1,32 @@
 import asyncio
 import logging
 import os
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 import aiohttp
 
 class HAClient:
     def __init__(self):
-        self._token = os.environ.get("SUPERVISOR_TOKEN") or os.environ.get("HASSIO_TOKEN")
+        self._token = self._load_token()
         self._ws_url = "http://supervisor/core/api/websocket"
         self._http_url = "http://supervisor/core/api"
         self._session: Optional[aiohttp.ClientSession] = None
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self.states: Dict[str, Dict[str, Any]] = {}
         self._log = logging.getLogger("ha_client")
+
+    def _load_token(self) -> Optional[str]:
+        env_token = os.environ.get("SUPERVISOR_TOKEN") or os.environ.get("HASSIO_TOKEN")
+        if env_token:
+            return env_token
+        secret_path = Path("/run/secrets/supervisor_token")
+        if secret_path.exists():
+            try:
+                return secret_path.read_text(encoding="utf-8").strip()
+            except Exception:
+                return None
+        return None
 
     async def start(self):
         if not self._token:
