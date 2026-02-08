@@ -7,3 +7,4 @@
 - UI Admin estesa per mapping entità HA.
 - Fix encoding in titoli/UI e stringhe logica.
 - Aggiornato `PROJECT_LOG.md` con stato e roadmap.
+- Aggiunto `build.yaml` per forzare base image `base-python` nel build add-on.
