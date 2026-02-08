@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import os
 from pathlib import Path
@@ -8,9 +9,9 @@ import aiohttp
 
 class HAClient:
     def __init__(self):
-        self._token = self._load_token()
-        self._ws_url = "http://supervisor/core/api/websocket"
-        self._http_url = "http://supervisor/core/api"
+        self._token, self._base_url = self._load_auth()
+        self._ws_url = self._build_ws_url(self._base_url)
+        self._http_url = f"{self._base_url}/api"
         self._session: Optional[aiohttp.ClientSession] = None
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self.states: Dict[str, Dict[str, Any]] = {}
@@ -18,19 +19,41 @@ class HAClient:
         self.enabled = bool(self._token)
         self.token_source = "env" if os.environ.get("SUPERVISOR_TOKEN") or os.environ.get("HASSIO_TOKEN") else "secret"
 
-    def _load_token(self) -> Optional[str]:
+    def _load_auth(self) -> tuple[Optional[str], str]:
+        base_url = "http://supervisor/core"
         env_token = os.environ.get("SUPERVISOR_TOKEN") or os.environ.get("HASSIO_TOKEN")
         if env_token:
             self.token_source = "env"
-            return env_token
+            return env_token, base_url
         secret_path = Path("/run/secrets/supervisor_token")
         if secret_path.exists():
             try:
                 self.token_source = "secret"
-                return secret_path.read_text(encoding="utf-8").strip()
+                return secret_path.read_text(encoding="utf-8").strip(), base_url
             except Exception:
-                return None
-        return None
+                return None, base_url
+
+        options_path = Path("/data/options.json")
+        if options_path.exists():
+            try:
+                data = json.loads(options_path.read_text(encoding="utf-8"))
+                ha_token = data.get("ha_token")
+                ha_url = data.get("ha_url") or "http://homeassistant:8123"
+                if isinstance(ha_token, str) and ha_token.strip():
+                    self.token_source = "options"
+                    return ha_token.strip(), ha_url.rstrip("/")
+            except Exception:
+                pass
+
+        return None, base_url
+
+    def _build_ws_url(self, base_url: str) -> str:
+        url = base_url.rstrip("/")
+        if url.startswith("https://"):
+            return url.replace("https://", "wss://", 1) + "/api/websocket"
+        if url.startswith("http://"):
+            return url.replace("http://", "ws://", 1) + "/api/websocket"
+        return "ws://homeassistant:8123/api/websocket"
 
     async def start(self):
         if not self._token:

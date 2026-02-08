@@ -1,7 +1,7 @@
 name: e-ThermoMind
 slug: e_thermomind
 description: "PLC termico: orchestrazione ACS/Puffer/Volano/Solare con UI Admin/User (Vue)"
-version: "0.1.9"
+version: "0.2.0"
 arch: [amd64, aarch64, armv7]
 init: false
 startup: services
@@ -20,6 +20,10 @@ ports_description:
 options:
   log_level: info
   pdc_enabled: false
+  ha_url: "http://homeassistant:8123"
+  ha_token: ""
 schema:
   log_level: list(trace|debug|info|warning|error)
   pdc_enabled: bool
+  ha_url: str
+  ha_token: str
