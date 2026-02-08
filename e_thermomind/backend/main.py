@@ -30,7 +30,7 @@ async def on_shutdown():
         ws_task.cancel()
     await ha.close()
 
-app.mount("/static", StaticFiles(directory="/app/static", html=True), name="static")
+app.mount("/assets", StaticFiles(directory="/app/static/assets"), name="assets")
 
 @app.get("/", response_class=HTMLResponse)
 async def ui():
