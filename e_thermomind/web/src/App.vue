@@ -620,6 +620,6 @@ details.form summary{cursor:pointer;list-style:none}
 .state-unknown{color:#f59e0b}
 .kpi.state-on{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08)}
 .kpi.state-off{border-color:var(--border)}
-.input-on{border:2px solid rgba(239,68,68,.65); box-shadow:0 0 0 2px rgba(239,68,68,.15)}
+.input-on{background:rgba(239,68,68,.12)}
 .dot-toggle{border:0;background:transparent;cursor:pointer;padding:0 2px}
 </style>

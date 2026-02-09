@@ -63,3 +63,4 @@
 - Header: pulsanti config uniformati e rimossa duplicazione in sezione Configurazione.
 - Guard: se un attuatore ON da HA con modulo attivo, auto-OFF dopo 2s (UI toggle escluso).
 - UI User: "Ultime azioni" in ordine inverso (nuove in cima).
+- Input attuatori: bordo verde per entita presente + riempimento rosso quando ON.
