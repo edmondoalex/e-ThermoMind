@@ -220,6 +220,12 @@ def apply_actuators(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
                 cfg["actuators"][key] = None
             elif isinstance(val, str):
                 cfg["actuators"][key] = val.strip() or None
+            elif isinstance(val, dict):
+                ent = val.get("entity_id")
+                if ent is None:
+                    cfg["actuators"][key] = None
+                elif isinstance(ent, str):
+                    cfg["actuators"][key] = ent.strip() or None
     return cfg
 
 def load_config() -> Dict[str, Any]:

@@ -199,7 +199,11 @@ async function saveEntities(){
   await refresh()
 }
 async function saveActuators(){
-  await fetch('/api/actuators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actuators: act.value})})
+  const payload = {}
+  for (const item of actuatorDefs) {
+    payload[item.key] = act.value?.[item.key]?.entity_id || null
+  }
+  await fetch('/api/actuators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actuators: payload})})
   await loadActuators()
 }
 async function doAct(entity_id, action){
