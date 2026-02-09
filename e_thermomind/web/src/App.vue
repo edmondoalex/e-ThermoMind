@@ -43,6 +43,11 @@
         <div class="actions">
           <button @click="refresh">Aggiorna</button>
         </div>
+
+        <div v-if="actions.length" class="card inner">
+          <div class="row"><strong>Ultime azioni</strong></div>
+          <div v-for="(line, idx) in actions" :key="`a-${idx}`" class="muted">{{ line }}</div>
+        </div>
       </section>
 
       <section v-else class="card">
@@ -50,6 +55,7 @@
         <p class="muted">Setpoint interni e mapping entita HA.</p>
         <div class="statusline">
           <span class="muted">v{{ status?.version || '-' }}</span>
+          <span class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
           <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
             {{ status?.ha_connected ? 'Online' : 'Offline' }}
           </span>
@@ -159,6 +165,7 @@ const status = ref(null)
 let pollTimer = null
 const lastUpdate = ref(null)
 const pollMs = ref(3000)
+const actions = ref([])
 
 const actuatorDefs = [
   { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)', impl: false },
@@ -201,6 +208,7 @@ const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
 async function refresh(){
   const r = await fetch('/api/decision'); d.value = await r.json()
   const s = await fetch('/api/status'); status.value = await s.json()
+  const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
   await loadActuators()
   lastUpdate.value = new Date()
 }

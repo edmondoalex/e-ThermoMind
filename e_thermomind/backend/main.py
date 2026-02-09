@@ -28,6 +28,8 @@ ha = HAClient()
 cfg = load_config()
 ws_task: asyncio.Task | None = None
 off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
+action_log: list[str] = []
+action_log: list[str] = []
 
 @app.on_event("startup")
 async def on_startup():
@@ -87,8 +89,10 @@ async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
     current = _get_state(entity_id)
     if want_on and current != "on":
         await ha.call_service(entity_id, "on")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id}")
     if (not want_on) and current != "off":
         await ha.call_service(entity_id, "off")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
 
 async def _apply_resistance_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
@@ -131,7 +135,12 @@ async def status():
         "ha_connected": bool(ha.enabled),
         "token_source": getattr(ha, "token_source", None),
         "version": APP_VERSION,
+        "runtime_mode": cfg.get("runtime", {}).get("mode", "dry-run"),
     })
+
+@app.get("/api/actions")
+async def actions():
+    return JSONResponse({"items": action_log[-20:]})
 
 @app.get("/api/assets")
 async def list_assets():
