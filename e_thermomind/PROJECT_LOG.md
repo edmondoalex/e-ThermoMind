@@ -69,6 +69,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Dry-run con log simulati completi (moduli ON/OFF/DISABLED).
 - Moduli ON evidenziati in rosso trasparente.
 - Comandi manuali rimossi; toggle attuatori via pallino con bordo rosso se ON (User senza pallino).
+- Header Admin: pulsanti config uniformati (stesso stile/colore) e duplicazione rimossa.
 
 ## Prossime implementazioni
 - Validazione completa via schema (Pydantic) per `config`/`entities`/`setpoints`.

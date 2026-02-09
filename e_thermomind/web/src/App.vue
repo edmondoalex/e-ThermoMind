@@ -3,9 +3,9 @@
     <header class="top">
       <div class="brand">e-ThermoMind</div>
       <div class="top-actions">
-        <button class="ghost" @click="saveAll">Salva tutto</button>
-        <button class="ghost" @click="exportConfig">Esporta config</button>
-        <label class="ghost upload">
+        <button class="action-btn" @click="saveAll">Salva tutto</button>
+        <button class="action-btn" @click="exportConfig">Esporta config</button>
+        <label class="action-btn upload">
           Importa config
           <input type="file" accept="application/json" @change="importConfig"/>
         </label>
@@ -137,14 +137,6 @@
 
         <div class="form">
           <h3 class="section">Configurazione</h3>
-          <div class="actions">
-            <button @click="saveAll">Salva tutto</button>
-            <button class="ghost" @click="exportConfig">Esporta config</button>
-            <label class="ghost upload">
-              Importa config
-              <input type="file" accept="application/json" @change="importConfig"/>
-            </label>
-          </div>
         </div>
 
         <div v-if="sp" class="form setpoint-grid">
@@ -601,6 +593,8 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 details.form{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(0,0,0,.08)}
 details.form summary{cursor:pointer;list-style:none}
 .top-actions{display:flex;gap:8px;align-items:center}
+.action-btn{background:var(--accent);border:none;color:#002b2a;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
+.action-btn.upload{display:inline-flex;align-items:center;gap:6px}
 .setpoint-grid{display:grid;gap:10px}
 .setpoint-grid .section{grid-column:1/-1}
 @media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
