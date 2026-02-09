@@ -38,3 +38,4 @@
 - Selettore runtime mode (dry-run/live) con conferma.
 - LIVE resistenze volano con off-delay (R22/R23/R24).
 - Log azioni e indicatori runtime mode in UI.
+- Icone HA anche per i sensori (Admin + User).

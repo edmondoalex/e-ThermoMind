@@ -14,10 +14,22 @@
         <p class="muted">Dry-run: nessun comando agli attuatori. Serve per validare la logica.</p>
 
         <div v-if="d" class="grid">
-          <div class="kpi"><div class="k">T_ACS</div><div class="v">{{ fmtTemp(d.inputs.t_acs) }}</div></div>
-          <div class="kpi"><div class="k">T_Puffer</div><div class="v">{{ fmtTemp(d.inputs.t_puffer) }}</div></div>
-          <div class="kpi"><div class="k">T_Volano</div><div class="v">{{ fmtTemp(d.inputs.t_volano) }}</div></div>
-          <div class="kpi"><div class="k">Export rete</div><div class="v">{{ fmtW(d.inputs.grid_export_w) }}</div></div>
+          <div class="kpi">
+            <div class="k"><i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i> T_ACS</div>
+            <div class="v">{{ fmtTemp(d.inputs.t_acs) }}</div>
+          </div>
+          <div class="kpi">
+            <div class="k"><i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i> T_Puffer</div>
+            <div class="v">{{ fmtTemp(d.inputs.t_puffer) }}</div>
+          </div>
+          <div class="kpi">
+            <div class="k"><i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i> T_Volano</div>
+            <div class="v">{{ fmtTemp(d.inputs.t_volano) }}</div>
+          </div>
+          <div class="kpi">
+            <div class="k"><i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i> Export rete</div>
+            <div class="v">{{ fmtW(d.inputs.grid_export_w) }}</div>
+          </div>
         </div>
 
         <div class="statusline">
@@ -95,24 +107,44 @@
         <div v-if="ent" class="form">
           <h3 class="section">Entita Home Assistant</h3>
           <div class="field">
-            <label><span class="pop" :class="isFilled(ent?.t_acs) ? 'pop-ok' : 'pop-no'">●</span>T_ACS</label>
-            <input type="text" v-model="ent.t_acs" placeholder="sensor.acs_temp"/>
+            <label>
+              <span class="pop" :class="isFilled(ent?.t_acs?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
+              <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
+              T_ACS
+            </label>
+            <input type="text" v-model="ent.t_acs.entity_id" placeholder="sensor.acs_temp"/>
           </div>
           <div class="field">
-            <label><span class="pop" :class="isFilled(ent?.t_puffer) ? 'pop-ok' : 'pop-no'">●</span>T_Puffer</label>
-            <input type="text" v-model="ent.t_puffer" placeholder="sensor.puffer_temp"/>
+            <label>
+              <span class="pop" :class="isFilled(ent?.t_puffer?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
+              <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
+              T_Puffer
+            </label>
+            <input type="text" v-model="ent.t_puffer.entity_id" placeholder="sensor.puffer_temp"/>
           </div>
           <div class="field">
-            <label><span class="pop" :class="isFilled(ent?.t_volano) ? 'pop-ok' : 'pop-no'">●</span>T_Volano</label>
-            <input type="text" v-model="ent.t_volano" placeholder="sensor.volano_temp"/>
+            <label>
+              <span class="pop" :class="isFilled(ent?.t_volano?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
+              <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
+              T_Volano
+            </label>
+            <input type="text" v-model="ent.t_volano.entity_id" placeholder="sensor.volano_temp"/>
           </div>
           <div class="field">
-            <label><span class="pop" :class="isFilled(ent?.t_solare_mandata) ? 'pop-ok' : 'pop-no'">●</span>T_Solare mandata</label>
-            <input type="text" v-model="ent.t_solare_mandata" placeholder="sensor.solar_mandata"/>
+            <label>
+              <span class="pop" :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
+              <i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i>
+              T_Solare mandata
+            </label>
+            <input type="text" v-model="ent.t_solare_mandata.entity_id" placeholder="sensor.solar_mandata"/>
           </div>
           <div class="field">
-            <label><span class="pop" :class="isFilled(ent?.grid_export_w) ? 'pop-ok' : 'pop-no'">●</span>Export rete (W)</label>
-            <input type="text" v-model="ent.grid_export_w" placeholder="sensor.grid_export_w"/>
+            <label>
+              <span class="pop" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
+              <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
+              Export rete (W)
+            </label>
+            <input type="text" v-model="ent.grid_export_w.entity_id" placeholder="sensor.grid_export_w"/>
           </div>
         </div>
 
@@ -240,7 +272,11 @@ async function loadEntities(){
   const r = await fetch('/api/entities'); ent.value = await r.json()
 }
 async function saveEntities(){
-  await fetch('/api/entities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entities: ent.value})})
+  const payload = {}
+  for (const key of Object.keys(ent.value || {})) {
+    payload[key] = ent.value?.[key]?.entity_id || null
+  }
+  await fetch('/api/entities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entities: payload})})
   await refresh()
 }
 async function saveActuators(){

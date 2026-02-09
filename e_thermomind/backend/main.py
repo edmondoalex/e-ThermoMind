@@ -171,7 +171,19 @@ async def set_setpoints(payload: dict):
 
 @app.get("/api/entities")
 async def get_entities():
-    return JSONResponse(cfg.get("entities", {}))
+    ent = cfg.get("entities", {})
+    out = {}
+    for k, eid in ent.items():
+        if eid:
+            st = ha.states.get(eid, {})
+            out[k] = {
+                "entity_id": eid,
+                "state": st.get("state"),
+                "attributes": st.get("attributes", {})
+            }
+        else:
+            out[k] = {"entity_id": None, "state": None, "attributes": {}}
+    return JSONResponse(out)
 
 @app.post("/api/entities")
 async def set_entities(payload: dict):
