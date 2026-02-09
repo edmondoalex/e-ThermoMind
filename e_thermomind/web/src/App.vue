@@ -132,6 +132,62 @@
           </div>
         </div>
 
+        <div v-if="d" class="card inner">
+          <div class="row"><strong>Schema impianto (live)</strong></div>
+          <div class="muted">Flussi evidenziati in tempo reale.</div>
+          <div class="diagram">
+            <svg viewBox="0 0 900 360" role="img" aria-label="Schema impianto e-ThermoMind">
+              <defs>
+                <linearGradient id="flowGrad" x1="0" x2="1">
+                  <stop offset="0%" stop-color="#4fd1c5" stop-opacity="0.4"/>
+                  <stop offset="100%" stop-color="#4fd1c5" stop-opacity="1"/>
+                </linearGradient>
+              </defs>
+              <rect x="30" y="30" width="180" height="70" rx="14" class="node"/>
+              <text x="120" y="70" text-anchor="middle" class="node-label">SOLARE</text>
+
+              <rect x="30" y="140" width="180" height="90" rx="14" class="node"/>
+              <text x="120" y="175" text-anchor="middle" class="node-label">PUFFER</text>
+              <text x="120" y="205" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
+
+              <rect x="30" y="260" width="180" height="70" rx="14" class="node"/>
+              <text x="120" y="300" text-anchor="middle" class="node-label">ACS</text>
+              <text x="120" y="320" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_acs) }}</text>
+
+              <rect x="360" y="160" width="180" height="90" rx="14" class="node"/>
+              <text x="450" y="195" text-anchor="middle" class="node-label">VOLANO</text>
+              <text x="450" y="225" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_volano) }}</text>
+
+              <rect x="690" y="90" width="180" height="70" rx="14" class="node"/>
+              <text x="780" y="130" text-anchor="middle" class="node-label">RESISTENZE</text>
+              <text x="780" y="150" text-anchor="middle" class="node-sub">step {{ d.computed?.resistance_step || 0 }}/3</text>
+
+              <rect x="690" y="220" width="180" height="70" rx="14" class="node"/>
+              <text x="780" y="260" text-anchor="middle" class="node-label">PDC</text>
+
+              <path d="M210 65 H330" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
+              <path d="M210 185 H360" class="flow-line" :class="flowPufferToVolano ? 'flow-on' : ''"/>
+              <path d="M210 295 H330" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
+              <path d="M540 205 H690" class="flow-line" :class="flowChargeVolano ? 'flow-on' : ''"/>
+              <path d="M540 205 H690" class="flow-line dashed" :class="flowChargeVolano ? 'flow-on' : ''"/>
+              <path d="M360 205 V295 H210" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
+              <path d="M360 205 V185 H210" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
+              <path d="M690 255 H540" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
+
+              <circle cx="330" cy="65" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
+              <circle cx="330" cy="295" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
+              <circle cx="330" cy="185" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
+              <circle cx="360" cy="295" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
+              <circle cx="540" cy="205" r="6" class="dot" :class="flowChargeVolano ? 'dot-on' : ''"/>
+              <circle cx="690" cy="255" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
+            </svg>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot on"></span> Flusso attivo</span>
+            <span class="legend-item"><span class="legend-dot"></span> Flusso inattivo</span>
+          </div>
+        </div>
+
         <div class="actions">
           <button @click="refresh">Aggiorna</button>
         </div>
@@ -441,6 +497,13 @@ const fmtEntity = (e) => {
   if (Number.isFinite(num)) return `${num} ${unit}`.trim()
   return `${raw} ${unit}`.trim()
 }
+const flowSolarToAcs = computed(() => d.value?.computed?.source_to_acs === 'SOLAR')
+const flowVolanoToAcs = computed(() => d.value?.computed?.source_to_acs === 'VOLANO')
+const flowPufferToAcs = computed(() => d.value?.computed?.source_to_acs === 'PUFFER')
+const flowVolanoToPuffer = computed(() => d.value?.computed?.flags?.volano_to_puffer)
+const flowPufferToVolano = computed(() => false)
+const flowChargeVolano = computed(() => (d.value?.computed?.resistance_step || 0) > 0)
+const flowPdcToVolano = computed(() => false)
 
   function mergeEntities(next){
     if (!ent.value) { ent.value = next; return }
@@ -730,4 +793,19 @@ details.form summary{cursor:pointer;list-style:none}
 .kpi.state-off{border-color:var(--border)}
 .input-on{background:rgba(239,68,68,.12) !important}
 .dot-toggle{border:0;background:transparent;cursor:pointer;padding:0 2px}
+.diagram{margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:12px;background:radial-gradient(800px 300px at 60% 20%, rgba(79,209,197,.08), transparent)}
+.diagram svg{width:100%;height:auto}
+.node{fill:#0f1522;stroke:rgba(255,255,255,.08)}
+.node-label{fill:#e6edf3;font-size:13px;font-weight:700}
+.node-sub{fill:#9aa4b2;font-size:11px}
+.flow-line{stroke:#2b3447;stroke-width:6;fill:none;stroke-linecap:round}
+.flow-line.dashed{stroke-dasharray:10 8;opacity:.6}
+.flow-on{stroke:url(#flowGrad);filter:drop-shadow(0 0 6px rgba(79,209,197,.45));animation:flow 1.6s linear infinite}
+.dot{fill:#2b3447}
+.dot-on{fill:#4fd1c5;filter:drop-shadow(0 0 6px rgba(79,209,197,.55))}
+.legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
+.legend-dot{width:10px;height:10px;border-radius:999px;background:#2b3447}
+.legend-dot.on{background:#4fd1c5}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-36}}
 </style>
