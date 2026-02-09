@@ -81,11 +81,26 @@
 
         <div v-if="ent" class="form">
           <h3 class="section">Entita Home Assistant</h3>
-          <div class="field"><label>T_ACS</label><input type="text" v-model="ent.t_acs" placeholder="sensor.acs_temp"/></div>
-          <div class="field"><label>T_Puffer</label><input type="text" v-model="ent.t_puffer" placeholder="sensor.puffer_temp"/></div>
-          <div class="field"><label>T_Volano</label><input type="text" v-model="ent.t_volano" placeholder="sensor.volano_temp"/></div>
-          <div class="field"><label>T_Solare mandata</label><input type="text" v-model="ent.t_solare_mandata" placeholder="sensor.solar_mandata"/></div>
-          <div class="field"><label>Export rete (W)</label><input type="text" v-model="ent.grid_export_w" placeholder="sensor.grid_export_w"/></div>
+          <div class="field">
+            <label><span class="pop" :class="isFilled(ent?.t_acs) ? 'pop-ok' : 'pop-no'">●</span>T_ACS</label>
+            <input type="text" v-model="ent.t_acs" placeholder="sensor.acs_temp"/>
+          </div>
+          <div class="field">
+            <label><span class="pop" :class="isFilled(ent?.t_puffer) ? 'pop-ok' : 'pop-no'">●</span>T_Puffer</label>
+            <input type="text" v-model="ent.t_puffer" placeholder="sensor.puffer_temp"/>
+          </div>
+          <div class="field">
+            <label><span class="pop" :class="isFilled(ent?.t_volano) ? 'pop-ok' : 'pop-no'">●</span>T_Volano</label>
+            <input type="text" v-model="ent.t_volano" placeholder="sensor.volano_temp"/>
+          </div>
+          <div class="field">
+            <label><span class="pop" :class="isFilled(ent?.t_solare_mandata) ? 'pop-ok' : 'pop-no'">●</span>T_Solare mandata</label>
+            <input type="text" v-model="ent.t_solare_mandata" placeholder="sensor.solar_mandata"/>
+          </div>
+          <div class="field">
+            <label><span class="pop" :class="isFilled(ent?.grid_export_w) ? 'pop-ok' : 'pop-no'">●</span>Export rete (W)</label>
+            <input type="text" v-model="ent.grid_export_w" placeholder="sensor.grid_export_w"/>
+          </div>
         </div>
 
         <div v-if="act" class="form">
@@ -93,6 +108,7 @@
           <div v-for="item in actuatorDefs" :key="item.key" class="field">
             <label>
               <span class="impl" :class="item.impl ? 'impl-ok' : 'impl-no'">●</span>
+              <span class="pop" :class="isFilled(act?.[item.key]?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
               {{ item.label }}
             </label>
             <input type="text" v-model="act[item.key].entity_id" :placeholder="`switch.${item.key}`"/>
@@ -165,6 +181,8 @@ const actuatorDefs = [
   { key: 'r29_scarico_antigelo_ritorno_pdc', label: 'R29 Scarico Antigelo Ritorno PDC', impl: false },
   { key: 'r30_alimentazione_caldaia_legna', label: 'R30 Alimentazione Caldaia Legna', impl: false }
 ]
+
+const isFilled = (v) => (typeof v === 'string' ? v.trim().length > 0 : false)
 
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
@@ -263,4 +281,7 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .impl{display:inline-block;margin-right:6px}
 .impl-ok{color:#22c55e}
 .impl-no{color:#ef4444}
+.pop{display:inline-block;margin-right:6px}
+.pop-ok{color:#22c55e}
+.pop-no{color:#64748b}
 </style>
