@@ -93,12 +93,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 const tab = ref('user')
 const d = ref(null)
 const sp = ref(null)
 const ent = ref(null)
 const status = ref(null)
+let pollTimer = null
 
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}°C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
@@ -126,7 +127,18 @@ async function loadAll(){
   await loadEntities()
   await refresh()
 }
-onMounted(async()=>{ await loadAll() })
+function startPolling(){
+  if (pollTimer) clearInterval(pollTimer)
+  pollTimer = setInterval(async()=>{
+    await refresh()
+  }, 3000)
+}
+function stopPolling(){
+  if (pollTimer) clearInterval(pollTimer)
+  pollTimer = null
+}
+onMounted(async()=>{ await loadAll(); startPolling() })
+onBeforeUnmount(()=>{ stopPolling() })
 </script>
 
 <style>

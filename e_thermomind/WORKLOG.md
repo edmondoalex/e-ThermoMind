@@ -19,3 +19,4 @@
 - Ricerca token Supervisor anche in `s6/container_environment` (compatibilità add-on).
 - Mostrata versione add-on in User/Admin via `/api/status`.
 - Versione UI ora letta da `config.yaml` (coerente con add-on).
+- Polling UI automatico (refresh ogni 3s).
