@@ -160,7 +160,7 @@
               <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
               T_ACS
             </label>
-            <input type="text" v-model="ent.t_acs.entity_id" placeholder="sensor.acs_temp"/>
+            <input type="text" v-model="ent.t_acs.entity_id" placeholder="sensor.acs_temp" @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="field">
             <label>
@@ -168,7 +168,7 @@
               <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
               T_Puffer
             </label>
-            <input type="text" v-model="ent.t_puffer.entity_id" placeholder="sensor.puffer_temp"/>
+            <input type="text" v-model="ent.t_puffer.entity_id" placeholder="sensor.puffer_temp" @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="field">
             <label>
@@ -176,7 +176,7 @@
               <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
               T_Volano
             </label>
-            <input type="text" v-model="ent.t_volano.entity_id" placeholder="sensor.volano_temp"/>
+            <input type="text" v-model="ent.t_volano.entity_id" placeholder="sensor.volano_temp" @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="field">
             <label>
@@ -184,7 +184,7 @@
               <i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i>
               T_Solare mandata
             </label>
-            <input type="text" v-model="ent.t_solare_mandata.entity_id" placeholder="sensor.solar_mandata"/>
+            <input type="text" v-model="ent.t_solare_mandata.entity_id" placeholder="sensor.solar_mandata" @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="field">
             <label>
@@ -192,7 +192,7 @@
               <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
               Export rete (W)
             </label>
-            <input type="text" v-model="ent.grid_export_w.entity_id" placeholder="sensor.grid_export_w"/>
+            <input type="text" v-model="ent.grid_export_w.entity_id" placeholder="sensor.grid_export_w" @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="actions">
             <button class="ghost" @click="saveEntities">Salva sensori</button>
@@ -203,7 +203,7 @@
           <summary class="section">Attuatori da e-manager</summary>
           <div class="field">
             <label>Filtro</label>
-            <input type="text" v-model="filterAct" placeholder="Cerca R22, PDC, solare..."/>
+            <input type="text" v-model="filterAct" placeholder="Cerca R22, PDC, solare..." @focus="onFocus" @blur="onBlur"/>
           </div>
           <div v-for="item in filteredActuators" :key="item.key" class="field">
             <label>
@@ -211,7 +211,7 @@
               <span class="pop" :class="isFilled(act?.[item.key]?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
               {{ item.label }}
             </label>
-            <input type="text" v-model="act[item.key].entity_id" :placeholder="`switch.${item.key}`"/>
+            <input type="text" v-model="act[item.key].entity_id" :placeholder="`switch.${item.key}`" @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="actions">
             <button class="ghost" @click="saveActuators">Salva attuatori</button>
@@ -252,6 +252,7 @@ const lastUpdate = ref(null)
 const pollMs = ref(3000)
 const actions = ref([])
 const filterAct = ref('')
+const editingCount = ref(0)
 
 const actuatorDefs = [
   { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)', impl: false },
@@ -297,6 +298,7 @@ const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
 
 async function refresh(){
+  if (editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
   const s = await fetch('/api/status'); status.value = await s.json()
   const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
@@ -310,6 +312,7 @@ async function load(){
   }
 }
 async function loadActuators(){
+  if (editingCount.value > 0) return
   const r = await fetch('/api/actuators'); act.value = await r.json()
 }
 async function save(){
@@ -333,6 +336,7 @@ function confirmMode(){
   }
 }
 async function loadEntities(){
+  if (editingCount.value > 0) return
   const r = await fetch('/api/entities')
   const data = await r.json()
   const out = {}
@@ -426,6 +430,12 @@ function startPolling(){
 function stopPolling(){
   if (pollTimer) clearInterval(pollTimer)
   pollTimer = null
+}
+function onFocus(){
+  editingCount.value += 1
+}
+function onBlur(){
+  editingCount.value = Math.max(0, editingCount.value - 1)
 }
 onMounted(async()=>{ await loadAll(); startPolling() })
 onBeforeUnmount(()=>{ stopPolling() })
