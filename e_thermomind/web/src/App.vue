@@ -64,7 +64,7 @@
 
       <section v-else class="card">
         <h2>Admin (v0.2)</h2>
-        <p class="muted">Setpoint interni e mapping entita HA.</p>
+        <p class="muted">Setpoint interni e mapping e-manager.</p>
         <div class="statusline">
           <span class="muted">v{{ status?.version || '-' }}</span>
           <span class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
@@ -73,6 +73,18 @@
           </span>
           <span class="muted">HA</span>
           <span class="muted">Ultimo aggiornamento: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</span>
+        </div>
+
+        <div class="form">
+          <h3 class="section">Configurazione</h3>
+          <div class="actions">
+            <button @click="saveAll">Salva tutto</button>
+            <button class="ghost" @click="exportConfig">Esporta config</button>
+            <label class="ghost upload">
+              Importa config
+              <input type="file" accept="application/json" @change="importConfig"/>
+            </label>
+          </div>
         </div>
 
         <div v-if="sp" class="form">
@@ -104,8 +116,8 @@
           </div>
         </div>
 
-        <div v-if="ent" class="form">
-          <h3 class="section">Entita Home Assistant</h3>
+        <details class="form" open>
+          <summary class="section">Sensori da e-manager</summary>
           <div class="field">
             <label>
               <span class="pop" :class="isFilled(ent?.t_acs?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
@@ -146,11 +158,18 @@
             </label>
             <input type="text" v-model="ent.grid_export_w.entity_id" placeholder="sensor.grid_export_w"/>
           </div>
-        </div>
+          <div class="actions">
+            <button class="ghost" @click="saveEntities">Salva sensori</button>
+          </div>
+        </details>
 
-        <div v-if="act" class="form">
-          <h3 class="section">Attuatori Home Assistant</h3>
-          <div v-for="item in actuatorDefs" :key="item.key" class="field">
+        <details class="form" open>
+          <summary class="section">Attuatori da e-manager</summary>
+          <div class="field">
+            <label>Filtro</label>
+            <input type="text" v-model="filterAct" placeholder="Cerca R22, PDC, solare..."/>
+          </div>
+          <div v-for="item in filteredActuators" :key="item.key" class="field">
             <label>
               <span class="impl" :class="item.impl ? 'impl-ok' : 'impl-no'">●</span>
               <span class="pop" :class="isFilled(act?.[item.key]?.entity_id) ? 'pop-ok' : 'pop-no'">●</span>
@@ -161,11 +180,11 @@
           <div class="actions">
             <button class="ghost" @click="saveActuators">Salva attuatori</button>
           </div>
-        </div>
+        </details>
 
-        <div v-if="act" class="form">
-          <h3 class="section">Comandi manuali</h3>
-          <div v-for="item in actuatorDefs" :key="`cmd-${item.key}`" class="row3">
+        <details class="form">
+          <summary class="section">Comandi manuali</summary>
+          <div v-for="item in filteredActuators" :key="`cmd-${item.key}`" class="row3">
             <button class="ghost toggle" @click="toggleAct(item.key)">
               <i v-if="mdiClass(act?.[item.key]?.attributes?.icon)" :class="[mdiClass(act?.[item.key]?.attributes?.icon), stateClass(act?.[item.key]?.state)]"></i>
               <span v-else class="mdi-fallback" :class="stateClass(act?.[item.key]?.state)">⏻</span>
@@ -174,11 +193,9 @@
             <div class="muted">{{ act?.[item.key]?.entity_id || '-' }}</div>
             <div class="muted">{{ stateLabel(act?.[item.key]?.state) }}</div>
           </div>
-        </div>
+        </details>
 
         <div class="actions">
-          <button @click="save">Salva setpoint</button>
-          <button class="ghost" @click="saveEntities">Salva entita</button>
           <button class="ghost" @click="loadAll">Ricarica</button>
         </div>
       </section>
@@ -187,7 +204,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 const tab = ref('user')
 const d = ref(null)
 const sp = ref(null)
@@ -198,6 +215,7 @@ let pollTimer = null
 const lastUpdate = ref(null)
 const pollMs = ref(3000)
 const actions = ref([])
+const filterAct = ref('')
 
 const actuatorDefs = [
   { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)', impl: false },
@@ -233,6 +251,11 @@ const actuatorDefs = [
 ]
 
 const isFilled = (v) => (typeof v === 'string' ? v.trim().length > 0 : false)
+const filteredActuators = computed(() => {
+  const q = filterAct.value.trim().toLowerCase()
+  if (!q) return actuatorDefs
+  return actuatorDefs.filter(a => (a.label.toLowerCase().includes(q) || a.key.toLowerCase().includes(q)))
+})
 
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
@@ -261,6 +284,11 @@ async function save(){
     startPolling()
   }
 }
+async function saveAll(){
+  await save()
+  await saveEntities()
+  await saveActuators()
+}
 function confirmMode(){
   if (!sp.value?.runtime?.mode) return
   if (sp.value.runtime.mode === 'live') {
@@ -286,6 +314,26 @@ async function saveActuators(){
   }
   await fetch('/api/actuators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actuators: payload})})
   await loadActuators()
+}
+async function exportConfig(){
+  const r = await fetch('/api/config')
+  const data = await r.json()
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'thermomind_config.json'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+async function importConfig(ev){
+  const file = ev.target.files?.[0]
+  if (!file) return
+  const text = await file.text()
+  let data = null
+  try { data = JSON.parse(text) } catch { return }
+  await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+  await loadAll()
 }
 async function doAct(entity_id, action){
   if (!entity_id) return
@@ -361,6 +409,10 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
 .field select{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0f1522;color:var(--text)}
 .field input{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0f1522;color:var(--text)}
+.upload{display:inline-flex;align-items:center;gap:8px}
+.upload input{display:none}
+details.form{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(0,0,0,.08)}
+details.form summary{cursor:pointer;list-style:none}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .statusline{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;flex-wrap:wrap}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}

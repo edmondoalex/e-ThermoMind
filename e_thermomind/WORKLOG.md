@@ -39,3 +39,4 @@
 - LIVE resistenze volano con off-delay (R22/R23/R24).
 - Log azioni e indicatori runtime mode in UI.
 - Icone HA anche per i sensori (Admin + User).
+- Admin: etichette e-manager, layout a sezioni, filtro attuatori, export/import config.
