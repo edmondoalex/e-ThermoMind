@@ -11,7 +11,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_puffer": None,
     "t_volano": None,
     "t_solare_mandata": None,
-    "grid_export_w": None
+    "grid_export_w": None,
+    "resistenze_volano_power": None,
+    "resistenze_volano_energy": None
   },
   "actuators": {
     "r1_valve_comparto_laboratorio": None,
@@ -38,6 +40,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "r22_resistenza_1_volano_pdc": None,
     "r23_resistenza_2_volano_pdc": None,
     "r24_resistenza_3_volano_pdc": None,
+    "generale_resistenze_volano_pdc": None,
     "r25_comparto_generale_pdc": None,
     "r26_comparto_pdc1_avvio": None,
     "r27_comparto_pdc2_avvio": None,

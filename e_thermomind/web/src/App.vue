@@ -109,6 +109,20 @@
                 R24 Resistenza 3 Volano PDC
               </div>
             </div>
+            <div class="kpi">
+              <div class="k">
+                <i v-if="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)"></i>
+                Potenza Resistenze
+              </div>
+              <div class="v">{{ fmtEntity(ent?.resistenze_volano_power) }}</div>
+            </div>
+            <div class="kpi">
+              <div class="k">
+                <i v-if="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)"></i>
+                Energia Resistenze
+              </div>
+              <div class="v">{{ fmtEntity(ent?.resistenze_volano_energy) }}</div>
+            </div>
           </div>
         </div>
 
@@ -253,20 +267,48 @@
                      @focus="onFocus" @blur="onBlur"/>
             </div>
           </div>
-          <div class="field">
-            <label>
-              <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
-              Export rete (W)
-            </label>
-            <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-              <input type="text"
-                     :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
-                     v-model="ent.grid_export_w.entity_id"
-                     placeholder="sensor.grid_export_w"
-                     @focus="onFocus" @blur="onBlur"/>
+            <div class="field">
+              <label>
+                <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
+                Export rete (W)
+              </label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.grid_export_w.entity_id"
+                       placeholder="sensor.grid_export_w"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
             </div>
-          </div>
+            <div class="field">
+              <label>
+                <i v-if="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)"></i>
+                Potenza Resistenze Volano (W)
+              </label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.resistenze_volano_power?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.resistenze_volano_power?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.resistenze_volano_power.entity_id"
+                       placeholder="sensor.resistenze_volano_power"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>
+                <i v-if="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)"></i>
+                Energia Resistenze Volano
+              </label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.resistenze_volano_energy?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.resistenze_volano_energy?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.resistenze_volano_energy.entity_id"
+                       placeholder="sensor.resistenze_volano_energy"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
           <div class="actions">
             <button class="ghost" @click="saveEntities">Salva sensori</button>
           </div>
@@ -356,6 +398,7 @@ const actuatorDefs = [
   { key: 'r22_resistenza_1_volano_pdc', label: 'R22 Resistenza 1 Volano PDC', impl: true },
   { key: 'r23_resistenza_2_volano_pdc', label: 'R23 Resistenza 2 Volano PDC', impl: true },
   { key: 'r24_resistenza_3_volano_pdc', label: 'R24 Resistenza 3 Volano PDC', impl: true },
+  { key: 'generale_resistenze_volano_pdc', label: 'R0 Generale Resistenze Volano PDC', impl: true },
   { key: 'r25_comparto_generale_pdc', label: 'R25 Comparto Generale PDC', impl: false },
   { key: 'r26_comparto_pdc1_avvio', label: 'R26 Comparto PDC 1 Avvio', impl: false },
   { key: 'r27_comparto_pdc2_avvio', label: 'R27 Comparto PDC 2 Avvio', impl: false },
@@ -373,6 +416,15 @@ const filteredActuators = computed(() => {
 
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
+const fmtEntity = (e) => {
+  if (!e) return 'n/d'
+  const raw = e.state
+  const unit = e.attributes?.unit_of_measurement || ''
+  if (raw === null || raw === undefined) return 'n/d'
+  const num = Number(raw)
+  if (Number.isFinite(num)) return `${num} ${unit}`.trim()
+  return `${raw} ${unit}`.trim()
+}
 
 function mergeEntities(next){
   if (!ent.value) { ent.value = next; return }

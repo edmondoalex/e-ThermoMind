@@ -220,10 +220,12 @@ def _log_dry_run(decision_data: dict) -> None:
     r22 = act.get("r22_resistenza_1_volano_pdc")
     r23 = act.get("r23_resistenza_2_volano_pdc")
     r24 = act.get("r24_resistenza_3_volano_pdc")
+    rg = act.get("generale_resistenze_volano_pdc")
     want = {
         "R22": "ON" if step >= 1 else "OFF",
         "R23": "ON" if step >= 2 else "OFF",
         "R24": "ON" if step >= 3 else "OFF",
+        "RG": "ON" if step >= 1 else "OFF",
     }
     notes: list[str] = []
     def _mod_state(key: str, active: bool, has_logic: bool = True) -> str:
@@ -265,7 +267,7 @@ def _log_dry_run(decision_data: dict) -> None:
     )
     action_log.append(
         f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN would set "
-        f"{want['R22']} {r22} | {want['R23']} {r23} | {want['R24']} {r24}"
+        f"{want['RG']} {rg} | {want['R22']} {r22} | {want['R23']} {r23} | {want['R24']} {r24}"
     )
     action_log.append(
         f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN modules "
@@ -303,6 +305,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     r22 = act.get("r22_resistenza_1_volano_pdc")
     r23 = act.get("r23_resistenza_2_volano_pdc")
     r24 = act.get("r24_resistenza_3_volano_pdc")
+    rg = act.get("generale_resistenze_volano_pdc")
     step = int(decision_data.get("computed", {}).get("resistance_step", 0))
 
     desired = {
@@ -330,6 +333,13 @@ async def _apply_resistance_live(decision_data: dict) -> None:
                     off_deadline[key] = 0.0
             else:
                 off_deadline[key] = 0.0
+
+    if rg:
+        current_r22 = _get_state(r22) == "on" if r22 else False
+        current_r23 = _get_state(r23) == "on" if r23 else False
+        current_r24 = _get_state(r24) == "on" if r24 else False
+        want_general = bool(desired["r22"] or desired["r23"] or desired["r24"] or current_r22 or current_r23 or current_r24)
+        await _set_resistance(rg, want_general)
 
 @app.get("/api/status")
 async def status():
