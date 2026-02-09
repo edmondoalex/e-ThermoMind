@@ -2,6 +2,10 @@
   <div class="wrap">
     <header class="top">
       <div class="brand">e-ThermoMind</div>
+      <div class="top-actions">
+        <button class="ghost" @click="saveAll">Salva tutto</button>
+        <button class="ghost" @click="exportConfig">Esporta config</button>
+      </div>
       <nav class="tabs">
         <button :class="{active: tab==='user'}" @click="tab='user'">User</button>
         <button :class="{active: tab==='admin'}" @click="tab='admin'">Admin</button>
@@ -87,7 +91,7 @@
           </div>
         </div>
 
-        <div v-if="sp" class="form">
+        <div v-if="sp" class="form setpoint-grid">
           <h3 class="section">Setpoint</h3>
           <div class="field">
             <label>Runtime mode</label>
@@ -413,6 +417,10 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .upload input{display:none}
 details.form{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(0,0,0,.08)}
 details.form summary{cursor:pointer;list-style:none}
+.top-actions{display:flex;gap:8px;align-items:center}
+.setpoint-grid{display:grid;gap:10px}
+.setpoint-grid .section{grid-column:1/-1}
+@media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .statusline{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;flex-wrap:wrap}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}

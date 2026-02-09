@@ -40,3 +40,4 @@
 - Log azioni e indicatori runtime mode in UI.
 - Icone HA anche per i sensori (Admin + User).
 - Admin: etichette e-manager, layout a sezioni, filtro attuatori, export/import config.
+- Admin: pulsanti in header + setpoint compatti.
