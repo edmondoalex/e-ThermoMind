@@ -65,15 +65,24 @@
           <div class="row"><strong>Resistenze volano</strong></div>
           <div class="row3">
             <div class="kpi">
-              <div class="k">R22</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon), stateClass(act?.r22_resistenza_1_volano_pdc?.state)]"></i>
+                R22 Resistenza 1 Volano PDC
+              </div>
               <div class="v"><span :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)">●</span></div>
             </div>
             <div class="kpi">
-              <div class="k">R23</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon), stateClass(act?.r23_resistenza_2_volano_pdc?.state)]"></i>
+                R23 Resistenza 2 Volano PDC
+              </div>
               <div class="v"><span :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)">●</span></div>
             </div>
             <div class="kpi">
-              <div class="k">R24</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon), stateClass(act?.r24_resistenza_3_volano_pdc?.state)]"></i>
+                R24 Resistenza 3 Volano PDC
+              </div>
               <div class="v"><span :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)">●</span></div>
             </div>
           </div>

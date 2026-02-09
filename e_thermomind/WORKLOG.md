@@ -43,3 +43,4 @@
 - Admin: pulsanti in header + setpoint compatti.
 - User: mostra runtime mode e stato resistenze volano (R22/R23/R24).
 - Import config anche in header.
+- User: nomi completi resistenze + icone colorate per stato.
