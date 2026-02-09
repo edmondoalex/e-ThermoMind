@@ -186,8 +186,11 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
                 res["thresholds_w"], cfg["resistance"]["thresholds_w"]
             )
     runtime = payload.get("runtime", {})
-    if isinstance(runtime, dict) and "ui_poll_ms" in runtime:
-        cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
+    if isinstance(runtime, dict):
+        if "ui_poll_ms" in runtime:
+            cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
+        if isinstance(runtime.get("mode"), str):
+            cfg["runtime"]["mode"] = runtime["mode"]
     return cfg
 
 def apply_entities(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, Any]:

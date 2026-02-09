@@ -59,6 +59,13 @@
 
         <div v-if="sp" class="form">
           <h3 class="section">Setpoint</h3>
+          <div class="field">
+            <label>Runtime mode</label>
+            <select v-model="sp.runtime.mode" @change="confirmMode">
+              <option value="dry-run">dry-run</option>
+              <option value="live">live</option>
+            </select>
+          </div>
           <div class="field"><label>ACS setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.acs.setpoint_c"/></div>
           <div class="field"><label>ACS MAX (C)</label><input type="number" step="0.5" v-model.number="sp.acs.max_c"/></div>
           <div class="field"><label>Volano margine (C)</label><input type="number" step="0.5" v-model.number="sp.volano.margin_c"/></div>
@@ -214,6 +221,13 @@ async function save(){
     startPolling()
   }
 }
+function confirmMode(){
+  if (!sp.value?.runtime?.mode) return
+  if (sp.value.runtime.mode === 'live') {
+    const ok = window.confirm('Passare a LIVE? Questo abilita comandi reali agli attuatori.')
+    if (!ok) sp.value.runtime.mode = 'dry-run'
+  }
+}
 async function loadEntities(){
   const r = await fetch('/api/entities'); ent.value = await r.json()
 }
@@ -301,6 +315,7 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .form{display:grid;gap:10px;margin-top:10px}
 .section{margin:6px 0 2px 0;font-size:14px;color:var(--text)}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.field select{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0f1522;color:var(--text)}
 .field input{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0f1522;color:var(--text)}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .statusline{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;flex-wrap:wrap}
