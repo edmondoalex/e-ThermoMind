@@ -184,6 +184,9 @@
               <circle cx="300" cy="620" r="10" class="pulse" :class="flowPdcToVolano ? 'pulse-on' : ''"/>
               <circle cx="260" cy="470" r="10" class="pulse" :class="flowPdcToVolano ? 'pulse-on' : ''"/>
               <circle cx="250" cy="140" r="10" class="pulse" :class="flowVolanoToImpianto ? 'pulse-on' : ''"/>
+
+              <!-- Linea animata: Volano -> ACS -->
+              <path d="M420 650 H820 V520 H1140" class="tube" :class="flowVolanoToAcs ? 'tube-on' : ''"/>
             </svg>
           </div>
           <div class="legend">
@@ -913,10 +916,26 @@ details.form summary{cursor:pointer;list-style:none}
   opacity:1;
   animation:pulse 1.6s ease-in-out infinite;
 }
+.tube{
+  fill:none;
+  stroke:rgba(87,227,214,.3);
+  stroke-width:7;
+  stroke-linecap:round;
+}
+.tube-on{
+  stroke:url(#flowGrad);
+  stroke-dasharray:18 10;
+  animation:tubeFlow 1.4s linear infinite;
+  filter:drop-shadow(0 0 6px rgba(87,227,214,.6));
+}
 @keyframes pulse{
   0%{r:6;opacity:.4}
   50%{r:12;opacity:1}
   100%{r:6;opacity:.4}
+}
+@keyframes tubeFlow{
+  0%{stroke-dashoffset:0}
+  100%{stroke-dashoffset:-56}
 }
 .diagram svg{width:100%;height:auto}
 .node{fill:url(#nodeGrad);stroke:rgba(255,255,255,.08);filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))}
