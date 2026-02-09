@@ -227,15 +227,16 @@
           </div>
           <div v-for="item in filteredActuators" :key="item.key" class="field">
             <label>
-              <span class="impl" :class="item.impl ? 'impl-ok' : 'impl-no'">●</span>
-              <span class="presence" :class="isFilled(act?.[item.key]?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               {{ item.label }}
             </label>
-            <input type="text"
-                   :class="isFilled(act?.[item.key]?.entity_id) ? 'input-ok' : ''"
-                   v-model="act[item.key].entity_id"
-                   :placeholder="`switch.${item.key}`"
-                   @focus="onFocus" @blur="onBlur"/>
+            <div class="input-row">
+              <span class="logic-dot" :class="item.impl ? 'logic-ok' : 'logic-no'">●</span>
+              <input type="text"
+                     :class="isFilled(act?.[item.key]?.entity_id) ? 'input-ok' : ''"
+                     v-model="act[item.key].entity_id"
+                     :placeholder="`switch.${item.key}`"
+                     @focus="onFocus" @blur="onBlur"/>
+            </div>
           </div>
           <div class="actions">
             <button class="ghost" @click="saveActuators">Salva attuatori</button>
@@ -532,13 +533,14 @@ details.form summary{cursor:pointer;list-style:none}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:#0b1f1c;background:var(--accent)}
 .badge.off{color:#f5f7fa;background:#3b3f46}
-.impl{display:inline-block;margin-right:6px}
-.impl-ok{color:#22c55e}
-.impl-no{color:#ef4444}
 .presence{display:inline-block;margin-right:6px}
 .presence-ok{color:#22c55e}
 .presence-no{color:#ef4444}
 .input-ok{border:2px solid #22c55e; box-shadow:0 0 0 2px rgba(34,197,94,0.15)}
+.input-row{display:flex;align-items:center;gap:8px}
+.logic-dot{display:inline-block}
+.logic-ok{color:#22c55e}
+.logic-no{color:#ef4444}
 .toggle{justify-content:flex-start;gap:8px}
 .mdi-fallback{font-size:14px;opacity:0.8}
 .state-on{color:#ef4444}
