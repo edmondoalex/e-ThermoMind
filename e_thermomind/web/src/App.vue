@@ -91,26 +91,23 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Resistenze volano</strong></div>
           <div class="row3">
-            <div class="kpi">
+            <div class="kpi" :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon), stateClass(act?.r22_resistenza_1_volano_pdc?.state)]"></i>
                 R22 Resistenza 1 Volano PDC
               </div>
-              <div class="v"><span :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)">●</span></div>
             </div>
-            <div class="kpi">
+            <div class="kpi" :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon), stateClass(act?.r23_resistenza_2_volano_pdc?.state)]"></i>
                 R23 Resistenza 2 Volano PDC
               </div>
-              <div class="v"><span :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)">●</span></div>
             </div>
-            <div class="kpi">
+            <div class="kpi" :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon), stateClass(act?.r24_resistenza_3_volano_pdc?.state)]"></i>
                 R24 Resistenza 3 Volano PDC
               </div>
-              <div class="v"><span :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)">●</span></div>
             </div>
           </div>
         </div>
@@ -294,9 +291,9 @@
               {{ item.label }}
             </label>
             <div class="input-row">
-              <span class="logic-dot" :class="item.impl ? 'logic-ok' : 'logic-no'">●</span>
+              <button class="logic-dot dot-toggle" :class="item.impl ? 'logic-ok' : 'logic-no'" @click="toggleAct(item.key)" :title="`Toggle ${item.label}`">●</button>
               <input type="text"
-                     :class="isFilled(act?.[item.key]?.entity_id) ? 'input-ok' : ''"
+                     :class="[isFilled(act?.[item.key]?.entity_id) ? 'input-ok' : '', act?.[item.key]?.state === 'on' ? 'input-on' : '']"
                      v-model="act[item.key].entity_id"
                      :placeholder="`switch.${item.key}`"
                      @focus="onFocus" @blur="onBlur"/>
@@ -304,19 +301,6 @@
           </div>
           <div class="actions">
             <button class="ghost" @click="saveActuators">Salva attuatori</button>
-          </div>
-        </details>
-
-        <details class="form">
-          <summary class="section">Comandi manuali</summary>
-          <div v-for="item in filteredActuators" :key="`cmd-${item.key}`" class="row3">
-            <button class="ghost toggle" @click="toggleAct(item.key)">
-              <i v-if="mdiClass(act?.[item.key]?.attributes?.icon)" :class="[mdiClass(act?.[item.key]?.attributes?.icon), stateClass(act?.[item.key]?.state)]"></i>
-              <span v-else class="mdi-fallback" :class="stateClass(act?.[item.key]?.state)">⏻</span>
-              {{ item.label }}
-            </button>
-            <div class="muted">{{ act?.[item.key]?.entity_id || '-' }}</div>
-            <div class="muted">{{ stateLabel(act?.[item.key]?.state) }}</div>
           </div>
         </details>
 
@@ -640,4 +624,8 @@ details.form summary{cursor:pointer;list-style:none}
 .state-on{color:#ef4444}
 .state-off{color:#94a3b8}
 .state-unknown{color:#f59e0b}
+.kpi.state-on{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08)}
+.kpi.state-off{border-color:var(--border)}
+.input-on{border:2px solid rgba(239,68,68,.65); box-shadow:0 0 0 2px rgba(239,68,68,.15)}
+.dot-toggle{border:0;background:transparent;cursor:pointer;padding:0 2px}
 </style>

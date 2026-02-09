@@ -59,3 +59,4 @@
 - Dry-run: log simulato completo per moduli (stati ON/OFF/DISABLED) + flag volano->puffer.
 - Moduli UI: evidenziazione ON con fondo rosso trasparente.
 - PROJECT_LOG aggiornato con snapshot 2026-02-09.
+- Rimossi comandi manuali, toggle via pallino attuatori + bordo rosso quando ON; user senza pallino.
