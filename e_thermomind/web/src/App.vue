@@ -92,7 +92,7 @@
           <h3 class="section">Attuatori Home Assistant</h3>
           <div v-for="item in actuatorDefs" :key="item.key" class="field">
             <label>
-              <span v-if="item.impl" class="impl">●</span>
+              <span class="impl" :class="item.impl ? 'impl-ok' : 'impl-no'">●</span>
               {{ item.label }}
             </label>
             <input type="text" v-model="act[item.key].entity_id" :placeholder="`switch.${item.key}`"/>
@@ -256,5 +256,7 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:#0b1f1c;background:var(--accent)}
 .badge.off{color:#f5f7fa;background:#3b3f46}
-.impl{display:inline-block;margin-right:6px;color:var(--accent)}
+.impl{display:inline-block;margin-right:6px}
+.impl-ok{color:#22c55e}
+.impl-no{color:#ef4444}
 </style>
