@@ -177,32 +177,35 @@
               </defs>
 
               <!-- NODI -->
+              <!-- IMPIANTO / LAB / MISCELATRICE -->
               <rect x="60" y="40" width="200" height="70" rx="14" class="node" :class="flowPufferToImpianto ? 'node-active' : ''"/>
               <text x="160" y="85" text-anchor="middle" class="node-label">IMPIANTO</text>
               <text x="160" y="105" text-anchor="middle" class="node-sub">RISCALDAMENTO</text>
 
-              <rect x="60" y="150" width="200" height="70" rx="14" class="node" :class="flowPufferToLab ? 'node-active' : ''"/>
-              <text x="160" y="195" text-anchor="middle" class="node-label">LABORATORIO</text>
+              <rect x="60" y="140" width="200" height="70" rx="14" class="node" :class="flowPufferToLab ? 'node-active' : ''"/>
+              <text x="160" y="185" text-anchor="middle" class="node-label">LABORATORIO</text>
 
-              <rect x="300" y="150" width="150" height="70" rx="14" class="node" :class="flowMiscelatrice ? 'node-active' : ''"/>
-              <text x="375" y="195" text-anchor="middle" class="node-label">MISCELATRICE</text>
+              <rect x="300" y="140" width="160" height="70" rx="14" class="node" :class="flowMiscelatrice ? 'node-active' : ''"/>
+              <text x="380" y="185" text-anchor="middle" class="node-label">MISCELATRICE</text>
 
-              <rect x="60" y="380" width="200" height="70" rx="14" class="node" :class="flowPdcToVolano ? 'node-active' : ''"/>
-              <text x="160" y="425" text-anchor="middle" class="node-label">PDC 1</text>
+              <!-- PDC / VOLANO / CALDAIA -->
+              <rect x="60" y="360" width="200" height="70" rx="14" class="node" :class="flowPdcToVolano ? 'node-active' : ''"/>
+              <text x="160" y="405" text-anchor="middle" class="node-label">PDC 1</text>
 
-              <rect x="60" y="470" width="200" height="70" rx="14" class="node" :class="flowPdcToVolano ? 'node-active' : ''"/>
-              <text x="160" y="515" text-anchor="middle" class="node-label">PDC 2</text>
+              <rect x="60" y="450" width="200" height="70" rx="14" class="node" :class="flowPdcToVolano ? 'node-active' : ''"/>
+              <text x="160" y="495" text-anchor="middle" class="node-label">PDC 2</text>
 
-              <rect x="300" y="420" width="150" height="80" rx="14" class="node" :class="flowVolanoToPuffer ? 'node-active' : ''"/>
-              <text x="375" y="465" text-anchor="middle" class="node-label">VOLANO</text>
+              <rect x="300" y="380" width="160" height="80" rx="14" class="node" :class="flowVolanoToPuffer ? 'node-active' : ''"/>
+              <text x="380" y="425" text-anchor="middle" class="node-label">VOLANO</text>
 
-              <rect x="480" y="380" width="180" height="120" rx="14" class="node" :class="flowCaldaiaToPuffer ? 'node-active' : ''"/>
-              <text x="570" y="430" text-anchor="middle" class="node-label">CALDAIA</text>
-              <text x="570" y="455" text-anchor="middle" class="node-sub">LEGNA</text>
+              <rect x="480" y="360" width="200" height="120" rx="14" class="node" :class="flowCaldaiaToPuffer ? 'node-active' : ''"/>
+              <text x="580" y="410" text-anchor="middle" class="node-label">CALDAIA</text>
+              <text x="580" y="435" text-anchor="middle" class="node-sub">LEGNA</text>
 
-              <rect x="700" y="150" width="220" height="260" rx="14" class="node" :class="(flowSolarToPuffer || flowVolanoToPuffer || flowCaldaiaToPuffer || flowPufferToAcs || flowPufferToImpianto || flowPufferToLab) ? 'node-active' : ''"/>
-              <text x="810" y="185" text-anchor="middle" class="node-label">PUFFER</text>
-              <text x="810" y="210" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
+              <!-- PUFFER / SANICUBE / SOLARE -->
+              <rect x="700" y="140" width="240" height="280" rx="14" class="node" :class="(flowSolarToPuffer || flowVolanoToPuffer || flowCaldaiaToPuffer || flowPufferToAcs || flowPufferToImpianto || flowPufferToLab) ? 'node-active' : ''"/>
+              <text x="820" y="180" text-anchor="middle" class="node-label">PUFFER</text>
+              <text x="820" y="205" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
 
               <rect x="980" y="170" width="180" height="220" rx="14" class="node" :class="(flowSolarToAcs || flowVolanoToAcs || flowPufferToAcs) ? 'node-active' : ''"/>
               <text x="1070" y="210" text-anchor="middle" class="node-label">SANICUBE</text>
@@ -214,47 +217,47 @@
               <text x="1070" y="105" text-anchor="middle" class="node-sub">TERMICO</text>
 
               <!-- COLLEGAMENTI (solo mandata) -->
-              <!-- Solare -> Puffer -->
-              <path d="M980 100 H920 V210 H700" class="flow-line" :class="flowSolarToPuffer ? 'flow-on' : ''"/>
-              <!-- Solare -> ACS -->
+              <!-- SOLARE -->
+              <path d="M980 100 H920 V220 H700" class="flow-line" :class="flowSolarToPuffer ? 'flow-on' : ''"/>
               <path d="M1070 120 V170" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
 
-              <!-- Caldaia legna -> Puffer -->
-              <path d="M660 440 H700" class="flow-line" :class="flowCaldaiaToPuffer ? 'flow-on' : ''"/>
+              <!-- CALDAIA -> PUFFER -->
+              <path d="M680 420 H700" class="flow-line" :class="flowCaldaiaToPuffer ? 'flow-on' : ''"/>
 
-              <!-- Volano -> Puffer -->
-              <path d="M450 460 H700" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
+              <!-- VOLANO -> PUFFER -->
+              <path d="M460 420 H700" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
 
-              <!-- Puffer -> ACS -->
-              <path d="M920 280 H980" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
-              <!-- Volano -> ACS -->
-              <path d="M450 460 H810 V320 H980" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
+              <!-- PUFFER -> ACS -->
+              <path d="M940 280 H980" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
+              <!-- VOLANO -> ACS -->
+              <path d="M460 420 H820 V320 H980" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
 
-              <!-- Puffer -> Miscelatrice -> Impianto -->
-              <path d="M700 240 H450" class="flow-line" :class="flowPufferToImpianto ? 'flow-on' : ''"/>
-              <path d="M300 185 H260" class="flow-line" :class="flowPufferToImpianto ? 'flow-on' : ''"/>
+              <!-- PUFFER -> MISCELATRICE -->
+              <path d="M700 220 H460" class="flow-line" :class="flowPufferToImpianto ? 'flow-on' : ''"/>
+              <!-- MISCELATRICE -> IMPIANTO -->
+              <path d="M300 175 H260" class="flow-line" :class="flowPufferToImpianto ? 'flow-on' : ''"/>
 
-              <!-- Puffer -> Laboratorio -->
-              <path d="M700 280 H260 V185" class="flow-line" :class="flowPufferToLab ? 'flow-on' : ''"/>
+              <!-- PUFFER -> LAB -->
+              <path d="M700 260 H260 V175" class="flow-line" :class="flowPufferToLab ? 'flow-on' : ''"/>
 
-              <!-- Volano -> Impianto -->
-              <path d="M450 460 H260 V85" class="flow-line" :class="flowVolanoToImpianto ? 'flow-on' : ''"/>
+              <!-- VOLANO -> IMPIANTO -->
+              <path d="M460 420 H260 V85" class="flow-line" :class="flowVolanoToImpianto ? 'flow-on' : ''"/>
 
-              <!-- PDC -> Volano -->
-              <path d="M260 415 H300 V460" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
-              <path d="M260 505 H300 V460" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
+              <!-- PDC -> VOLANO -->
+              <path d="M260 395 H300 V420" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
+              <path d="M260 485 H300 V420" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
 
               <!-- DOTS -->
-              <circle cx="920" cy="210" r="6" class="dot" :class="flowSolarToPuffer ? 'dot-on' : ''"/>
+              <circle cx="920" cy="220" r="6" class="dot" :class="flowSolarToPuffer ? 'dot-on' : ''"/>
               <circle cx="1070" cy="170" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
-              <circle cx="700" cy="440" r="6" class="dot" :class="flowCaldaiaToPuffer ? 'dot-on' : ''"/>
-              <circle cx="700" cy="460" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
+              <circle cx="700" cy="420" r="6" class="dot" :class="flowCaldaiaToPuffer ? 'dot-on' : ''"/>
+              <circle cx="700" cy="450" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
               <circle cx="980" cy="280" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
-              <circle cx="810" cy="320" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
-              <circle cx="450" cy="240" r="6" class="dot" :class="flowPufferToImpianto ? 'dot-on' : ''"/>
-              <circle cx="260" cy="185" r="6" class="dot" :class="flowPufferToLab ? 'dot-on' : ''"/>
+              <circle cx="820" cy="320" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
+              <circle cx="460" cy="220" r="6" class="dot" :class="flowPufferToImpianto ? 'dot-on' : ''"/>
+              <circle cx="260" cy="175" r="6" class="dot" :class="flowPufferToLab ? 'dot-on' : ''"/>
               <circle cx="260" cy="85" r="6" class="dot" :class="flowVolanoToImpianto ? 'dot-on' : ''"/>
-              <circle cx="300" cy="460" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
+              <circle cx="300" cy="420" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
             </svg>
           </div>
           <div class="legend">
