@@ -156,63 +156,73 @@
           <summary class="section">Sensori da e-manager</summary>
           <div class="field">
             <label>
-              <span class="presence" :class="isFilled(ent?.t_acs?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
               T_ACS
             </label>
-            <input type="text"
-                   :class="isFilled(ent?.t_acs?.entity_id) ? 'input-ok' : ''"
-                   v-model="ent.t_acs.entity_id"
-                   placeholder="sensor.acs_temp"
-                   @focus="onFocus" @blur="onBlur"/>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_acs?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+              <input type="text"
+                     :class="isFilled(ent?.t_acs?.entity_id) ? 'input-ok' : ''"
+                     v-model="ent.t_acs.entity_id"
+                     placeholder="sensor.acs_temp"
+                     @focus="onFocus" @blur="onBlur"/>
+            </div>
           </div>
           <div class="field">
             <label>
-              <span class="presence" :class="isFilled(ent?.t_puffer?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
               T_Puffer
             </label>
-            <input type="text"
-                   :class="isFilled(ent?.t_puffer?.entity_id) ? 'input-ok' : ''"
-                   v-model="ent.t_puffer.entity_id"
-                   placeholder="sensor.puffer_temp"
-                   @focus="onFocus" @blur="onBlur"/>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_puffer?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+              <input type="text"
+                     :class="isFilled(ent?.t_puffer?.entity_id) ? 'input-ok' : ''"
+                     v-model="ent.t_puffer.entity_id"
+                     placeholder="sensor.puffer_temp"
+                     @focus="onFocus" @blur="onBlur"/>
+            </div>
           </div>
           <div class="field">
             <label>
-              <span class="presence" :class="isFilled(ent?.t_volano?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
               T_Volano
             </label>
-            <input type="text"
-                   :class="isFilled(ent?.t_volano?.entity_id) ? 'input-ok' : ''"
-                   v-model="ent.t_volano.entity_id"
-                   placeholder="sensor.volano_temp"
-                   @focus="onFocus" @blur="onBlur"/>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_volano?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+              <input type="text"
+                     :class="isFilled(ent?.t_volano?.entity_id) ? 'input-ok' : ''"
+                     v-model="ent.t_volano.entity_id"
+                     placeholder="sensor.volano_temp"
+                     @focus="onFocus" @blur="onBlur"/>
+            </div>
           </div>
           <div class="field">
             <label>
-              <span class="presence" :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i>
               T_Solare mandata
             </label>
-            <input type="text"
-                   :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'input-ok' : ''"
-                   v-model="ent.t_solare_mandata.entity_id"
-                   placeholder="sensor.solar_mandata"
-                   @focus="onFocus" @blur="onBlur"/>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+              <input type="text"
+                     :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'input-ok' : ''"
+                     v-model="ent.t_solare_mandata.entity_id"
+                     placeholder="sensor.solar_mandata"
+                     @focus="onFocus" @blur="onBlur"/>
+            </div>
           </div>
           <div class="field">
             <label>
-              <span class="presence" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
               Export rete (W)
             </label>
-            <input type="text"
-                   :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
-                   v-model="ent.grid_export_w.entity_id"
-                   placeholder="sensor.grid_export_w"
-                   @focus="onFocus" @blur="onBlur"/>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+              <input type="text"
+                     :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
+                     v-model="ent.grid_export_w.entity_id"
+                     placeholder="sensor.grid_export_w"
+                     @focus="onFocus" @blur="onBlur"/>
+            </div>
           </div>
           <div class="actions">
             <button class="ghost" @click="saveEntities">Salva sensori</button>

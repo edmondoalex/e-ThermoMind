@@ -54,3 +54,4 @@
 - Indicatori ripristinati: verde = in logica, rosso = non in logica, bordo verde se entity presente.
 - Bordo verde input piu evidente (2px + glow).
 - Pallino logica spostato accanto all'input entita.
+- Pallino logica accanto anche ai sensori.
