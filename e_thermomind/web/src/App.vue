@@ -538,7 +538,7 @@ details.form summary{cursor:pointer;list-style:none}
 .presence{display:inline-block;margin-right:6px}
 .presence-ok{color:#22c55e}
 .presence-no{color:#ef4444}
-.input-ok{border-color:#22c55e}
+.input-ok{border:2px solid #22c55e; box-shadow:0 0 0 2px rgba(34,197,94,0.15)}
 .toggle{justify-content:flex-start;gap:8px}
 .mdi-fallback{font-size:14px;opacity:0.8}
 .state-on{color:#ef4444}

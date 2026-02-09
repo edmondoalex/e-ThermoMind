@@ -52,3 +52,4 @@
 - Indicatore presenza: pallino rosso fisso + bordo verde se entity presente.
 - Rimosso bordo verde; pallino rosso unico a sinistra.
 - Indicatori ripristinati: verde = in logica, rosso = non in logica, bordo verde se entity presente.
+- Bordo verde input piu evidente (2px + glow).
