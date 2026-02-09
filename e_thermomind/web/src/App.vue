@@ -50,6 +50,33 @@
           <span class="muted">Ultimo aggiornamento: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</span>
         </div>
 
+        <div class="card inner">
+          <div class="row"><strong>Moduli (User)</strong></div>
+          <div class="row3">
+            <button class="ghost toggle" @click="toggleModule('resistenze_volano')">
+              Resistenze Volano: {{ modules.resistenze_volano ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('volano_to_acs')">
+              Volano → ACS: {{ modules.volano_to_acs ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('volano_to_puffer')">
+              Volano → Puffer: {{ modules.volano_to_puffer ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('puffer_to_acs')">
+              Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('solare')">
+              Solare: {{ modules.solare ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('miscelatrice')">
+              Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('pdc')">
+              PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
+            </button>
+          </div>
+        </div>
+
         <div v-if="d" class="card inner">
           <div class="row"><strong>Destinazione surplus:</strong> {{ d.computed.dest }}</div>
           <div class="muted">{{ d.computed.dest_reason }}</div>
@@ -149,6 +176,33 @@
           <div class="field">
             <label>Polling UI (ms)</label>
             <input type="number" min="500" step="500" v-model.number="sp.runtime.ui_poll_ms"/>
+          </div>
+        </div>
+
+        <div class="form">
+          <h3 class="section">Moduli (Admin)</h3>
+          <div class="row3">
+            <button class="ghost toggle" @click="toggleModule('resistenze_volano')">
+              Resistenze Volano: {{ modules.resistenze_volano ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('volano_to_acs')">
+              Volano → ACS: {{ modules.volano_to_acs ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('volano_to_puffer')">
+              Volano → Puffer: {{ modules.volano_to_puffer ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('puffer_to_acs')">
+              Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('solare')">
+              Solare: {{ modules.solare ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('miscelatrice')">
+              Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" @click="toggleModule('pdc')">
+              PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
+            </button>
           </div>
         </div>
 
@@ -290,6 +344,15 @@ const filterAct = ref('')
 const editingCount = ref(0)
 let focusInHandler = null
 let focusOutHandler = null
+const modules = ref({
+  resistenze_volano: true,
+  volano_to_acs: false,
+  volano_to_puffer: false,
+  puffer_to_acs: false,
+  solare: false,
+  miscelatrice: false,
+  pdc: false
+})
 
 const actuatorDefs = [
   { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)', impl: false },
@@ -343,6 +406,9 @@ async function refresh(){
   await loadActuators()
   lastUpdate.value = new Date()
 }
+async function loadModules(){
+  const r = await fetch('/api/modules'); modules.value = await r.json()
+}
 async function load(){
   const r = await fetch('/api/setpoints'); sp.value = await r.json()
   if (sp.value?.runtime?.ui_poll_ms) {
@@ -365,6 +431,21 @@ async function saveAll(){
   await save()
   await saveEntities()
   await saveActuators()
+}
+async function toggleModule(key){
+  const pin = sp.value?.security?.user_pin || ''
+  let provided = ''
+  if (pin) {
+    provided = window.prompt('PIN') || ''
+  }
+  const next = { ...modules.value, [key]: !modules.value[key] }
+  const res = await fetch('/api/modules',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ modules: next, pin: provided })
+  })
+  if (!res.ok) return
+  await loadModules()
 }
 function confirmMode(){
   if (!sp.value?.runtime?.mode) return
@@ -457,6 +538,7 @@ async function loadAll(){
   await load()
   await loadEntities()
   await loadActuators()
+  await loadModules()
   await refresh()
 }
 function startPolling(){

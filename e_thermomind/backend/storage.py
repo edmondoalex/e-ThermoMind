@@ -76,6 +76,18 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   "runtime": {
     "mode": "dry-run",
     "ui_poll_ms": 3000
+  },
+  "modules_enabled": {
+    "resistenze_volano": True,
+    "volano_to_acs": False,
+    "volano_to_puffer": False,
+    "puffer_to_acs": False,
+    "solare": False,
+    "miscelatrice": False,
+    "pdc": False
+  },
+  "security": {
+    "user_pin": ""
   }
 }
 
@@ -161,6 +173,16 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
         if "ui_poll_ms" in runtime:
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
 
+    modules = raw.get("modules_enabled", {})
+    if isinstance(modules, dict):
+        for key in cfg["modules_enabled"].keys():
+            if key in modules:
+                cfg["modules_enabled"][key] = bool(modules[key])
+
+    security = raw.get("security", {})
+    if isinstance(security, dict) and isinstance(security.get("user_pin"), str):
+        cfg["security"]["user_pin"] = security.get("user_pin", "")
+
     return cfg
 
 def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -191,6 +213,16 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
         if isinstance(runtime.get("mode"), str):
             cfg["runtime"]["mode"] = runtime["mode"]
+
+    modules = payload.get("modules_enabled", {})
+    if isinstance(modules, dict):
+        for key in cfg["modules_enabled"].keys():
+            if key in modules:
+                cfg["modules_enabled"][key] = bool(modules[key])
+
+    security = payload.get("security", {})
+    if isinstance(security, dict) and isinstance(security.get("user_pin"), str):
+        cfg["security"]["user_pin"] = security.get("user_pin", "")
     return cfg
 
 def apply_entities(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, Any]:

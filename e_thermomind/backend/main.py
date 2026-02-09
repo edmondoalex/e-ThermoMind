@@ -120,6 +120,8 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         export_w = decision_data.get("inputs", {}).get("grid_export_w")
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN step={step} export={export_w}")
         return
+    if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
+        return
     act = cfg.get("actuators", {})
     r22 = act.get("r22_resistenza_1_volano_pdc")
     r23 = act.get("r23_resistenza_2_volano_pdc")
@@ -181,6 +183,8 @@ async def get_setpoints():
         "volano": cfg.get("volano", {}),
         "resistance": cfg.get("resistance", {}),
         "runtime": cfg.get("runtime", {}),
+        "modules_enabled": cfg.get("modules_enabled", {}),
+        "security": cfg.get("security", {}),
     })
 
 @app.post("/api/setpoints")
@@ -189,6 +193,26 @@ async def set_setpoints(payload: dict):
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
     cfg = apply_setpoints(cfg, payload)
+    save_config(cfg)
+    return JSONResponse({"ok": True})
+
+@app.get("/api/modules")
+async def get_modules():
+    return JSONResponse(cfg.get("modules_enabled", {}))
+
+@app.post("/api/modules")
+async def set_modules(payload: dict):
+    global cfg
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    pin_required = cfg.get("security", {}).get("user_pin", "")
+    provided = payload.get("pin", "")
+    if pin_required and provided != pin_required:
+        raise HTTPException(status_code=403, detail="Invalid PIN")
+    modules = payload.get("modules", {})
+    if not isinstance(modules, dict):
+        raise HTTPException(status_code=400, detail="Invalid modules")
+    cfg = apply_setpoints(cfg, {"modules_enabled": modules})
     save_config(cfg)
     return JSONResponse({"ok": True})
 
