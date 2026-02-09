@@ -164,50 +164,57 @@
           <div class="row"><strong>Schema impianto (live)</strong></div>
           <div class="muted">Flussi evidenziati in tempo reale.</div>
           <div class="diagram">
-            <svg viewBox="0 0 980 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Schema impianto e-ThermoMind">
+            <svg viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Schema impianto e-ThermoMind">
               <defs>
                 <linearGradient id="flowGrad" x1="0" x2="1">
                   <stop offset="0%" stop-color="#4fd1c5" stop-opacity="0.4"/>
                   <stop offset="100%" stop-color="#4fd1c5" stop-opacity="1"/>
                 </linearGradient>
               </defs>
-              <rect x="40" y="40" width="220" height="70" rx="14" class="node"/>
-              <text x="150" y="80" text-anchor="middle" class="node-label">SOLARE</text>
+              <rect x="60" y="50" width="220" height="70" rx="14" class="node"/>
+              <text x="170" y="90" text-anchor="middle" class="node-label">SOLARE</text>
 
-              <rect x="40" y="170" width="220" height="90" rx="14" class="node"/>
-              <text x="150" y="205" text-anchor="middle" class="node-label">PUFFER</text>
-              <text x="150" y="235" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
+              <rect x="60" y="180" width="220" height="90" rx="14" class="node"/>
+              <text x="170" y="215" text-anchor="middle" class="node-label">PUFFER</text>
+              <text x="170" y="245" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
 
-              <rect x="40" y="310" width="220" height="70" rx="14" class="node"/>
-              <text x="150" y="350" text-anchor="middle" class="node-label">ACS</text>
-              <text x="150" y="370" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_acs) }}</text>
+              <rect x="60" y="310" width="220" height="70" rx="14" class="node"/>
+              <text x="170" y="350" text-anchor="middle" class="node-label">ACS</text>
+              <text x="170" y="370" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_acs) }}</text>
 
-              <rect x="380" y="180" width="220" height="100" rx="14" class="node"/>
-              <text x="490" y="220" text-anchor="middle" class="node-label">VOLANO</text>
-              <text x="490" y="250" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_volano) }}</text>
+              <rect x="390" y="190" width="220" height="90" rx="14" class="node"/>
+              <text x="500" y="225" text-anchor="middle" class="node-label">VOLANO</text>
+              <text x="500" y="255" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_volano) }}</text>
 
               <rect x="720" y="120" width="220" height="80" rx="14" class="node"/>
               <text x="830" y="160" text-anchor="middle" class="node-label">RESISTENZE</text>
               <text x="830" y="182" text-anchor="middle" class="node-sub">step {{ d.computed?.resistance_step || 0 }}/3</text>
 
-              <rect x="720" y="260" width="220" height="80" rx="14" class="node"/>
-              <text x="830" y="300" text-anchor="middle" class="node-label">PDC</text>
+              <rect x="720" y="270" width="220" height="80" rx="14" class="node"/>
+              <text x="830" y="310" text-anchor="middle" class="node-label">PDC</text>
 
-              <path d="M260 75 H340" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
-              <path d="M260 215 H380" class="flow-line" :class="flowPufferToVolano ? 'flow-on' : ''"/>
-              <path d="M260 345 H340" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
-              <path d="M600 230 H720" class="flow-line" :class="flowChargeVolano ? 'flow-on' : ''"/>
-              <path d="M600 230 H720" class="flow-line dashed" :class="flowChargeVolano ? 'flow-on' : ''"/>
-              <path d="M380 260 L340 345 H260" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
-              <path d="M380 200 L340 215 H260" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
-              <path d="M720 300 H600" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
+              <!-- SOLARE -> ACS -->
+              <path d="M280 85 H340 V345 H280" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
+              <!-- PUFFER -> VOLANO -->
+              <path d="M280 225 H390" class="flow-line" :class="flowPufferToVolano ? 'flow-on' : ''"/>
+              <!-- PUFFER -> ACS -->
+              <path d="M280 345 H340" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
+              <!-- VOLANO -> RESISTENZE -->
+              <path d="M610 235 H720" class="flow-line" :class="flowChargeVolano ? 'flow-on' : ''"/>
+              <path d="M610 235 H720" class="flow-line dashed" :class="flowChargeVolano ? 'flow-on' : ''"/>
+              <!-- VOLANO -> ACS -->
+              <path d="M390 260 H340 V345 H280" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
+              <!-- VOLANO -> PUFFER -->
+              <path d="M390 215 H340 V225 H280" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
+              <!-- PDC -> VOLANO -->
+              <path d="M720 310 H610" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
 
-              <circle cx="340" cy="75" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
-              <circle cx="340" cy="215" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
+              <circle cx="340" cy="85" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
+              <circle cx="340" cy="225" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
               <circle cx="340" cy="345" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
-              <circle cx="380" cy="260" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
-              <circle cx="600" cy="230" r="6" class="dot" :class="flowChargeVolano ? 'dot-on' : ''"/>
-              <circle cx="720" cy="300" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
+              <circle cx="390" cy="260" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
+              <circle cx="610" cy="235" r="6" class="dot" :class="flowChargeVolano ? 'dot-on' : ''"/>
+              <circle cx="720" cy="310" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
             </svg>
           </div>
           <div class="legend">
@@ -899,10 +906,10 @@ details.form summary{cursor:pointer;list-style:none}
 .kpi.state-off{border-color:var(--border)}
 .input-on{background:rgba(239,68,68,.12) !important}
 .dot-toggle{border:0;background:transparent;cursor:pointer;padding:0 2px}
-.diagram{margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:14px;background:
+.diagram{margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:16px;background:
   radial-gradient(900px 320px at 70% 10%, rgba(87,227,214,.10), transparent),
   radial-gradient(800px 300px at 20% 90%, rgba(122,167,255,.10), transparent),
-  repeating-linear-gradient(135deg, rgba(255,255,255,.02), rgba(255,255,255,.02) 10px, transparent 10px, transparent 20px)}
+  linear-gradient(180deg, rgba(9,14,22,.65), rgba(9,14,22,.35))}
 .diagram svg{width:100%;height:auto}
 .node{fill:#0d1421;stroke:rgba(255,255,255,.08)}
 .node-label{fill:#e6edf3;font-size:13px;font-weight:700}
