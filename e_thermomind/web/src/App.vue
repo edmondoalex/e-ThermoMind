@@ -218,11 +218,12 @@
             </label>
             <div class="input-row">
               <span class="logic-dot" :class="isFilled(ent?.t_acs?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-              <input type="text"
-                     :class="isFilled(ent?.t_acs?.entity_id) ? 'input-ok' : ''"
-                     v-model="ent.t_acs.entity_id"
-                     placeholder="sensor.acs_temp"
-                     @focus="onFocus" @blur="onBlur"/>
+                <input type="text"
+                       :class="isFilled(ent?.t_acs?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_acs.entity_id"
+                       placeholder="sensor.acs_temp"
+                       @input="dirtyEnt.t_acs = true"
+                       @focus="onFocus" @blur="onBlur"/>
             </div>
           </div>
           <div class="field">
@@ -232,11 +233,12 @@
             </label>
             <div class="input-row">
               <span class="logic-dot" :class="isFilled(ent?.t_puffer?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-              <input type="text"
-                     :class="isFilled(ent?.t_puffer?.entity_id) ? 'input-ok' : ''"
-                     v-model="ent.t_puffer.entity_id"
-                     placeholder="sensor.puffer_temp"
-                     @focus="onFocus" @blur="onBlur"/>
+                <input type="text"
+                       :class="isFilled(ent?.t_puffer?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_puffer.entity_id"
+                       placeholder="sensor.puffer_temp"
+                       @input="dirtyEnt.t_puffer = true"
+                       @focus="onFocus" @blur="onBlur"/>
             </div>
           </div>
           <div class="field">
@@ -246,11 +248,12 @@
             </label>
             <div class="input-row">
               <span class="logic-dot" :class="isFilled(ent?.t_volano?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-              <input type="text"
-                     :class="isFilled(ent?.t_volano?.entity_id) ? 'input-ok' : ''"
-                     v-model="ent.t_volano.entity_id"
-                     placeholder="sensor.volano_temp"
-                     @focus="onFocus" @blur="onBlur"/>
+                <input type="text"
+                       :class="isFilled(ent?.t_volano?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_volano.entity_id"
+                       placeholder="sensor.volano_temp"
+                       @input="dirtyEnt.t_volano = true"
+                       @focus="onFocus" @blur="onBlur"/>
             </div>
           </div>
           <div class="field">
@@ -260,11 +263,12 @@
             </label>
             <div class="input-row">
               <span class="logic-dot" :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-              <input type="text"
-                     :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'input-ok' : ''"
-                     v-model="ent.t_solare_mandata.entity_id"
-                     placeholder="sensor.solar_mandata"
-                     @focus="onFocus" @blur="onBlur"/>
+                <input type="text"
+                       :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_solare_mandata.entity_id"
+                       placeholder="sensor.solar_mandata"
+                       @input="dirtyEnt.t_solare_mandata = true"
+                       @focus="onFocus" @blur="onBlur"/>
             </div>
           </div>
             <div class="field">
@@ -278,6 +282,7 @@
                        :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.grid_export_w.entity_id"
                        placeholder="sensor.grid_export_w"
+                       @input="dirtyEnt.grid_export_w = true"
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
@@ -292,6 +297,7 @@
                        :class="isFilled(ent?.resistenze_volano_power?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.resistenze_volano_power.entity_id"
                        placeholder="sensor.resistenze_volano_power"
+                       @input="dirtyEnt.resistenze_volano_power = true"
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
@@ -306,6 +312,7 @@
                        :class="isFilled(ent?.resistenze_volano_energy?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.resistenze_volano_energy.entity_id"
                        placeholder="sensor.resistenze_volano_energy"
+                       @input="dirtyEnt.resistenze_volano_energy = true"
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
@@ -330,6 +337,7 @@
                      :class="[isFilled(act?.[item.key]?.entity_id) ? 'input-ok' : '', act?.[item.key]?.state === 'on' ? 'input-on' : '']"
                      v-model="act[item.key].entity_id"
                      :placeholder="`switch.${item.key}`"
+                     @input="dirtyAct[item.key] = true"
                      @focus="onFocus" @blur="onBlur"/>
             </div>
           </div>
@@ -359,8 +367,10 @@ const status = ref(null)
 const lastUpdate = ref(null)
 const pollMs = ref(3000)
 const actions = ref([])
-const filterAct = ref('')
-const editingCount = ref(0)
+  const filterAct = ref('')
+  const editingCount = ref(0)
+  const dirtyEnt = ref({})
+  const dirtyAct = ref({})
 let focusInHandler = null
 let focusOutHandler = null
 const modules = ref({
@@ -426,22 +436,22 @@ const fmtEntity = (e) => {
   return `${raw} ${unit}`.trim()
 }
 
-function mergeEntities(next){
-  if (!ent.value) { ent.value = next; return }
-  for (const key of Object.keys(next || {})) {
-    const prev = ent.value[key] || { entity_id: null }
-    const keepId = editingCount.value > 0 ? prev.entity_id : next[key]?.entity_id
-    ent.value[key] = { ...next[key], entity_id: keepId }
+  function mergeEntities(next){
+    if (!ent.value) { ent.value = next; return }
+    for (const key of Object.keys(next || {})) {
+      const prev = ent.value[key] || { entity_id: null }
+      const keepId = (dirtyEnt.value?.[key] || editingCount.value > 0) ? prev.entity_id : next[key]?.entity_id
+      ent.value[key] = { ...next[key], entity_id: keepId }
+    }
   }
-}
-function mergeActuators(next){
-  if (!act.value) { act.value = next; return }
-  for (const key of Object.keys(next || {})) {
-    const prev = act.value[key] || { entity_id: null }
-    const keepId = editingCount.value > 0 ? prev.entity_id : next[key]?.entity_id
-    act.value[key] = { ...next[key], entity_id: keepId }
+  function mergeActuators(next){
+    if (!act.value) { act.value = next; return }
+    for (const key of Object.keys(next || {})) {
+      const prev = act.value[key] || { entity_id: null }
+      const keepId = (dirtyAct.value?.[key] || editingCount.value > 0) ? prev.entity_id : next[key]?.entity_id
+      act.value[key] = { ...next[key], entity_id: keepId }
+    }
   }
-}
 async function refresh(){
   if (tab.value === 'admin' || editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
@@ -513,22 +523,24 @@ async function loadEntities(){
   }
   ent.value = out
 }
-async function saveEntities(){
-  const payload = {}
-  for (const key of Object.keys(ent.value || {})) {
-    payload[key] = ent.value?.[key]?.entity_id || null
+  async function saveEntities(){
+    const payload = {}
+    for (const key of Object.keys(ent.value || {})) {
+      payload[key] = ent.value?.[key]?.entity_id || null
+    }
+    await fetch('/api/entities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entities: payload})})
+    dirtyEnt.value = {}
+    await refresh()
   }
-  await fetch('/api/entities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entities: payload})})
-  await refresh()
-}
-async function saveActuators(){
-  const payload = {}
-  for (const item of actuatorDefs) {
-    payload[item.key] = act.value?.[item.key]?.entity_id || null
+  async function saveActuators(){
+    const payload = {}
+    for (const item of actuatorDefs) {
+      payload[item.key] = act.value?.[item.key]?.entity_id || null
+    }
+    await fetch('/api/actuators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actuators: payload})})
+    dirtyAct.value = {}
+    await loadActuators()
   }
-  await fetch('/api/actuators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actuators: payload})})
-  await loadActuators()
-}
 async function exportConfig(){
   const r = await fetch('/api/config')
   const data = await r.json()
