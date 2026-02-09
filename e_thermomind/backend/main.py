@@ -32,6 +32,8 @@ off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
 action_log: list[str] = []
 entity_icon_map: dict[str, str] = {}
 last_dry_run_signature: str | None = None
+recent_ui_actuations: dict[str, float] = {}
+pending_auto_off: dict[str, asyncio.Task] = {}
 
 @app.on_event("startup")
 async def on_startup():
@@ -44,6 +46,7 @@ async def on_startup():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     await ha.start()
+    ha.set_state_callback(_on_state_changed)
     if ha.enabled:
         ws_task = asyncio.create_task(ha.run())
         asyncio.create_task(_refresh_entity_registry_loop())
@@ -103,6 +106,66 @@ def _get_state(entity_id: str | None) -> str | None:
     if not entity_id:
         return None
     return ha.states.get(entity_id, {}).get("state")
+
+def _actuator_key_for_entity(entity_id: str) -> str | None:
+    for key, eid in (cfg.get("actuators", {}) or {}).items():
+        if eid == entity_id:
+            return key
+    return None
+
+def _module_for_actuator_key(key: str) -> str | None:
+    if "resistenza" in key:
+        return "resistenze_volano"
+    if "solare" in key or "ritorno_solare" in key:
+        return "solare"
+    if "miscelatrice" in key:
+        return "miscelatrice"
+    if "puffer_to_acs" in key:
+        return "puffer_to_acs"
+    if "pdc" in key or "antigelo" in key or "comparto_pdc" in key:
+        return "pdc"
+    return None
+
+def _is_recent_ui(entity_id: str, window_s: float = 4.0) -> bool:
+    ts = recent_ui_actuations.get(entity_id)
+    if not ts:
+        return False
+    if time.time() - ts > window_s:
+        recent_ui_actuations.pop(entity_id, None)
+        return False
+    return True
+
+async def _auto_off_after_delay(entity_id: str, module_key: str | None) -> None:
+    try:
+        await asyncio.sleep(2)
+        if _is_recent_ui(entity_id):
+            return
+        current = _get_state(entity_id)
+        if current != "on":
+            return
+        if module_key and not cfg.get("modules_enabled", {}).get(module_key, True):
+            return
+        await ha.call_service(entity_id, "off")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} AUTO-OFF {entity_id} (HA manual guard)")
+    finally:
+        pending_auto_off.pop(entity_id, None)
+
+async def _on_state_changed(entity_id: str, new_state: dict) -> None:
+    if not entity_id or not isinstance(new_state, dict):
+        return
+    if new_state.get("state") != "on":
+        return
+    if _is_recent_ui(entity_id):
+        return
+    key = _actuator_key_for_entity(entity_id)
+    if not key:
+        return
+    module_key = _module_for_actuator_key(key)
+    if module_key and not cfg.get("modules_enabled", {}).get(module_key, True):
+        return
+    if entity_id in pending_auto_off:
+        return
+    pending_auto_off[entity_id] = asyncio.create_task(_auto_off_after_delay(entity_id, module_key))
 
 def _log_dry_run(decision_data: dict) -> None:
     global last_dry_run_signature
@@ -353,5 +416,6 @@ async def actuate(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid entity_id")
     if not ha.enabled:
         raise HTTPException(status_code=400, detail="HA offline")
+    recent_ui_actuations[entity_id] = time.time()
     ok = await ha.call_service(entity_id, action)
     return JSONResponse({"ok": bool(ok)})

@@ -61,3 +61,4 @@
 - PROJECT_LOG aggiornato con snapshot 2026-02-09.
 - Rimossi comandi manuali, toggle via pallino attuatori + bordo rosso quando ON; user senza pallino.
 - Header: pulsanti config uniformati e rimossa duplicazione in sezione Configurazione.
+- Guard: se un attuatore ON da HA con modulo attivo, auto-OFF dopo 2s (UI toggle escluso).

@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import inspect
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -18,6 +19,10 @@ class HAClient:
         self._log = logging.getLogger("ha_client")
         self.enabled = bool(self._token)
         self.token_source = "env" if os.environ.get("SUPERVISOR_TOKEN") or os.environ.get("HASSIO_TOKEN") else "secret"
+        self._state_cb = None
+
+    def set_state_callback(self, callback):
+        self._state_cb = callback
 
     def _load_auth(self) -> tuple[Optional[str], str]:
         base_url = "http://supervisor/core"
@@ -127,6 +132,13 @@ class HAClient:
                 new_state = ev.get("new_state")
                 if ent and new_state:
                     self.states[ent] = new_state
+                    if self._state_cb:
+                        try:
+                            res = self._state_cb(ent, new_state)
+                            if inspect.isawaitable(res):
+                                await res
+                        except Exception as exc:
+                            self._log.debug("State callback error: %s", exc)
 
     async def run(self):
         backoff = 1

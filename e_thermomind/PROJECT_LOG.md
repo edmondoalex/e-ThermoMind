@@ -70,6 +70,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Moduli ON evidenziati in rosso trasparente.
 - Comandi manuali rimossi; toggle attuatori via pallino con bordo rosso se ON (User senza pallino).
 - Header Admin: pulsanti config uniformati (stesso stile/colore) e duplicazione rimossa.
+- Guard HA: se un attuatore viene acceso da HA mentre il modulo è attivo, auto spegnimento dopo 2s (UI esclusa).
 
 ## Prossime implementazioni
 - Validazione completa via schema (Pydantic) per `config`/`entities`/`setpoints`.
