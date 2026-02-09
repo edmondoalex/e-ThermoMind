@@ -59,7 +59,8 @@ async def decision():
 async def status():
     return JSONResponse({
         "ha_connected": bool(ha.enabled),
-        "token_source": getattr(ha, "token_source", None)
+        "token_source": getattr(ha, "token_source", None),
+        "version": app.version,
     })
 
 @app.get("/api/assets")

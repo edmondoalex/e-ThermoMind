@@ -21,6 +21,7 @@
         </div>
 
         <div class="statusline">
+          <span class="muted">v{{ status?.version || '—' }}</span>
           <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
             {{ status?.ha_connected ? 'Online' : 'Offline' }}
           </span>
@@ -47,6 +48,7 @@
         <h2>Admin (v0.2)</h2>
         <p class="muted">Setpoint interni e mapping entità HA.</p>
         <div class="statusline">
+          <span class="muted">v{{ status?.version || '—' }}</span>
           <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
             {{ status?.ha_connected ? 'Online' : 'Offline' }}
           </span>

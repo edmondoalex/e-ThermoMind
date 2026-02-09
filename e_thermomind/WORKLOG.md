@@ -17,3 +17,4 @@
 - Indicatore Online/Offline HA in UI (User/Admin) con endpoint `/api/status`.
 - Supporto token HA da `options.json` con `ha_url`/`ha_token` (fallback se token Supervisor assente).
 - Ricerca token Supervisor anche in `s6/container_environment` (compatibilità add-on).
+- Mostrata versione add-on in User/Admin via `/api/status`.
