@@ -90,7 +90,7 @@
 
         <div v-if="act" class="form">
           <h3 class="section">Attuatori Home Assistant</h3>
-          <div class="field"><label>Pompa ACS (circolazione verso bollitore ACS)</label><input type="text" v-model="act.pump_acs.entity_id" placeholder="switch.pump_acs"/></div>
+          <div class="field"><label>Pompa ACS (PDC -> ACS)</label><input type="text" v-model="act.pump_acs.entity_id" placeholder="switch.pump_acs"/></div>
           <div class="field"><label>Valvola ACS (devia flusso verso ACS)</label><input type="text" v-model="act.valve_acs.entity_id" placeholder="switch.valve_acs"/></div>
           <div class="field"><label>Pompa Puffer (circolazione verso puffer)</label><input type="text" v-model="act.pump_puffer.entity_id" placeholder="switch.pump_puffer"/></div>
           <div class="field"><label>Valvola Puffer (devia flusso verso puffer)</label><input type="text" v-model="act.valve_puffer.entity_id" placeholder="switch.valve_puffer"/></div>

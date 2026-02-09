@@ -25,3 +25,4 @@
 - UI: configurazione attuatori + comandi manuali + stato attuatori.
 - Logging con timestamp in output add-on.
 - Etichette attuatori piu chiare (descrizione funzione).
+- Etichetta pompa ACS specificata come PDC -> ACS.
