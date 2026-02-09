@@ -47,3 +47,4 @@
 - Dry-run: log simulato step/export in "Ultime azioni".
 - Compatibilita load sensori (stringa -> oggetto UI).
 - Blocca refresh mentre si editano i campi (no sparizione input).
+- Polling sospeso con focus globale input/select/textarea.

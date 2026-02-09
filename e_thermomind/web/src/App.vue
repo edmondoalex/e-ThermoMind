@@ -253,6 +253,8 @@ const pollMs = ref(3000)
 const actions = ref([])
 const filterAct = ref('')
 const editingCount = ref(0)
+let focusInHandler = null
+let focusOutHandler = null
 
 const actuatorDefs = [
   { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)', impl: false },
@@ -433,12 +435,31 @@ function stopPolling(){
 }
 function onFocus(){
   editingCount.value += 1
+  stopPolling()
 }
 function onBlur(){
   editingCount.value = Math.max(0, editingCount.value - 1)
+  if (editingCount.value === 0) startPolling()
 }
-onMounted(async()=>{ await loadAll(); startPolling() })
-onBeforeUnmount(()=>{ stopPolling() })
+onMounted(async()=>{ 
+  await loadAll(); 
+  startPolling();
+  focusInHandler = (e) => {
+    const tag = e.target?.tagName
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') onFocus()
+  }
+  focusOutHandler = (e) => {
+    const tag = e.target?.tagName
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') onBlur()
+  }
+  window.addEventListener('focusin', focusInHandler)
+  window.addEventListener('focusout', focusOutHandler)
+})
+onBeforeUnmount(()=>{ 
+  stopPolling();
+  if (focusInHandler) window.removeEventListener('focusin', focusInHandler)
+  if (focusOutHandler) window.removeEventListener('focusout', focusOutHandler)
+})
 </script>
 
 <style>
