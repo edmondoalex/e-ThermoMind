@@ -58,3 +58,4 @@
 - Toggle moduli anche in Admin (7 moduli).
 - Dry-run: log simulato completo per moduli (stati ON/OFF/DISABLED) + flag volano->puffer.
 - Moduli UI: evidenziazione ON con fondo rosso trasparente.
+- PROJECT_LOG aggiornato con snapshot 2026-02-09.

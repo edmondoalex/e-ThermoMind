@@ -60,6 +60,15 @@ Data export: 2026-02-08 (Europe/Rome)
 - Guardie su `thresholds_w` + formatting output decisioni.
 - WS HA con reconnect/backoff e logging minimo.
 
+## Aggiornamenti 2026-02-09
+- Resistenze volano LIVE con off-delay, runtime mode UI (dry-run/live) e log azioni.
+- Mapping completo attuatori R1–R30 + indicatori logica/presenza e icone HA.
+- Moduli togglable in User/Admin con PIN opzionale.
+- Export/Import configurazione e pulsanti header; setpoint compatti.
+- Polling UI controllato (stop in Admin / durante editing).
+- Dry-run con log simulati completi (moduli ON/OFF/DISABLED).
+- Moduli ON evidenziati in rosso trasparente.
+
 ## Prossime implementazioni
 - Validazione completa via schema (Pydantic) per `config`/`entities`/`setpoints`.
 - Persistenza configurazione per `runtime.mode` e future azioni live.
