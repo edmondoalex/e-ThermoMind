@@ -38,6 +38,7 @@
 
         <div class="statusline">
           <span class="muted">v{{ status?.version || '-' }}</span>
+          <span class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
           <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
             {{ status?.ha_connected ? 'Online' : 'Offline' }}
           </span>
@@ -54,6 +55,24 @@
           <hr />
           <div class="row"><strong>Carica riserva:</strong> {{ d.computed.charge_buffer }} (step {{ d.computed.resistance_step }}/3)</div>
           <div class="muted">{{ d.computed.charge_reason }}</div>
+        </div>
+
+        <div v-if="act" class="card inner">
+          <div class="row"><strong>Resistenze volano</strong></div>
+          <div class="row3">
+            <div class="kpi">
+              <div class="k">R22</div>
+              <div class="v"><span :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)">●</span></div>
+            </div>
+            <div class="kpi">
+              <div class="k">R23</div>
+              <div class="v"><span :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)">●</span></div>
+            </div>
+            <div class="kpi">
+              <div class="k">R24</div>
+              <div class="v"><span :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)">●</span></div>
+            </div>
+          </div>
         </div>
 
         <div class="actions">
