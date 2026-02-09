@@ -26,3 +26,4 @@
 - Logging con timestamp in output add-on.
 - Etichette attuatori piu chiare (descrizione funzione).
 - Etichetta pompa ACS specificata come PDC -> ACS.
+- UI attuatori completa con canali R1-R30 (mapping manuale in Admin).

@@ -90,15 +90,10 @@
 
         <div v-if="act" class="form">
           <h3 class="section">Attuatori Home Assistant</h3>
-          <div class="field"><label>Pompa ACS (PDC -> ACS)</label><input type="text" v-model="act.pump_acs.entity_id" placeholder="switch.pump_acs"/></div>
-          <div class="field"><label>Valvola ACS (devia flusso verso ACS)</label><input type="text" v-model="act.valve_acs.entity_id" placeholder="switch.valve_acs"/></div>
-          <div class="field"><label>Pompa Puffer (circolazione verso puffer)</label><input type="text" v-model="act.pump_puffer.entity_id" placeholder="switch.pump_puffer"/></div>
-          <div class="field"><label>Valvola Puffer (devia flusso verso puffer)</label><input type="text" v-model="act.valve_puffer.entity_id" placeholder="switch.valve_puffer"/></div>
-          <div class="field"><label>Pompa Volano (circolazione verso volano)</label><input type="text" v-model="act.pump_volano.entity_id" placeholder="switch.pump_volano"/></div>
-          <div class="field"><label>Valvola Volano (devia flusso verso volano)</label><input type="text" v-model="act.valve_volano.entity_id" placeholder="switch.valve_volano"/></div>
-          <div class="field"><label>Resistenza 1</label><input type="text" v-model="act.resistance_1.entity_id" placeholder="switch.resistance_1"/></div>
-          <div class="field"><label>Resistenza 2</label><input type="text" v-model="act.resistance_2.entity_id" placeholder="switch.resistance_2"/></div>
-          <div class="field"><label>Resistenza 3</label><input type="text" v-model="act.resistance_3.entity_id" placeholder="switch.resistance_3"/></div>
+          <div v-for="item in actuatorDefs" :key="item.key" class="field">
+            <label>{{ item.label }}</label>
+            <input type="text" v-model="act[item.key].entity_id" :placeholder="`switch.${item.key}`"/>
+          </div>
           <div class="actions">
             <button class="ghost" @click="saveActuators">Salva attuatori</button>
           </div>
@@ -106,35 +101,10 @@
 
         <div v-if="act" class="form">
           <h3 class="section">Comandi manuali</h3>
-          <div class="row3">
-            <button class="ghost" @click="doAct(act.pump_acs.entity_id, 'on')">Pompa ACS ON</button>
-            <button class="ghost" @click="doAct(act.pump_acs.entity_id, 'off')">Pompa ACS OFF</button>
-            <div class="muted">{{ act.pump_acs.state || '-' }}</div>
-          </div>
-          <div class="row3">
-            <button class="ghost" @click="doAct(act.pump_puffer.entity_id, 'on')">Pompa Puffer ON</button>
-            <button class="ghost" @click="doAct(act.pump_puffer.entity_id, 'off')">Pompa Puffer OFF</button>
-            <div class="muted">{{ act.pump_puffer.state || '-' }}</div>
-          </div>
-          <div class="row3">
-            <button class="ghost" @click="doAct(act.pump_volano.entity_id, 'on')">Pompa Volano ON</button>
-            <button class="ghost" @click="doAct(act.pump_volano.entity_id, 'off')">Pompa Volano OFF</button>
-            <div class="muted">{{ act.pump_volano.state || '-' }}</div>
-          </div>
-          <div class="row3">
-            <button class="ghost" @click="doAct(act.resistance_1.entity_id, 'on')">Resistenza 1 ON</button>
-            <button class="ghost" @click="doAct(act.resistance_1.entity_id, 'off')">Resistenza 1 OFF</button>
-            <div class="muted">{{ act.resistance_1.state || '-' }}</div>
-          </div>
-          <div class="row3">
-            <button class="ghost" @click="doAct(act.resistance_2.entity_id, 'on')">Resistenza 2 ON</button>
-            <button class="ghost" @click="doAct(act.resistance_2.entity_id, 'off')">Resistenza 2 OFF</button>
-            <div class="muted">{{ act.resistance_2.state || '-' }}</div>
-          </div>
-          <div class="row3">
-            <button class="ghost" @click="doAct(act.resistance_3.entity_id, 'on')">Resistenza 3 ON</button>
-            <button class="ghost" @click="doAct(act.resistance_3.entity_id, 'off')">Resistenza 3 OFF</button>
-            <div class="muted">{{ act.resistance_3.state || '-' }}</div>
+          <div v-for="item in actuatorDefs" :key="`cmd-${item.key}`" class="row3">
+            <button class="ghost" @click="doAct(act[item.key].entity_id, 'on')">{{ item.label }} ON</button>
+            <button class="ghost" @click="doAct(act[item.key].entity_id, 'off')">{{ item.label }} OFF</button>
+            <div class="muted">{{ act[item.key].state || '-' }}</div>
           </div>
         </div>
 
@@ -159,6 +129,39 @@ const status = ref(null)
 let pollTimer = null
 const lastUpdate = ref(null)
 const pollMs = ref(3000)
+
+const actuatorDefs = [
+  { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)' },
+  { key: 'r2_valve_comparto_mandata_imp_pt', label: 'R2 Valvola Comparto Mandata Imp PT (riscaldamento)' },
+  { key: 'r3_valve_comparto_mandata_imp_m1p', label: 'R3 Valvola Comparto Mandata Imp M+1P (riscaldamento)' },
+  { key: 'r4_valve_impianto_da_puffer', label: 'R4 Valvola Impianto da Puffer' },
+  { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC' },
+  { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS' },
+  { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer' },
+  { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp' },
+  { key: 'r9_valve_solare_normal_funz', label: 'R9 Valvola Solare Normal Funz' },
+  { key: 'r10_valve_solare_precedenza_acs', label: 'R10 Valvola Solare Precedenza ACS' },
+  { key: 'r11_pump_mandata_laboratorio', label: 'R11 Pompa Mandata Laboratorio' },
+  { key: 'r12_pump_mandata_piani', label: 'R12 Pompa Mandata Piani' },
+  { key: 'r13_pump_pdc_to_acs_puffer', label: 'R13 Pompa PDC -> ACS/Puffer' },
+  { key: 'r14_pump_puffer_to_acs', label: 'R14 Pompa Puffer -> ACS' },
+  { key: 'r15_pump_caldaia_legna', label: 'R15 Pompa Caldaia Legna -> Puffer' },
+  { key: 'r16_cmd_miscelatrice_alza', label: 'R16 CMD Miscelatrice ALZA' },
+  { key: 'r17_cmd_miscelatrice_abbassa', label: 'R17 CMD Miscelatrice ABBASSA' },
+  { key: 'r18_valve_ritorno_solare_basso', label: 'R18 Valvola Ritorno Solare Basso' },
+  { key: 'r19_valve_ritorno_solare_alto', label: 'R19 Valvola Ritorno Solare Alto' },
+  { key: 'r20_ta_caldaia_legna', label: 'R20 TA Caldaia Legna' },
+  { key: 'r21_libero', label: 'R21 Libero' },
+  { key: 'r22_resistenza_1_volano_pdc', label: 'R22 Resistenza 1 Volano PDC' },
+  { key: 'r23_resistenza_2_volano_pdc', label: 'R23 Resistenza 2 Volano PDC' },
+  { key: 'r24_resistenza_3_volano_pdc', label: 'R24 Resistenza 3 Volano PDC' },
+  { key: 'r25_comparto_generale_pdc', label: 'R25 Comparto Generale PDC' },
+  { key: 'r26_comparto_pdc1_avvio', label: 'R26 Comparto PDC 1 Avvio' },
+  { key: 'r27_comparto_pdc2_avvio', label: 'R27 Comparto PDC 2 Avvio' },
+  { key: 'r28_scarico_antigelo_mandata_pdc', label: 'R28 Scarico Antigelo Mandata PDC' },
+  { key: 'r29_scarico_antigelo_ritorno_pdc', label: 'R29 Scarico Antigelo Ritorno PDC' },
+  { key: 'r30_alimentazione_caldaia_legna', label: 'R30 Alimentazione Caldaia Legna' }
+]
 
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
