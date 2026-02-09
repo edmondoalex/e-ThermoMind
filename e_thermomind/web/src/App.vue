@@ -121,9 +121,12 @@
         <div v-if="act" class="form">
           <h3 class="section">Comandi manuali</h3>
           <div v-for="item in actuatorDefs" :key="`cmd-${item.key}`" class="row3">
-            <button class="ghost" @click="doAct(act[item.key].entity_id, 'on')">{{ item.label }} ON</button>
-            <button class="ghost" @click="doAct(act[item.key].entity_id, 'off')">{{ item.label }} OFF</button>
-            <div class="muted">{{ act[item.key].state || '-' }}</div>
+            <button class="ghost toggle" @click="toggleAct(item.key)">
+              <span class="mdi">{{ mdiIcon(act?.[item.key]?.attributes?.icon) }}</span>
+              {{ item.label }}: {{ stateLabel(act?.[item.key]?.state) }}
+            </button>
+            <div class="muted">{{ act?.[item.key]?.entity_id || '-' }}</div>
+            <div class="muted">{{ act?.[item.key]?.state || '-' }}</div>
           </div>
         </div>
 
@@ -229,6 +232,22 @@ async function doAct(entity_id, action){
   await fetch('/api/actuate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entity_id, action})})
   await loadActuators()
 }
+function stateLabel(state){
+  if (state === 'on') return 'ON'
+  if (state === 'off') return 'OFF'
+  return state || '-'
+}
+function toggleAct(key){
+  const ent = act.value?.[key]
+  if (!ent?.entity_id) return
+  const action = ent.state === 'on' ? 'off' : 'on'
+  doAct(ent.entity_id, action)
+}
+function mdiIcon(icon){
+  if (!icon || typeof icon !== 'string') return ''
+  if (icon.startsWith('mdi:')) return icon
+  return icon
+}
 async function loadAll(){
   await load()
   await loadEntities()
@@ -284,4 +303,6 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .pop{display:inline-block;margin-right:6px}
 .pop-ok{color:#22c55e}
 .pop-no{color:#64748b}
+.toggle{justify-content:flex-start;gap:8px}
+.mdi{font-family:monospace}
 </style>

@@ -31,3 +31,4 @@
 - Pallino verde/rosso per gestito/non gestito.
 - Fix salvataggio attuatori (salva solo entity_id).
 - Indicatore popolato/non popolato per entita e attuatori in Admin.
+- Comandi manuali con toggle singolo e stato (icona da HA attributes).

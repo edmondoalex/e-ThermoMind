@@ -126,12 +126,14 @@ async def get_actuators():
     states = {}
     for k, eid in act.items():
         if eid:
+            st = ha.states.get(eid, {})
             states[k] = {
                 "entity_id": eid,
-                "state": ha.states.get(eid, {}).get("state")
+                "state": st.get("state"),
+                "attributes": st.get("attributes", {})
             }
         else:
-            states[k] = {"entity_id": None, "state": None}
+            states[k] = {"entity_id": None, "state": None, "attributes": {}}
     return JSONResponse(states)
 
 @app.post("/api/actuators")
