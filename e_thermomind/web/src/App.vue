@@ -293,6 +293,34 @@
             <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/></div>
             <div class="field"><label>Δ Start Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_start_c"/></div>
             <div class="field"><label>Δ Hold Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_hold_c"/></div>
+            <div class="field">
+              <label>Sequenza Volano → ACS (valvola + pompa)</label>
+              <div class="row2">
+                <div class="mini-field">
+                  <span class="mini-label">Start (s)</span>
+                  <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_start_s"/>
+                </div>
+                <div class="mini-field">
+                  <span class="mini-label">Stop (s)</span>
+                  <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_stop_s"/>
+                </div>
+              </div>
+              <div class="help">Prima apre la valvola, poi parte la pompa. In stop: valvola OFF, pompa OFF con ritardo.</div>
+            </div>
+            <div class="field">
+              <label>Sequenza Volano → Puffer (valvola + pompa)</label>
+              <div class="row2">
+                <div class="mini-field">
+                  <span class="mini-label">Start (s)</span>
+                  <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_start_s"/>
+                </div>
+                <div class="mini-field">
+                  <span class="mini-label">Stop (s)</span>
+                  <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_stop_s"/>
+                </div>
+              </div>
+              <div class="help">Valvola ON → ritardo → pompa ON. In stop: valvola OFF → ritardo → pompa OFF.</div>
+            </div>
           </div>
 
           <div class="set-section">
@@ -313,37 +341,6 @@
             </div>
           </div>
 
-          <div class="set-section">
-            <div class="section-title">Sequenze Volano</div>
-            <div class="field">
-              <label>Volano → ACS (valvola + pompa)</label>
-              <div class="row2">
-                <div class="mini-field">
-                  <span class="mini-label">Start (s)</span>
-                  <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_start_s"/>
-                </div>
-                <div class="mini-field">
-                  <span class="mini-label">Stop (s)</span>
-                  <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_stop_s"/>
-                </div>
-              </div>
-              <div class="help">Prima apre la valvola, poi parte la pompa. In stop: valvola OFF, pompa OFF con ritardo.</div>
-            </div>
-            <div class="field">
-              <label>Volano → Puffer (valvola + pompa)</label>
-              <div class="row2">
-                <div class="mini-field">
-                  <span class="mini-label">Start (s)</span>
-                  <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_start_s"/>
-                </div>
-                <div class="mini-field">
-                  <span class="mini-label">Stop (s)</span>
-                  <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_stop_s"/>
-                </div>
-              </div>
-              <div class="help">Valvola ON → ritardo → pompa ON. In stop: valvola OFF → ritardo → pompa OFF.</div>
-            </div>
-          </div>
         </div>
 
         <div class="form">
