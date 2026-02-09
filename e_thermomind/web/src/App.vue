@@ -193,25 +193,25 @@
               <rect x="720" y="270" width="220" height="80" rx="14" class="node"/>
               <text x="830" y="310" text-anchor="middle" class="node-label">PDC</text>
 
-              <!-- SOLARE -> ACS -->
-              <path d="M280 85 H340 V345 H280" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
+              <!-- SOLARE -> ACS (linea dedicata) -->
+              <path d="M280 85 H330 V345 H280" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
               <!-- PUFFER -> VOLANO -->
               <path d="M280 225 H390" class="flow-line" :class="flowPufferToVolano ? 'flow-on' : ''"/>
               <!-- PUFFER -> ACS -->
-              <path d="M280 345 H340" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
+              <path d="M280 345 H330" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
               <!-- VOLANO -> RESISTENZE -->
               <path d="M610 235 H720" class="flow-line" :class="flowChargeVolano ? 'flow-on' : ''"/>
               <path d="M610 235 H720" class="flow-line dashed" :class="flowChargeVolano ? 'flow-on' : ''"/>
               <!-- VOLANO -> ACS -->
-              <path d="M390 260 H340 V345 H280" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
+              <path d="M390 260 H330 V345 H280" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
               <!-- VOLANO -> PUFFER -->
-              <path d="M390 215 H340 V225 H280" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
+              <path d="M390 215 H330 V225 H280" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
               <!-- PDC -> VOLANO -->
               <path d="M720 310 H610" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
 
-              <circle cx="340" cy="85" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
-              <circle cx="340" cy="225" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
-              <circle cx="340" cy="345" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
+              <circle cx="330" cy="85" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
+              <circle cx="330" cy="225" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
+              <circle cx="330" cy="345" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
               <circle cx="390" cy="260" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
               <circle cx="610" cy="235" r="6" class="dot" :class="flowChargeVolano ? 'dot-on' : ''"/>
               <circle cx="720" cy="310" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
