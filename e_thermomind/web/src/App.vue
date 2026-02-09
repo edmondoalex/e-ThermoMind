@@ -192,7 +192,7 @@
             <div class="kpi" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
-                Pompa PDC/Volano
+                R13 Pompa PDC → ACS/Puffer
               </div>
             </div>
             <div class="kpi">
