@@ -889,6 +889,9 @@ details.form summary{cursor:pointer;list-style:none}
   linear-gradient(180deg, rgba(6,10,16,.85), rgba(6,10,16,.55));
   box-shadow: inset 0 0 50px rgba(0,0,0,.55)}
 .diagram-photo{
+  padding:0;
+  aspect-ratio:1347/864;
+  min-height:360px;
   background-position:center center;
   background-repeat:no-repeat;
   background-size:contain;
@@ -896,10 +899,10 @@ details.form summary{cursor:pointer;list-style:none}
 }
 .diagram-overlay{
   width:100%;
-  height:auto;
+  height:100%;
   display:block;
   position:absolute;
-  inset:16px;
+  inset:0;
   pointer-events:none;
 }
 .pulse{
