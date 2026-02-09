@@ -230,8 +230,22 @@
           <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/></div>
           <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/></div>
           <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/></div>
-          <div class="field"><label>Valvola→Pompa start (s)</label><input type="number" step="1" v-model.number="sp.timers.valve_to_pump_start_s"/></div>
-          <div class="field"><label>Valvola→Pompa stop (s)</label><input type="number" step="1" v-model.number="sp.timers.valve_to_pump_stop_s"/></div>
+          <div class="field">
+            <label>Sequenza Volano → ACS (valvola + pompa)</label>
+            <div class="row3">
+              <input type="number" step="1" v-model.number="sp.timers.valve_to_pump_start_s" placeholder="Start (s)"/>
+              <input type="number" step="1" v-model.number="sp.timers.valve_to_pump_stop_s" placeholder="Stop (s)"/>
+            </div>
+            <div class="help">Prima apre la valvola, poi parte la pompa. In stop: valvola OFF, pompa OFF con ritardo.</div>
+          </div>
+          <div class="field">
+            <label>Sequenza Volano → Puffer (valvola + pompa)</label>
+            <div class="row3">
+              <input type="number" step="1" v-model.number="sp.timers.valve_to_pump_start_s" placeholder="Start (s)"/>
+              <input type="number" step="1" v-model.number="sp.timers.valve_to_pump_stop_s" placeholder="Stop (s)"/>
+            </div>
+            <div class="help">Stessa sequenza della linea Volano→ACS (attualmente condivisa).</div>
+          </div>
           <div class="field">
             <label>Soglie export (W) [1/2/3]</label>
             <div class="row3">
@@ -763,6 +777,7 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .form{display:grid;gap:10px;margin-top:10px}
 .section{margin:6px 0 2px 0;font-size:14px;color:var(--text)}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.help{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.3}
 .field select{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0e1522;color:var(--text)}
 .field input{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0e1522;color:var(--text)}
 .upload{display:inline-flex;align-items:center;gap:8px}
@@ -776,6 +791,7 @@ details.form summary{cursor:pointer;list-style:none}
 .setpoint-grid .section{grid-column:1/-1}
 @media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row3 input::placeholder{color:rgba(159,176,199,.6)}
 .statusline{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;flex-wrap:wrap}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:#0b1f1c;background:var(--accent)}
