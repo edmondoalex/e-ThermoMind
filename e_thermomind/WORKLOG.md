@@ -34,3 +34,4 @@
 - Comandi manuali con toggle singolo e stato (icona da HA attributes).
 - Toggle colorato per stato e icone MDI reali.
 - MDI font locale bundlato via npm (icone HA visibili anche senza CDN).
+- Icone toggle colorate per stato e aggiornamento attuatori via polling.

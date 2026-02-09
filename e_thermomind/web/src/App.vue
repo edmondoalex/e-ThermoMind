@@ -121,9 +121,9 @@
         <div v-if="act" class="form">
           <h3 class="section">Comandi manuali</h3>
           <div v-for="item in actuatorDefs" :key="`cmd-${item.key}`" class="row3">
-            <button class="ghost toggle" :class="stateClass(act?.[item.key]?.state)" @click="toggleAct(item.key)">
-              <i v-if="mdiClass(act?.[item.key]?.attributes?.icon)" :class="mdiClass(act?.[item.key]?.attributes?.icon)"></i>
-              <span v-else class="mdi-fallback">⏻</span>
+            <button class="ghost toggle" @click="toggleAct(item.key)">
+              <i v-if="mdiClass(act?.[item.key]?.attributes?.icon)" :class="[mdiClass(act?.[item.key]?.attributes?.icon), stateClass(act?.[item.key]?.state)]"></i>
+              <span v-else class="mdi-fallback" :class="stateClass(act?.[item.key]?.state)">⏻</span>
               {{ item.label }}
             </button>
             <div class="muted">{{ act?.[item.key]?.entity_id || '-' }}</div>
@@ -194,6 +194,7 @@ const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
 async function refresh(){
   const r = await fetch('/api/decision'); d.value = await r.json()
   const s = await fetch('/api/status'); status.value = await s.json()
+  await loadActuators()
   lastUpdate.value = new Date()
 }
 async function load(){
@@ -314,7 +315,7 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .pop-no{color:#64748b}
 .toggle{justify-content:flex-start;gap:8px}
 .mdi-fallback{font-size:14px;opacity:0.8}
-.state-on{border-color:#22c55e;color:#0b1f1c;background:#22c55e}
-.state-off{border-color:#64748b;color:#e2e8f0;background:#1f2937}
-.state-unknown{border-color:#ef4444;color:#fee2e2;background:#3f1d1d}
+.state-on{color:#ef4444}
+.state-off{color:#94a3b8}
+.state-unknown{color:#f59e0b}
 </style>
