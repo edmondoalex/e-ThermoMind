@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import time
 from pathlib import Path
@@ -30,7 +31,7 @@ ws_task: asyncio.Task | None = None
 off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
 action_log: list[str] = []
 entity_icon_map: dict[str, str] = {}
-action_log: list[str] = []
+last_dry_run_signature: str | None = None
 
 @app.on_event("startup")
 async def on_startup():
@@ -103,6 +104,80 @@ def _get_state(entity_id: str | None) -> str | None:
         return None
     return ha.states.get(entity_id, {}).get("state")
 
+def _log_dry_run(decision_data: dict) -> None:
+    global last_dry_run_signature
+    step = int(decision_data.get("computed", {}).get("resistance_step", 0))
+    export_w = decision_data.get("inputs", {}).get("grid_export_w")
+    dest = decision_data.get("computed", {}).get("dest")
+    source = decision_data.get("computed", {}).get("source_to_acs")
+    act = cfg.get("actuators", {})
+    flags = decision_data.get("computed", {}).get("flags", {})
+    modules = cfg.get("modules_enabled", {})
+    r22 = act.get("r22_resistenza_1_volano_pdc")
+    r23 = act.get("r23_resistenza_2_volano_pdc")
+    r24 = act.get("r24_resistenza_3_volano_pdc")
+    want = {
+        "R22": "ON" if step >= 1 else "OFF",
+        "R23": "ON" if step >= 2 else "OFF",
+        "R24": "ON" if step >= 3 else "OFF",
+    }
+    notes: list[str] = []
+    def _mod_state(key: str, active: bool, has_logic: bool = True) -> str:
+        if not modules.get(key, True):
+            return "DISABLED"
+        if not has_logic:
+            notes.append(key)
+            return "OFF"
+        return "ON" if active else "OFF"
+
+    res_module = "DISABLED"
+    if modules.get("resistenze_volano", True):
+        res_module = f"STEP {step}"
+
+    module_states = {
+        "resistenze_volano": res_module,
+        "volano_to_acs": _mod_state("volano_to_acs", bool(flags.get("volano_to_acs"))),
+        "volano_to_puffer": _mod_state("volano_to_puffer", bool(flags.get("volano_to_puffer"))),
+        "puffer_to_acs": _mod_state("puffer_to_acs", bool(flags.get("puffer_to_acs"))),
+        "solare": _mod_state("solare", bool(flags.get("solare_to_acs"))),
+        "miscelatrice": _mod_state("miscelatrice", False, has_logic=False),
+        "pdc": _mod_state("pdc", False, has_logic=False)
+    }
+
+    signature = json.dumps({
+        "dest": dest,
+        "source": source,
+        "export_w": export_w,
+        "step": step,
+        "modules": module_states,
+        "want": want
+    }, sort_keys=True)
+    if signature == last_dry_run_signature:
+        return
+    last_dry_run_signature = signature
+    action_log.append(
+        f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN dest={dest} source={source} "
+        f"export={export_w}W step={step}"
+    )
+    action_log.append(
+        f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN would set "
+        f"{want['R22']} {r22} | {want['R23']} {r23} | {want['R24']} {r24}"
+    )
+    action_log.append(
+        f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN modules "
+        f"resistenze_volano={module_states['resistenze_volano']}, "
+        f"volano_to_acs={module_states['volano_to_acs']}, "
+        f"volano_to_puffer={module_states['volano_to_puffer']}, "
+        f"puffer_to_acs={module_states['puffer_to_acs']}, "
+        f"solare={module_states['solare']}, "
+        f"miscelatrice={module_states['miscelatrice']}, "
+        f"pdc={module_states['pdc']}"
+    )
+    if notes:
+        action_log.append(
+            f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN note: no logic for {', '.join(notes)}"
+        )
+
 async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
     if not entity_id or not ha.enabled:
         return
@@ -116,9 +191,7 @@ async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
 
 async def _apply_resistance_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
-        step = int(decision_data.get("computed", {}).get("resistance_step", 0))
-        export_w = decision_data.get("inputs", {}).get("grid_export_w")
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN step={step} export={export_w}")
+        _log_dry_run(decision_data)
         return
     if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
         return

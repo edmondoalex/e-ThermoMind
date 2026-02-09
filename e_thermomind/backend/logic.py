@@ -20,7 +20,8 @@ def _thr_list(value: Any) -> list[float]:
 
 _LAST: Dict[str, Any] = {
     "dest": None,
-    "source_to_acs": None
+    "source_to_acs": None,
+    "volano_to_puffer": False
 }
 
 def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float | None = None) -> Dict[str, Any]:
@@ -81,6 +82,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     last_source = _LAST.get("source_to_acs")
     delta_start = float(vol_cfg.get("delta_to_acs_start_c", 5.0))
     delta_hold = float(vol_cfg.get("delta_to_acs_hold_c", 2.5))
+    puf_delta_start = float(vol_cfg.get("delta_to_puffer_start_c", 5.0))
+    puf_delta_hold = float(vol_cfg.get("delta_to_puffer_hold_c", 2.5))
+    last_vol_to_puf = bool(_LAST.get("volano_to_puffer"))
 
     if dest == "ACS" and (t_sol >= t_acs + solar_delta_on) and (not acs_max_hit):
         source_to_acs = "SOLAR"
@@ -97,6 +101,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     else:
         source_to_acs = "OFF"
         source_reason = "Nessuna sorgente selezionata (v0.1)."
+
+    volano_to_puffer = False
+    if dest == "PUFFER" and (not vol_max_hit):
+        if t_volano >= t_puffer + puf_delta_start:
+            volano_to_puffer = True
+        elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold):
+            volano_to_puffer = True
 
     step = 0
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
@@ -120,6 +131,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     _LAST["dest"] = dest
     _LAST["source_to_acs"] = source_to_acs
+    _LAST["volano_to_puffer"] = volano_to_puffer
 
     return {
         "inputs": {
@@ -140,6 +152,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "charge_buffer": charge_buffer,
             "charge_reason": charge_reason,
             "resistance_step": step,
+            "flags": {
+                "volano_to_acs": source_to_acs == "VOLANO",
+                "puffer_to_acs": source_to_acs == "PUFFER",
+                "solare_to_acs": source_to_acs == "SOLAR",
+                "volano_to_puffer": volano_to_puffer
+            },
             "state": {
                 "last_dest": _LAST.get("dest"),
                 "last_source_to_acs": _LAST.get("source_to_acs")
