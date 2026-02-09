@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -26,6 +27,7 @@ app = FastAPI(title="e-ThermoMind", version=APP_VERSION)
 ha = HAClient()
 cfg = load_config()
 ws_task: asyncio.Task | None = None
+off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
 
 @app.on_event("startup")
 async def on_startup():
@@ -70,7 +72,58 @@ async def set_config(payload: dict):
 
 @app.get("/api/decision")
 async def decision():
-    return JSONResponse(compute_decision(cfg, ha.states))
+    data = compute_decision(cfg, ha.states)
+    await _apply_resistance_live(data)
+    return JSONResponse(data)
+
+def _get_state(entity_id: str | None) -> str | None:
+    if not entity_id:
+        return None
+    return ha.states.get(entity_id, {}).get("state")
+
+async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
+    if not entity_id or not ha.enabled:
+        return
+    current = _get_state(entity_id)
+    if want_on and current != "on":
+        await ha.call_service(entity_id, "on")
+    if (not want_on) and current != "off":
+        await ha.call_service(entity_id, "off")
+
+async def _apply_resistance_live(decision_data: dict) -> None:
+    if cfg.get("runtime", {}).get("mode") != "live":
+        return
+    act = cfg.get("actuators", {})
+    r22 = act.get("r22_resistenza_1_volano_pdc")
+    r23 = act.get("r23_resistenza_2_volano_pdc")
+    r24 = act.get("r24_resistenza_3_volano_pdc")
+    step = int(decision_data.get("computed", {}).get("resistance_step", 0))
+
+    desired = {
+        "r22": step >= 1,
+        "r23": step >= 2,
+        "r24": step >= 3,
+    }
+
+    off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
+    now = time.time()
+
+    for key, ent in (("r22", r22), ("r23", r23), ("r24", r24)):
+        want_on = desired[key]
+        current = _get_state(ent)
+        if want_on:
+            off_deadline[key] = 0.0
+            if current != "on":
+                await _set_resistance(ent, True)
+        else:
+            if current == "on":
+                if off_deadline[key] == 0.0:
+                    off_deadline[key] = now + off_delay
+                elif now >= off_deadline[key]:
+                    await _set_resistance(ent, False)
+                    off_deadline[key] = 0.0
+            else:
+                off_deadline[key] = 0.0
 
 @app.get("/api/status")
 async def status():

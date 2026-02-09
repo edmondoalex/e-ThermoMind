@@ -36,3 +36,4 @@
 - MDI font locale bundlato via npm (icone HA visibili anche senza CDN).
 - Icone toggle colorate per stato e aggiornamento attuatori via polling.
 - Selettore runtime mode (dry-run/live) con conferma.
+- LIVE resistenze volano con off-delay (R22/R23/R24).

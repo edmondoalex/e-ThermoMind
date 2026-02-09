@@ -23,7 +23,7 @@ _LAST: Dict[str, Any] = {
     "source_to_acs": None
 }
 
-def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any]) -> Dict[str, Any]:
+def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float | None = None) -> Dict[str, Any]:
     ent = cfg.get("entities", {})
     acs_cfg = cfg.get("acs", {})
     puf_cfg = cfg.get("puffer", {})
