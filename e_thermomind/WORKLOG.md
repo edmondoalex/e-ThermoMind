@@ -68,3 +68,4 @@
 - WebSocket UI: aggiornamento live per User/Admin senza sovrascrivere input in editing.
 - Resistenze: aggiunti sensori potenza/energia + switch generale in logica (ON con step).
 - Input mapping: blocco overwrite da WS quando campi sono "dirty" finché non salvi.
+- WS: applica logica live resistenze durante snapshot (general OFF quando step=0).

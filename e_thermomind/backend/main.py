@@ -108,8 +108,9 @@ def _get_state(entity_id: str | None) -> str | None:
         return None
     return ha.states.get(entity_id, {}).get("state")
 
-def _build_snapshot() -> dict:
+async def _build_snapshot() -> dict:
     data = compute_decision(cfg, ha.states)
+    await _apply_resistance_live(data)
     act = {}
     for k, eid in (cfg.get("actuators", {}) or {}).items():
         if eid:
@@ -356,7 +357,7 @@ async def ws_endpoint(websocket: WebSocket):
     ws_clients.add(websocket)
     try:
         while True:
-            await websocket.send_json(_build_snapshot())
+            await websocket.send_json(await _build_snapshot())
             await asyncio.sleep(2)
     except WebSocketDisconnect:
         pass
