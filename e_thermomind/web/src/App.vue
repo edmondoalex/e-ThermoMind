@@ -156,55 +156,60 @@
           <summary class="section">Sensori da e-manager</summary>
           <div class="field">
             <label>
-              <span class="presence">●</span>
+              <span class="presence" :class="isFilled(ent?.t_acs?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
               T_ACS
             </label>
             <input type="text"
+                   :class="isFilled(ent?.t_acs?.entity_id) ? 'input-ok' : ''"
                    v-model="ent.t_acs.entity_id"
                    placeholder="sensor.acs_temp"
                    @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="field">
             <label>
-              <span class="presence">●</span>
+              <span class="presence" :class="isFilled(ent?.t_puffer?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
               T_Puffer
             </label>
             <input type="text"
+                   :class="isFilled(ent?.t_puffer?.entity_id) ? 'input-ok' : ''"
                    v-model="ent.t_puffer.entity_id"
                    placeholder="sensor.puffer_temp"
                    @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="field">
             <label>
-              <span class="presence">●</span>
+              <span class="presence" :class="isFilled(ent?.t_volano?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
               T_Volano
             </label>
             <input type="text"
+                   :class="isFilled(ent?.t_volano?.entity_id) ? 'input-ok' : ''"
                    v-model="ent.t_volano.entity_id"
                    placeholder="sensor.volano_temp"
                    @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="field">
             <label>
-              <span class="presence">●</span>
+              <span class="presence" :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i>
               T_Solare mandata
             </label>
             <input type="text"
+                   :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'input-ok' : ''"
                    v-model="ent.t_solare_mandata.entity_id"
                    placeholder="sensor.solar_mandata"
                    @focus="onFocus" @blur="onBlur"/>
           </div>
           <div class="field">
             <label>
-              <span class="presence">●</span>
+              <span class="presence" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
               Export rete (W)
             </label>
             <input type="text"
+                   :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
                    v-model="ent.grid_export_w.entity_id"
                    placeholder="sensor.grid_export_w"
                    @focus="onFocus" @blur="onBlur"/>
@@ -223,10 +228,11 @@
           <div v-for="item in filteredActuators" :key="item.key" class="field">
             <label>
               <span class="impl" :class="item.impl ? 'impl-ok' : 'impl-no'">●</span>
-              <span class="presence">●</span>
+              <span class="presence" :class="isFilled(act?.[item.key]?.entity_id) ? 'presence-ok' : 'presence-no'">●</span>
               {{ item.label }}
             </label>
             <input type="text"
+                   :class="isFilled(act?.[item.key]?.entity_id) ? 'input-ok' : ''"
                    v-model="act[item.key].entity_id"
                    :placeholder="`switch.${item.key}`"
                    @focus="onFocus" @blur="onBlur"/>
@@ -529,7 +535,10 @@ details.form summary{cursor:pointer;list-style:none}
 .impl{display:inline-block;margin-right:6px}
 .impl-ok{color:#22c55e}
 .impl-no{color:#ef4444}
-.presence{display:inline-block;margin-right:6px;color:#ef4444}
+.presence{display:inline-block;margin-right:6px}
+.presence-ok{color:#22c55e}
+.presence-no{color:#ef4444}
+.input-ok{border-color:#22c55e}
 .toggle{justify-content:flex-start;gap:8px}
 .mdi-fallback{font-size:14px;opacity:0.8}
 .state-on{color:#ef4444}
