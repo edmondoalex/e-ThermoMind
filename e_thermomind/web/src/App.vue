@@ -170,49 +170,53 @@
                   <stop offset="0%" stop-color="#4fd1c5" stop-opacity="0.4"/>
                   <stop offset="100%" stop-color="#4fd1c5" stop-opacity="1"/>
                 </linearGradient>
+                <linearGradient id="nodeGrad" x1="0" x2="1">
+                  <stop offset="0%" stop-color="#0c1423"/>
+                  <stop offset="100%" stop-color="#111c30"/>
+                </linearGradient>
               </defs>
-              <rect x="60" y="40" width="220" height="70" rx="14" class="node" :class="flowSolarToAcs ? 'node-active' : ''"/>
-              <text x="170" y="90" text-anchor="middle" class="node-label">SOLARE</text>
+              <rect x="60" y="40" width="200" height="70" rx="14" class="node" :class="flowSolarToAcs ? 'node-active' : ''"/>
+              <text x="160" y="90" text-anchor="middle" class="node-label">SOLARE</text>
 
-              <rect x="60" y="170" width="220" height="90" rx="14" class="node" :class="(flowPufferToAcs || flowVolanoToPuffer || flowPufferToVolano) ? 'node-active' : ''"/>
-              <text x="170" y="205" text-anchor="middle" class="node-label">PUFFER</text>
-              <text x="170" y="235" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
+              <rect x="60" y="170" width="200" height="90" rx="14" class="node" :class="(flowPufferToAcs || flowVolanoToPuffer || flowPufferToVolano) ? 'node-active' : ''"/>
+              <text x="160" y="205" text-anchor="middle" class="node-label">PUFFER</text>
+              <text x="160" y="235" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
 
-              <rect x="390" y="300" width="220" height="70" rx="14" class="node" :class="(flowSolarToAcs || flowPufferToAcs || flowVolanoToAcs) ? 'node-active' : ''"/>
-              <text x="500" y="340" text-anchor="middle" class="node-label">ACS</text>
-              <text x="500" y="360" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_acs) }}</text>
+              <rect x="60" y="310" width="200" height="70" rx="14" class="node" :class="(flowSolarToAcs || flowPufferToAcs || flowVolanoToAcs) ? 'node-active' : ''"/>
+              <text x="160" y="350" text-anchor="middle" class="node-label">ACS</text>
+              <text x="160" y="370" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_acs) }}</text>
 
-              <rect x="390" y="170" width="220" height="90" rx="14" class="node" :class="(flowVolanoToAcs || flowVolanoToPuffer || flowChargeVolano || flowPdcToVolano || flowPufferToVolano) ? 'node-active' : ''"/>
+              <rect x="400" y="170" width="200" height="90" rx="14" class="node" :class="(flowVolanoToAcs || flowVolanoToPuffer || flowChargeVolano || flowPdcToVolano || flowPufferToVolano) ? 'node-active' : ''"/>
               <text x="500" y="205" text-anchor="middle" class="node-label">VOLANO</text>
               <text x="500" y="235" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_volano) }}</text>
 
-              <rect x="720" y="140" width="220" height="80" rx="14" class="node" :class="flowChargeVolano ? 'node-active' : ''"/>
-              <text x="830" y="180" text-anchor="middle" class="node-label">RESISTENZE</text>
-              <text x="830" y="202" text-anchor="middle" class="node-sub">step {{ d.computed?.resistance_step || 0 }}/3</text>
+              <rect x="740" y="80" width="200" height="80" rx="14" class="node" :class="flowChargeVolano ? 'node-active' : ''"/>
+              <text x="840" y="120" text-anchor="middle" class="node-label">RESISTENZE</text>
+              <text x="840" y="145" text-anchor="middle" class="node-sub">step {{ d.computed?.resistance_step || 0 }}/3</text>
 
-              <rect x="720" y="300" width="220" height="80" rx="14" class="node" :class="flowPdcToVolano ? 'node-active' : ''"/>
-              <text x="830" y="340" text-anchor="middle" class="node-label">PDC</text>
+              <rect x="740" y="300" width="200" height="80" rx="14" class="node" :class="flowPdcToVolano ? 'node-active' : ''"/>
+              <text x="840" y="340" text-anchor="middle" class="node-label">PDC</text>
 
               <!-- SOLARE -> ACS -->
-              <path d="M280 75 H320 V335 H390" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
+              <path d="M260 75 H320 V330 H260" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
               <!-- PUFFER <-> VOLANO -->
-              <path d="M280 215 H390" class="flow-line" :class="(flowVolanoToPuffer || flowPufferToVolano) ? 'flow-on' : ''"/>
+              <path d="M260 215 H400" class="flow-line" :class="(flowVolanoToPuffer || flowPufferToVolano) ? 'flow-on' : ''"/>
               <!-- PUFFER -> ACS -->
-              <path d="M280 215 H350 V335 H390" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
+              <path d="M160 260 V310" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
               <!-- VOLANO -> ACS -->
-              <path d="M500 260 V300" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
+              <path d="M500 260 V345 H260" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
               <!-- VOLANO -> RESISTENZE -->
-              <path d="M610 215 H670 V180 H720" class="flow-line" :class="flowChargeVolano ? 'flow-on' : ''"/>
-              <path d="M610 215 H670 V180 H720" class="flow-line dashed" :class="flowChargeVolano ? 'flow-on' : ''"/>
+              <path d="M600 215 H720 V120 H740" class="flow-line" :class="flowChargeVolano ? 'flow-on' : ''"/>
+              <path d="M600 215 H720 V120 H740" class="flow-line dashed" :class="flowChargeVolano ? 'flow-on' : ''"/>
               <!-- PDC -> VOLANO -->
-              <path d="M720 340 H670 V215 H610" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
+              <path d="M740 340 H680 V230 H600" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
 
               <circle cx="320" cy="75" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
               <circle cx="330" cy="215" r="6" class="dot" :class="(flowVolanoToPuffer || flowPufferToVolano) ? 'dot-on' : ''"/>
-              <circle cx="350" cy="335" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
-              <circle cx="500" cy="280" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
-              <circle cx="670" cy="180" r="6" class="dot" :class="flowChargeVolano ? 'dot-on' : ''"/>
-              <circle cx="670" cy="215" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
+              <circle cx="160" cy="290" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
+              <circle cx="500" cy="305" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
+              <circle cx="720" cy="120" r="6" class="dot" :class="flowChargeVolano ? 'dot-on' : ''"/>
+              <circle cx="680" cy="230" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
             </svg>
           </div>
           <div class="legend">
@@ -905,15 +909,17 @@ details.form summary{cursor:pointer;list-style:none}
 .input-on{background:rgba(239,68,68,.12) !important}
 .dot-toggle{border:0;background:transparent;cursor:pointer;padding:0 2px}
 .diagram{margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:16px;background:
-  radial-gradient(900px 320px at 70% 10%, rgba(87,227,214,.10), transparent),
-  radial-gradient(800px 300px at 20% 90%, rgba(122,167,255,.10), transparent),
-  linear-gradient(180deg, rgba(9,14,22,.65), rgba(9,14,22,.35))}
+  radial-gradient(900px 320px at 70% 10%, rgba(87,227,214,.12), transparent),
+  radial-gradient(800px 300px at 20% 90%, rgba(122,167,255,.12), transparent),
+  repeating-linear-gradient(135deg, rgba(255,255,255,.015), rgba(255,255,255,.015) 12px, transparent 12px, transparent 24px),
+  linear-gradient(180deg, rgba(9,14,22,.72), rgba(9,14,22,.35));
+  box-shadow: inset 0 0 40px rgba(0,0,0,.35)}
 .diagram svg{width:100%;height:auto}
-.node{fill:#0d1421;stroke:rgba(255,255,255,.08);filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))}
-.node-active{stroke:rgba(87,227,214,.6);box-shadow:none;filter:drop-shadow(0 0 10px rgba(87,227,214,.45))}
+.node{fill:url(#nodeGrad);stroke:rgba(255,255,255,.08);filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))}
+.node-active{stroke:rgba(87,227,214,.75);filter:drop-shadow(0 0 12px rgba(87,227,214,.55))}
 .node-label{fill:#e6edf3;font-size:13px;font-weight:700}
 .node-sub{fill:#9aa4b2;font-size:11px}
-.flow-line{stroke:#2b3447;stroke-width:6;fill:none;stroke-linecap:round}
+.flow-line{stroke:#2b3447;stroke-width:5.5;fill:none;stroke-linecap:round}
 .flow-line.dashed{stroke-dasharray:10 8;opacity:.6}
 .flow-on{stroke:url(#flowGrad);filter:drop-shadow(0 0 6px rgba(87,227,214,.45));animation:flow 1.6s linear infinite}
 .dot{fill:#2b3447}
