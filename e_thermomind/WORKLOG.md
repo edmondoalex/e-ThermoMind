@@ -50,3 +50,4 @@
 - Polling sospeso con focus globale input/select/textarea.
 - Polling sospeso in tab Admin (no overwrite mentre si compila).
 - Indicatore presenza: pallino rosso fisso + bordo verde se entity presente.
+- Rimosso bordo verde; pallino rosso unico a sinistra.
