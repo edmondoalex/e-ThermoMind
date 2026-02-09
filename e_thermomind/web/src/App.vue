@@ -136,50 +136,50 @@
           <div class="row"><strong>Schema impianto (live)</strong></div>
           <div class="muted">Flussi evidenziati in tempo reale.</div>
           <div class="diagram">
-            <svg viewBox="0 0 900 360" role="img" aria-label="Schema impianto e-ThermoMind">
+            <svg viewBox="0 0 980 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Schema impianto e-ThermoMind">
               <defs>
                 <linearGradient id="flowGrad" x1="0" x2="1">
                   <stop offset="0%" stop-color="#4fd1c5" stop-opacity="0.4"/>
                   <stop offset="100%" stop-color="#4fd1c5" stop-opacity="1"/>
                 </linearGradient>
               </defs>
-              <rect x="30" y="30" width="180" height="70" rx="14" class="node"/>
-              <text x="120" y="70" text-anchor="middle" class="node-label">SOLARE</text>
+              <rect x="40" y="40" width="220" height="70" rx="14" class="node"/>
+              <text x="150" y="80" text-anchor="middle" class="node-label">SOLARE</text>
 
-              <rect x="30" y="140" width="180" height="90" rx="14" class="node"/>
-              <text x="120" y="175" text-anchor="middle" class="node-label">PUFFER</text>
-              <text x="120" y="205" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
+              <rect x="40" y="170" width="220" height="90" rx="14" class="node"/>
+              <text x="150" y="205" text-anchor="middle" class="node-label">PUFFER</text>
+              <text x="150" y="235" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_puffer) }}</text>
 
-              <rect x="30" y="260" width="180" height="70" rx="14" class="node"/>
-              <text x="120" y="300" text-anchor="middle" class="node-label">ACS</text>
-              <text x="120" y="320" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_acs) }}</text>
+              <rect x="40" y="310" width="220" height="70" rx="14" class="node"/>
+              <text x="150" y="350" text-anchor="middle" class="node-label">ACS</text>
+              <text x="150" y="370" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_acs) }}</text>
 
-              <rect x="360" y="160" width="180" height="90" rx="14" class="node"/>
-              <text x="450" y="195" text-anchor="middle" class="node-label">VOLANO</text>
-              <text x="450" y="225" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_volano) }}</text>
+              <rect x="380" y="180" width="220" height="100" rx="14" class="node"/>
+              <text x="490" y="220" text-anchor="middle" class="node-label">VOLANO</text>
+              <text x="490" y="250" text-anchor="middle" class="node-sub">{{ fmtTemp(d.inputs?.t_volano) }}</text>
 
-              <rect x="690" y="90" width="180" height="70" rx="14" class="node"/>
-              <text x="780" y="130" text-anchor="middle" class="node-label">RESISTENZE</text>
-              <text x="780" y="150" text-anchor="middle" class="node-sub">step {{ d.computed?.resistance_step || 0 }}/3</text>
+              <rect x="720" y="120" width="220" height="80" rx="14" class="node"/>
+              <text x="830" y="160" text-anchor="middle" class="node-label">RESISTENZE</text>
+              <text x="830" y="182" text-anchor="middle" class="node-sub">step {{ d.computed?.resistance_step || 0 }}/3</text>
 
-              <rect x="690" y="220" width="180" height="70" rx="14" class="node"/>
-              <text x="780" y="260" text-anchor="middle" class="node-label">PDC</text>
+              <rect x="720" y="260" width="220" height="80" rx="14" class="node"/>
+              <text x="830" y="300" text-anchor="middle" class="node-label">PDC</text>
 
-              <path d="M210 65 H330" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
-              <path d="M210 185 H360" class="flow-line" :class="flowPufferToVolano ? 'flow-on' : ''"/>
-              <path d="M210 295 H330" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
-              <path d="M540 205 H690" class="flow-line" :class="flowChargeVolano ? 'flow-on' : ''"/>
-              <path d="M540 205 H690" class="flow-line dashed" :class="flowChargeVolano ? 'flow-on' : ''"/>
-              <path d="M360 205 V295 H210" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
-              <path d="M360 205 V185 H210" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
-              <path d="M690 255 H540" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
+              <path d="M260 75 H340" class="flow-line" :class="flowSolarToAcs ? 'flow-on' : ''"/>
+              <path d="M260 215 H380" class="flow-line" :class="flowPufferToVolano ? 'flow-on' : ''"/>
+              <path d="M260 345 H340" class="flow-line" :class="flowPufferToAcs ? 'flow-on' : ''"/>
+              <path d="M600 230 H720" class="flow-line" :class="flowChargeVolano ? 'flow-on' : ''"/>
+              <path d="M600 230 H720" class="flow-line dashed" :class="flowChargeVolano ? 'flow-on' : ''"/>
+              <path d="M380 260 L340 345 H260" class="flow-line" :class="flowVolanoToAcs ? 'flow-on' : ''"/>
+              <path d="M380 200 L340 215 H260" class="flow-line" :class="flowVolanoToPuffer ? 'flow-on' : ''"/>
+              <path d="M720 300 H600" class="flow-line" :class="flowPdcToVolano ? 'flow-on' : ''"/>
 
-              <circle cx="330" cy="65" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
-              <circle cx="330" cy="295" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
-              <circle cx="330" cy="185" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
-              <circle cx="360" cy="295" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
-              <circle cx="540" cy="205" r="6" class="dot" :class="flowChargeVolano ? 'dot-on' : ''"/>
-              <circle cx="690" cy="255" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
+              <circle cx="340" cy="75" r="6" class="dot" :class="flowSolarToAcs ? 'dot-on' : ''"/>
+              <circle cx="340" cy="215" r="6" class="dot" :class="flowVolanoToPuffer ? 'dot-on' : ''"/>
+              <circle cx="340" cy="345" r="6" class="dot" :class="flowPufferToAcs ? 'dot-on' : ''"/>
+              <circle cx="380" cy="260" r="6" class="dot" :class="flowVolanoToAcs ? 'dot-on' : ''"/>
+              <circle cx="600" cy="230" r="6" class="dot" :class="flowChargeVolano ? 'dot-on' : ''"/>
+              <circle cx="720" cy="300" r="6" class="dot" :class="flowPdcToVolano ? 'dot-on' : ''"/>
             </svg>
           </div>
           <div class="legend">
@@ -230,6 +230,8 @@
           <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/></div>
           <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/></div>
           <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/></div>
+          <div class="field"><label>Valvola→Pompa start (s)</label><input type="number" step="1" v-model.number="sp.timers.valve_to_pump_start_s"/></div>
+          <div class="field"><label>Valvola→Pompa stop (s)</label><input type="number" step="1" v-model.number="sp.timers.valve_to_pump_stop_s"/></div>
           <div class="field">
             <label>Soglie export (W) [1/2/3]</label>
             <div class="row3">
@@ -534,6 +536,9 @@ async function loadModules(){
 }
 async function load(){
   const r = await fetch('/api/setpoints'); sp.value = await r.json()
+  if (!sp.value?.timers) {
+    sp.value.timers = { valve_to_pump_start_s: 5, valve_to_pump_stop_s: 2 }
+  }
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }
@@ -736,36 +741,36 @@ watch(tab, (val) => {
 </script>
 
 <style>
-:root{--bg:#0b0f14;--card:#121826;--muted:#9aa4b2;--text:#e6edf3;--accent:#4fd1c5;--border:rgba(255,255,255,.08)}
-*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:var(--bg);color:var(--text)}
+:root{--bg:#0a0f16;--card:#0f1624;--muted:#9fb0c7;--text:#e8f1ff;--accent:#57e3d6;--accent-2:#7aa7ff;--border:rgba(255,255,255,.08)}
+*{box-sizing:border-box} body{margin:0;font-family:"Space Grotesk","IBM Plex Sans","Trebuchet MS",sans-serif;background:radial-gradient(1200px 500px at 20% -10%, rgba(122,167,255,.12), transparent),radial-gradient(900px 500px at 80% 0%, rgba(87,227,214,.10), transparent),var(--bg);color:var(--text)}
 .wrap{min-height:100vh;display:flex;flex-direction:column}
-.top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,15,20,.9);backdrop-filter:blur(10px)}
-.brand{font-weight:700}
-.tabs button{background:transparent;color:var(--text);border:1px solid var(--border);padding:8px 10px;border-radius:12px;margin-left:8px;cursor:pointer}
+.top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,15,22,.85);backdrop-filter:blur(14px)}
+.brand{font-weight:800;letter-spacing:.3px}
+.tabs button{background:transparent;color:var(--text);border:1px solid var(--border);padding:8px 12px;border-radius:12px;margin-left:8px;cursor:pointer}
 .tabs button.active{border-color:var(--accent);color:var(--accent)}
-.main{padding:16px;max-width:980px;margin:0 auto;width:100%}
-.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.main{padding:18px;max-width:1100px;margin:0 auto;width:100%}
+.card{background:linear-gradient(180deg, rgba(15,22,36,.98), rgba(12,18,29,.98));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.28)}
 .card.inner{margin-top:14px}
 .muted{color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 @media(min-width:760px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.kpi{border:1px solid var(--border);border-radius:14px;padding:10px}
+.kpi{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}
 .k{font-size:12px;color:var(--muted)} .v{font-size:18px;font-weight:700;margin-top:2px}
 .actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
-button{background:var(--accent);border:none;color:#002b2a;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
+button{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
 button.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
 hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .form{display:grid;gap:10px;margin-top:10px}
 .section{margin:6px 0 2px 0;font-size:14px;color:var(--text)}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-.field select{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0f1522;color:var(--text)}
-.field input{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0f1522;color:var(--text)}
+.field select{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0e1522;color:var(--text)}
+.field input{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:#0e1522;color:var(--text)}
 .upload{display:inline-flex;align-items:center;gap:8px}
 .upload input{display:none}
 details.form{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(0,0,0,.08)}
 details.form summary{cursor:pointer;list-style:none}
 .top-actions{display:flex;gap:8px;align-items:center}
-.action-btn{background:var(--accent);border:none;color:#002b2a;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
+.action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
 .action-btn.upload{display:inline-flex;align-items:center;gap:6px}
 .setpoint-grid{display:grid;gap:10px}
 .setpoint-grid .section{grid-column:1/-1}
@@ -784,7 +789,7 @@ details.form summary{cursor:pointer;list-style:none}
 .logic-ok{color:#22c55e}
 .logic-no{color:#ef4444}
 .toggle{justify-content:flex-start;gap:8px}
-.toggle.on{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.15);box-shadow:0 0 0 1px rgba(239,68,68,.08) inset}
+.toggle.on{border-color:rgba(239,68,68,.45);background:linear-gradient(135deg, rgba(239,68,68,.22), rgba(239,68,68,.08));box-shadow:0 0 0 1px rgba(239,68,68,.08) inset}
 .toggle.off{border-color:var(--border);background:transparent}
 .mdi-fallback{font-size:14px;opacity:0.8}
 .state-on{color:#ef4444}
@@ -794,16 +799,19 @@ details.form summary{cursor:pointer;list-style:none}
 .kpi.state-off{border-color:var(--border)}
 .input-on{background:rgba(239,68,68,.12) !important}
 .dot-toggle{border:0;background:transparent;cursor:pointer;padding:0 2px}
-.diagram{margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:12px;background:radial-gradient(800px 300px at 60% 20%, rgba(79,209,197,.08), transparent)}
+.diagram{margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:14px;background:
+  radial-gradient(900px 320px at 70% 10%, rgba(87,227,214,.10), transparent),
+  radial-gradient(800px 300px at 20% 90%, rgba(122,167,255,.10), transparent),
+  repeating-linear-gradient(135deg, rgba(255,255,255,.02), rgba(255,255,255,.02) 10px, transparent 10px, transparent 20px)}
 .diagram svg{width:100%;height:auto}
-.node{fill:#0f1522;stroke:rgba(255,255,255,.08)}
+.node{fill:#0d1421;stroke:rgba(255,255,255,.08)}
 .node-label{fill:#e6edf3;font-size:13px;font-weight:700}
 .node-sub{fill:#9aa4b2;font-size:11px}
 .flow-line{stroke:#2b3447;stroke-width:6;fill:none;stroke-linecap:round}
 .flow-line.dashed{stroke-dasharray:10 8;opacity:.6}
-.flow-on{stroke:url(#flowGrad);filter:drop-shadow(0 0 6px rgba(79,209,197,.45));animation:flow 1.6s linear infinite}
+.flow-on{stroke:url(#flowGrad);filter:drop-shadow(0 0 6px rgba(87,227,214,.45));animation:flow 1.6s linear infinite}
 .dot{fill:#2b3447}
-.dot-on{fill:#4fd1c5;filter:drop-shadow(0 0 6px rgba(79,209,197,.55))}
+.dot-on{fill:#57e3d6;filter:drop-shadow(0 0 6px rgba(87,227,214,.55))}
 .legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
 .legend-item{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
 .legend-dot{width:10px;height:10px;border-radius:999px;background:#2b3447}

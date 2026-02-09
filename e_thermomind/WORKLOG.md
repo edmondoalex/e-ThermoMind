@@ -73,3 +73,7 @@
 - User: schema impianto animato con flussi live.
 - Resistenze: generale segue step (ON se step>0, OFF se step=0).
 - Runtime mode: cambio live/dry-run salvato automaticamente.
+## 2026-02-09
+- UI: restyle completo e schema impianto più pulito e leggibile.
+- Backend: attuazione live per Volano→ACS, Volano→Puffer e Puffer→ACS con sequenze valvola→pompa.
+- Config: aggiunti timer `valve_to_pump_start_s` e `valve_to_pump_stop_s` con campi UI.

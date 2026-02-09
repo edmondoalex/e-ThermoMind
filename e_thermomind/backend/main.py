@@ -34,6 +34,8 @@ entity_icon_map: dict[str, str] = {}
 last_dry_run_signature: str | None = None
 recent_ui_actuations: dict[str, float] = {}
 pending_auto_off: dict[str, asyncio.Task] = {}
+transfer_tasks: dict[str, asyncio.Task] = {}
+transfer_desired: dict[str, bool] = {}
 ws_clients: set[WebSocket] = set()
 
 @app.on_event("startup")
@@ -101,6 +103,7 @@ async def set_config(payload: dict):
 async def decision():
     data = compute_decision(cfg, ha.states)
     await _apply_resistance_live(data)
+    await _apply_transfer_live(data)
     return JSONResponse(data)
 
 def _get_state(entity_id: str | None) -> str | None:
@@ -111,6 +114,7 @@ def _get_state(entity_id: str | None) -> str | None:
 async def _build_snapshot() -> dict:
     data = compute_decision(cfg, ha.states)
     await _apply_resistance_live(data)
+    await _apply_transfer_live(data)
     act = {}
     for k, eid in (cfg.get("actuators", {}) or {}).items():
         if eid:
@@ -296,6 +300,67 @@ async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
         await ha.call_service(entity_id, "off")
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
 
+async def _set_actuator(entity_id: str | None, want_on: bool) -> None:
+    if not entity_id or not ha.enabled:
+        return
+    current = _get_state(entity_id)
+    if want_on and current != "on":
+        await ha.call_service(entity_id, "on")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id}")
+    if (not want_on) and current != "off":
+        await ha.call_service(entity_id, "off")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
+
+def _cancel_transfer_task(key: str) -> None:
+    task = transfer_tasks.pop(key, None)
+    if task:
+        task.cancel()
+
+async def _delayed_actuate(task_key: str, entity_id: str, want_on: bool, delay_s: float) -> None:
+    try:
+        await asyncio.sleep(max(0.0, delay_s))
+        await _set_actuator(entity_id, want_on)
+    finally:
+        transfer_tasks.pop(task_key, None)
+
+async def _set_transfer_pair(name: str, valve_eid: str | None, pump_eid: str | None, want_on: bool) -> None:
+    timers = cfg.get("timers", {})
+    start_s = float(timers.get("valve_to_pump_start_s", 5))
+    stop_s = float(timers.get("valve_to_pump_stop_s", 2))
+    prev = transfer_desired.get(name)
+    transfer_desired[name] = want_on
+    if want_on:
+        await _set_actuator(valve_eid, True)
+        if pump_eid and _get_state(pump_eid) != "on":
+            if prev is False:
+                _cancel_transfer_task(f"{name}:pump_off")
+            if f"{name}:pump_on" not in transfer_tasks:
+                transfer_tasks[f"{name}:pump_on"] = asyncio.create_task(
+                    _delayed_actuate(f"{name}:pump_on", pump_eid, True, start_s)
+                )
+    else:
+        await _set_actuator(valve_eid, False)
+        if pump_eid and _get_state(pump_eid) != "off":
+            if prev is True:
+                _cancel_transfer_task(f"{name}:pump_on")
+            if f"{name}:pump_off" not in transfer_tasks:
+                transfer_tasks[f"{name}:pump_off"] = asyncio.create_task(
+                    _delayed_actuate(f"{name}:pump_off", pump_eid, False, stop_s)
+                )
+
+async def _set_pump_only(name: str, pump_eid: str | None, want_on: bool) -> None:
+    prev = transfer_desired.get(name)
+    transfer_desired[name] = want_on
+    if prev is not None and prev == want_on:
+        await _set_actuator(pump_eid, want_on)
+        return
+    _cancel_transfer_task(f"{name}:pump_on")
+    _cancel_transfer_task(f"{name}:pump_off")
+    await _set_actuator(pump_eid, want_on)
+
+async def _set_valve_only(valve_eid: str | None, want_on: bool) -> None:
+    await _set_actuator(valve_eid, want_on)
+
 async def _apply_resistance_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
         _log_dry_run(decision_data)
@@ -339,6 +404,44 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         want_general = step >= 1
         await _set_resistance(rg, want_general)
 
+async def _apply_transfer_live(decision_data: dict) -> None:
+    if cfg.get("runtime", {}).get("mode") != "live":
+        return
+    if not ha.enabled:
+        return
+
+    flags = decision_data.get("computed", {}).get("flags", {})
+    modules = cfg.get("modules_enabled", {})
+    act = cfg.get("actuators", {})
+
+    want_vol_acs = bool(flags.get("volano_to_acs")) and modules.get("volano_to_acs", True)
+    want_vol_puf = bool(flags.get("volano_to_puffer")) and modules.get("volano_to_puffer", True)
+    want_puf_acs = bool(flags.get("puffer_to_acs")) and modules.get("puffer_to_acs", True)
+
+    if want_vol_acs:
+        want_vol_puf = False
+        want_puf_acs = False
+
+    r6 = act.get("r6_valve_pdc_to_integrazione_acs")
+    r7 = act.get("r7_valve_pdc_to_integrazione_puffer")
+    r13 = act.get("r13_pump_pdc_to_acs_puffer")
+
+    if want_vol_acs:
+        await _set_transfer_pair("volano_to_acs", r6, r13, True)
+        await _set_valve_only(r7, False)
+    elif want_vol_puf:
+        await _set_valve_only(r6, False)
+        await _set_transfer_pair("volano_to_puffer", r7, r13, True)
+    else:
+        await _set_transfer_pair("volano_to_acs", r6, r13, False)
+        await _set_transfer_pair("volano_to_puffer", r7, r13, False)
+
+    await _set_pump_only(
+        "puffer_to_acs",
+        act.get("r14_pump_puffer_to_acs"),
+        want_puf_acs,
+    )
+
 @app.get("/api/status")
 async def status():
     return JSONResponse({
@@ -380,6 +483,7 @@ async def get_setpoints():
         "puffer": cfg.get("puffer", {}),
         "volano": cfg.get("volano", {}),
         "resistance": cfg.get("resistance", {}),
+        "timers": cfg.get("timers", {}),
         "runtime": cfg.get("runtime", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),
         "security": cfg.get("security", {}),

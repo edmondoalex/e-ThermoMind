@@ -76,6 +76,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "thresholds_w": [1100, 2200, 3300],
     "invert_export_sign": False
   },
+  "timers": {
+    "valve_to_pump_start_s": 5,
+    "valve_to_pump_stop_s": 2
+  },
   "runtime": {
     "mode": "dry-run",
     "ui_poll_ms": 3000
@@ -169,6 +173,13 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
                 res["thresholds_w"], cfg["resistance"]["thresholds_w"]
             )
 
+    timers = raw.get("timers", {})
+    if isinstance(timers, dict):
+        if "valve_to_pump_start_s" in timers:
+            cfg["timers"]["valve_to_pump_start_s"] = int(_float(timers["valve_to_pump_start_s"], cfg["timers"]["valve_to_pump_start_s"]))
+        if "valve_to_pump_stop_s" in timers:
+            cfg["timers"]["valve_to_pump_stop_s"] = int(_float(timers["valve_to_pump_stop_s"], cfg["timers"]["valve_to_pump_stop_s"]))
+
     runtime = raw.get("runtime", {})
     if isinstance(runtime, dict):
         if isinstance(runtime.get("mode"), str):
@@ -210,6 +221,12 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["resistance"]["thresholds_w"] = _float_list_3(
                 res["thresholds_w"], cfg["resistance"]["thresholds_w"]
             )
+    timers = payload.get("timers", {})
+    if isinstance(timers, dict):
+        if "valve_to_pump_start_s" in timers:
+            cfg["timers"]["valve_to_pump_start_s"] = int(_float(timers["valve_to_pump_start_s"], cfg["timers"]["valve_to_pump_start_s"]))
+        if "valve_to_pump_stop_s" in timers:
+            cfg["timers"]["valve_to_pump_stop_s"] = int(_float(timers["valve_to_pump_stop_s"], cfg["timers"]["valve_to_pump_stop_s"]))
     runtime = payload.get("runtime", {})
     if isinstance(runtime, dict):
         if "ui_poll_ms" in runtime:
