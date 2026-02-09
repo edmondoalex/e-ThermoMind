@@ -32,7 +32,11 @@ async def on_startup():
     global cfg
     global ws_task
     cfg = load_config()
-    logging.basicConfig(level=str(cfg.get("log_level", "info")).upper())
+    logging.basicConfig(
+        level=str(cfg.get("log_level", "info")).upper(),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     await ha.start()
     if ha.enabled:
         ws_task = asyncio.create_task(ha.run())
