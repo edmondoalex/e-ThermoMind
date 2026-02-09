@@ -160,6 +160,48 @@
           </div>
         </div>
 
+        <div v-if="act" class="card inner">
+          <div class="row"><strong>Volano → ACS</strong></div>
+          <div class="row3">
+            <div class="kpi">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
+                T_Volano
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_volano) }}</div>
+            </div>
+            <div class="kpi">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
+                T_ACS
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_acs) }}</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Delta (Volano - ACS)</div>
+              <div class="v">{{ fmtDelta(d?.inputs?.t_volano, d?.inputs?.t_acs) }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi" :class="stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r6_valve_pdc_to_integrazione_acs?.attributes?.icon)" :class="[mdiClass(act?.r6_valve_pdc_to_integrazione_acs?.attributes?.icon), stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)]"></i>
+                Valvola PDC → ACS
+              </div>
+            </div>
+            <div class="kpi" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
+                Pompa PDC/Volano
+              </div>
+            </div>
+            <div class="kpi">
+              <div class="k">Stato logica</div>
+              <div class="v">{{ d?.computed?.flags?.volano_to_acs ? 'ATTIVO' : 'STOP' }}</div>
+            </div>
+          </div>
+        </div>
+
         <div v-if="d" class="card inner">
           <div class="row"><strong>Schema impianto (live)</strong></div>
           <div class="muted">Flussi evidenziati in tempo reale.</div>
@@ -518,6 +560,12 @@ const filteredActuators = computed(() => {
 })
 
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
+const fmtDelta = (a, b) => {
+  const da = Number(a)
+  const db = Number(b)
+  if (!Number.isFinite(da) || !Number.isFinite(db)) return 'n/d'
+  return `${(da - db).toFixed(1)}C`
+}
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
 const fmtEntity = (e) => {
   if (!e) return 'n/d'
