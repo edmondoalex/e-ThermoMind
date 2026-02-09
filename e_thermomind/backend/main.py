@@ -336,10 +336,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
                 off_deadline[key] = 0.0
 
     if rg:
-        current_r22 = _get_state(r22) == "on" if r22 else False
-        current_r23 = _get_state(r23) == "on" if r23 else False
-        current_r24 = _get_state(r24) == "on" if r24 else False
-        want_general = bool(desired["r22"] or desired["r23"] or desired["r24"] or current_r22 or current_r23 or current_r24)
+        want_general = step >= 1
         await _set_resistance(rg, want_general)
 
 @app.get("/api/status")

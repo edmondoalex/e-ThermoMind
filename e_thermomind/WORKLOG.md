@@ -71,3 +71,5 @@
 - WS: applica logica live resistenze durante snapshot (general OFF quando step=0).
 - User: aggiunto R0 generale resistenze nella card Resistenze volano.
 - User: schema impianto animato con flussi live.
+- Resistenze: generale segue step (ON se step>0, OFF se step=0).
+- Runtime mode: cambio live/dry-run salvato automaticamente.

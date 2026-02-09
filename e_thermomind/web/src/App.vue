@@ -570,12 +570,13 @@ async function toggleModule(key){
   if (!res.ok) return
   await loadModules()
 }
-function confirmMode(){
+async function confirmMode(){
   if (!sp.value?.runtime?.mode) return
   if (sp.value.runtime.mode === 'live') {
     const ok = window.confirm('Passare a LIVE? Questo abilita comandi reali agli attuatori.')
     if (!ok) sp.value.runtime.mode = 'dry-run'
   }
+  await save()
 }
 async function loadEntities(){
   if (editingCount.value > 0) return

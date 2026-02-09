@@ -73,6 +73,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Guard HA: se un attuatore viene acceso da HA mentre il modulo è attivo, auto spegnimento dopo 2s (UI esclusa).
 - UI: WebSocket per aggiornamenti live su User/Admin con merge che non sovrascrive input in editing.
 - Resistenze: switch generale + sensori potenza/energia integrati (UI + logica).
+- Runtime mode persistente (salvataggio automatico) + generale resistenze segue step.
 
 ## Prossime implementazioni
 - Validazione completa via schema (Pydantic) per `config`/`entities`/`setpoints`.
