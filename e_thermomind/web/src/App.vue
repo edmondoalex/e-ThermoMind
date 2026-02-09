@@ -317,17 +317,29 @@
             <div class="section-title">Sequenze Volano</div>
             <div class="field">
               <label>Volano → ACS (valvola + pompa)</label>
-              <div class="row3">
-                <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_start_s" placeholder="Start (s)"/>
-                <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_stop_s" placeholder="Stop (s)"/>
+              <div class="row2">
+                <div class="mini-field">
+                  <span class="mini-label">Start (s)</span>
+                  <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_start_s"/>
+                </div>
+                <div class="mini-field">
+                  <span class="mini-label">Stop (s)</span>
+                  <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_stop_s"/>
+                </div>
               </div>
               <div class="help">Prima apre la valvola, poi parte la pompa. In stop: valvola OFF, pompa OFF con ritardo.</div>
             </div>
             <div class="field">
               <label>Volano → Puffer (valvola + pompa)</label>
-              <div class="row3">
-                <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_start_s" placeholder="Start (s)"/>
-                <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_stop_s" placeholder="Stop (s)"/>
+              <div class="row2">
+                <div class="mini-field">
+                  <span class="mini-label">Start (s)</span>
+                  <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_start_s"/>
+                </div>
+                <div class="mini-field">
+                  <span class="mini-label">Stop (s)</span>
+                  <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_stop_s"/>
+                </div>
               </div>
               <div class="help">Valvola ON → ritardo → pompa ON. In stop: valvola OFF → ritardo → pompa OFF.</div>
             </div>
@@ -923,6 +935,9 @@ details.form summary{cursor:pointer;list-style:none}
 .set-section .section-title{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row3 input::placeholder{color:rgba(159,176,199,.6)}
+.row2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.mini-field{display:flex;flex-direction:column;gap:6px}
+.mini-label{font-size:11px;color:var(--muted)}
 .chart-grid{display:grid;gap:12px}
 @media(min-width:900px){.chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chart{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}
