@@ -29,6 +29,7 @@ cfg = load_config()
 ws_task: asyncio.Task | None = None
 off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
 action_log: list[str] = []
+entity_icon_map: dict[str, str] = {}
 action_log: list[str] = []
 
 @app.on_event("startup")
@@ -44,6 +45,7 @@ async def on_startup():
     await ha.start()
     if ha.enabled:
         ws_task = asyncio.create_task(ha.run())
+        asyncio.create_task(_refresh_entity_registry_loop())
 
 @app.on_event("shutdown")
 async def on_shutdown():
@@ -51,6 +53,24 @@ async def on_shutdown():
     if ws_task:
         ws_task.cancel()
     await ha.close()
+
+async def _refresh_entity_registry_loop():
+    if not ha.enabled:
+        return
+    while True:
+        try:
+            async with ha._session.get(f"{ha._http_url}/config/entity_registry/list") as r:
+                if r.status == 200:
+                    data = await r.json()
+                    entity_icon_map.clear()
+                    for item in data:
+                        eid = item.get("entity_id")
+                        icon = item.get("icon")
+                        if eid and icon:
+                            entity_icon_map[eid] = icon
+        except Exception:
+            pass
+        await asyncio.sleep(60)
 
 app.mount("/assets", StaticFiles(directory="/app/static/assets"), name="assets")
 
@@ -96,6 +116,9 @@ async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
 
 async def _apply_resistance_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
+        step = int(decision_data.get("computed", {}).get("resistance_step", 0))
+        export_w = decision_data.get("inputs", {}).get("grid_export_w")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN step={step} export={export_w}")
         return
     act = cfg.get("actuators", {})
     r22 = act.get("r22_resistenza_1_volano_pdc")
@@ -179,10 +202,11 @@ async def get_entities():
             out[k] = {
                 "entity_id": eid,
                 "state": st.get("state"),
-                "attributes": st.get("attributes", {})
+                "attributes": st.get("attributes", {}),
+                "icon": entity_icon_map.get(eid)
             }
         else:
-            out[k] = {"entity_id": None, "state": None, "attributes": {}}
+            out[k] = {"entity_id": None, "state": None, "attributes": {}, "icon": None}
     return JSONResponse(out)
 
 @app.post("/api/entities")
@@ -204,10 +228,11 @@ async def get_actuators():
             states[k] = {
                 "entity_id": eid,
                 "state": st.get("state"),
-                "attributes": st.get("attributes", {})
+                "attributes": st.get("attributes", {}),
+                "icon": entity_icon_map.get(eid)
             }
         else:
-            states[k] = {"entity_id": None, "state": None, "attributes": {}}
+            states[k] = {"entity_id": None, "state": None, "attributes": {}, "icon": None}
     return JSONResponse(states)
 
 @app.post("/api/actuators")
