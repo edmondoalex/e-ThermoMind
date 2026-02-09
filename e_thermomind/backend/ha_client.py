@@ -25,13 +25,20 @@ class HAClient:
         if env_token:
             self.token_source = "env"
             return env_token, base_url
-        secret_path = Path("/run/secrets/supervisor_token")
-        if secret_path.exists():
-            try:
-                self.token_source = "secret"
-                return secret_path.read_text(encoding="utf-8").strip(), base_url
-            except Exception:
-                return None, base_url
+        secret_candidates = [
+            Path("/run/secrets/supervisor_token"),
+            Path("/var/run/s6/container_environment/SUPERVISOR_TOKEN"),
+            Path("/run/s6/container_environment/SUPERVISOR_TOKEN"),
+            Path("/var/run/s6/container_environment/HASSIO_TOKEN"),
+            Path("/run/s6/container_environment/HASSIO_TOKEN"),
+        ]
+        for secret_path in secret_candidates:
+            if secret_path.exists():
+                try:
+                    self.token_source = f"secret:{secret_path}"
+                    return secret_path.read_text(encoding="utf-8").strip(), base_url
+                except Exception:
+                    return None, base_url
 
         options_path = Path("/data/options.json")
         if options_path.exists():
