@@ -90,12 +90,12 @@
 
         <div v-if="act" class="form">
           <h3 class="section">Attuatori Home Assistant</h3>
-          <div class="field"><label>Pompa ACS</label><input type="text" v-model="act.pump_acs.entity_id" placeholder="switch.pump_acs"/></div>
-          <div class="field"><label>Valvola ACS</label><input type="text" v-model="act.valve_acs.entity_id" placeholder="switch.valve_acs"/></div>
-          <div class="field"><label>Pompa Puffer</label><input type="text" v-model="act.pump_puffer.entity_id" placeholder="switch.pump_puffer"/></div>
-          <div class="field"><label>Valvola Puffer</label><input type="text" v-model="act.valve_puffer.entity_id" placeholder="switch.valve_puffer"/></div>
-          <div class="field"><label>Pompa Volano</label><input type="text" v-model="act.pump_volano.entity_id" placeholder="switch.pump_volano"/></div>
-          <div class="field"><label>Valvola Volano</label><input type="text" v-model="act.valve_volano.entity_id" placeholder="switch.valve_volano"/></div>
+          <div class="field"><label>Pompa ACS (circolazione verso bollitore ACS)</label><input type="text" v-model="act.pump_acs.entity_id" placeholder="switch.pump_acs"/></div>
+          <div class="field"><label>Valvola ACS (devia flusso verso ACS)</label><input type="text" v-model="act.valve_acs.entity_id" placeholder="switch.valve_acs"/></div>
+          <div class="field"><label>Pompa Puffer (circolazione verso puffer)</label><input type="text" v-model="act.pump_puffer.entity_id" placeholder="switch.pump_puffer"/></div>
+          <div class="field"><label>Valvola Puffer (devia flusso verso puffer)</label><input type="text" v-model="act.valve_puffer.entity_id" placeholder="switch.valve_puffer"/></div>
+          <div class="field"><label>Pompa Volano (circolazione verso volano)</label><input type="text" v-model="act.pump_volano.entity_id" placeholder="switch.pump_volano"/></div>
+          <div class="field"><label>Valvola Volano (devia flusso verso volano)</label><input type="text" v-model="act.valve_volano.entity_id" placeholder="switch.valve_volano"/></div>
           <div class="field"><label>Resistenza 1</label><input type="text" v-model="act.resistance_1.entity_id" placeholder="switch.resistance_1"/></div>
           <div class="field"><label>Resistenza 2</label><input type="text" v-model="act.resistance_2.entity_id" placeholder="switch.resistance_2"/></div>
           <div class="field"><label>Resistenza 3</label><input type="text" v-model="act.resistance_3.entity_id" placeholder="switch.resistance_3"/></div>

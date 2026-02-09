@@ -24,3 +24,4 @@
 - Logica: isteresi ACS, hold VOLANO->ACS e stato last_* in decision.
 - UI: configurazione attuatori + comandi manuali + stato attuatori.
 - Logging con timestamp in output add-on.
+- Etichette attuatori piu chiare (descrizione funzione).
