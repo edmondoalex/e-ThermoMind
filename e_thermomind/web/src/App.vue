@@ -40,6 +40,34 @@
           </div>
         </div>
 
+        <div v-if="d" class="card inner">
+          <div class="row"><strong>Grafico rapido (ultimi ~2-3 min)</strong></div>
+          <div class="chart-grid">
+            <div class="chart">
+              <div class="chart-title">Temperature</div>
+              <svg viewBox="0 0 300 90" role="img" aria-label="Grafico temperature">
+                <polyline :points="sparkPoints(history.t_acs)" class="spark acs"/>
+                <polyline :points="sparkPoints(history.t_puffer)" class="spark puffer"/>
+                <polyline :points="sparkPoints(history.t_volano)" class="spark volano"/>
+              </svg>
+              <div class="legend small">
+                <span class="legend-item"><span class="legend-dot acs"></span> ACS</span>
+                <span class="legend-item"><span class="legend-dot puffer"></span> Puffer</span>
+                <span class="legend-item"><span class="legend-dot volano"></span> Volano</span>
+              </div>
+            </div>
+            <div class="chart">
+              <div class="chart-title">Export (W)</div>
+              <svg viewBox="0 0 300 90" role="img" aria-label="Grafico export rete">
+                <polyline :points="sparkPoints(history.export_w)" class="spark export"/>
+              </svg>
+              <div class="legend small">
+                <span class="legend-item"><span class="legend-dot export"></span> Export rete</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="statusline">
           <span class="muted">v{{ status?.version || '-' }}</span>
           <span class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
@@ -233,18 +261,18 @@
           <div class="field">
             <label>Sequenza Volano → ACS (valvola + pompa)</label>
             <div class="row3">
-              <input type="number" step="1" v-model.number="sp.timers.valve_to_pump_start_s" placeholder="Start (s)"/>
-              <input type="number" step="1" v-model.number="sp.timers.valve_to_pump_stop_s" placeholder="Stop (s)"/>
+              <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_start_s" placeholder="Start (s)"/>
+              <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_stop_s" placeholder="Stop (s)"/>
             </div>
             <div class="help">Prima apre la valvola, poi parte la pompa. In stop: valvola OFF, pompa OFF con ritardo.</div>
           </div>
           <div class="field">
             <label>Sequenza Volano → Puffer (valvola + pompa)</label>
             <div class="row3">
-              <input type="number" step="1" v-model.number="sp.timers.valve_to_pump_start_s" placeholder="Start (s)"/>
-              <input type="number" step="1" v-model.number="sp.timers.valve_to_pump_stop_s" placeholder="Stop (s)"/>
+              <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_start_s" placeholder="Start (s)"/>
+              <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_stop_s" placeholder="Stop (s)"/>
             </div>
-            <div class="help">Stessa sequenza della linea Volano→ACS (attualmente condivisa).</div>
+            <div class="help">Valvola ON → ritardo → pompa ON. In stop: valvola OFF → ritardo → pompa OFF.</div>
           </div>
           <div class="field">
             <label>Soglie export (W) [1/2/3]</label>
@@ -445,6 +473,13 @@ const status = ref(null)
 const lastUpdate = ref(null)
 const pollMs = ref(3000)
 const actions = ref([])
+const history = ref({
+  t_acs: [],
+  t_puffer: [],
+  t_volano: [],
+  export_w: []
+})
+const maxPoints = 60
   const filterAct = ref('')
   const editingCount = ref(0)
   const dirtyEnt = ref({})
@@ -540,6 +575,7 @@ const flowPdcToVolano = computed(() => false)
 async function refresh(){
   if (tab.value === 'admin' || editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
+  updateHistoryFromDecision(d.value)
   const s = await fetch('/api/status'); status.value = await s.json()
   const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
   await loadActuators()
@@ -551,7 +587,12 @@ async function loadModules(){
 async function load(){
   const r = await fetch('/api/setpoints'); sp.value = await r.json()
   if (!sp.value?.timers) {
-    sp.value.timers = { valve_to_pump_start_s: 5, valve_to_pump_stop_s: 2 }
+    sp.value.timers = {
+      volano_to_acs_start_s: 5,
+      volano_to_acs_stop_s: 2,
+      volano_to_puffer_start_s: 5,
+      volano_to_puffer_stop_s: 2
+    }
   }
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
@@ -688,6 +729,7 @@ function connectWS(){
     try { payload = JSON.parse(ev.data) } catch { return }
     if (!payload) return
     d.value = payload.decision || d.value
+    if (payload.decision) updateHistoryFromDecision(payload.decision)
     status.value = payload.status || status.value
     actions.value = payload.actions || actions.value
     modules.value = payload.modules || modules.value
@@ -698,6 +740,34 @@ function connectWS(){
   ws.onclose = () => {
     setTimeout(connectWS, 2000)
   }
+}
+
+function pushHistory(arr, value){
+  const v = Number(value)
+  if (!Number.isFinite(v)) return
+  arr.push(v)
+  if (arr.length > maxPoints) arr.splice(0, arr.length - maxPoints)
+}
+function updateHistoryFromDecision(decision){
+  if (!decision?.inputs) return
+  pushHistory(history.value.t_acs, decision.inputs.t_acs)
+  pushHistory(history.value.t_puffer, decision.inputs.t_puffer)
+  pushHistory(history.value.t_volano, decision.inputs.t_volano)
+  pushHistory(history.value.export_w, decision.inputs.grid_export_w)
+}
+function sparkPoints(values){
+  const w = 300
+  const h = 90
+  const pad = 6
+  if (!values || values.length < 2) return ''
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const span = max - min || 1
+  return values.map((v, i) => {
+    const x = pad + (i / (values.length - 1)) * (w - pad * 2)
+    const y = h - pad - ((v - min) / span) * (h - pad * 2)
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
 }
 async function loadAll(){
   await load()
@@ -792,6 +862,20 @@ details.form summary{cursor:pointer;list-style:none}
 @media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row3 input::placeholder{color:rgba(159,176,199,.6)}
+.chart-grid{display:grid;gap:12px}
+@media(min-width:900px){.chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.chart{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}
+.chart-title{font-size:12px;color:var(--muted);margin-bottom:6px}
+.spark{fill:none;stroke-width:2}
+.spark.acs{stroke:#57e3d6}
+.spark.puffer{stroke:#7aa7ff}
+.spark.volano{stroke:#f59e0b}
+.spark.export{stroke:#ef4444}
+.legend.small{margin-top:6px;gap:10px}
+.legend-dot.acs{background:#57e3d6}
+.legend-dot.puffer{background:#7aa7ff}
+.legend-dot.volano{background:#f59e0b}
+.legend-dot.export{background:#ef4444}
 .statusline{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;flex-wrap:wrap}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:#0b1f1c;background:var(--accent)}

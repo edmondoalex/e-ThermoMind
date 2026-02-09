@@ -77,3 +77,6 @@
 - UI: restyle completo e schema impianto più pulito e leggibile.
 - Backend: attuazione live per Volano→ACS, Volano→Puffer e Puffer→ACS con sequenze valvola→pompa.
 - Config: aggiunti timer `valve_to_pump_start_s` e `valve_to_pump_stop_s` con campi UI.
+- UI: sequenze separate Volano→ACS e Volano→Puffer con nomi logici.
+- Config: timer separati per Volano→ACS e Volano→Puffer (start/stop).
+- User: grafico rapido temperature + export.

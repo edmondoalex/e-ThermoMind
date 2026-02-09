@@ -323,10 +323,14 @@ async def _delayed_actuate(task_key: str, entity_id: str, want_on: bool, delay_s
     finally:
         transfer_tasks.pop(task_key, None)
 
-async def _set_transfer_pair(name: str, valve_eid: str | None, pump_eid: str | None, want_on: bool) -> None:
-    timers = cfg.get("timers", {})
-    start_s = float(timers.get("valve_to_pump_start_s", 5))
-    stop_s = float(timers.get("valve_to_pump_stop_s", 2))
+async def _set_transfer_pair(
+    name: str,
+    valve_eid: str | None,
+    pump_eid: str | None,
+    want_on: bool,
+    start_s: float,
+    stop_s: float,
+) -> None:
     prev = transfer_desired.get(name)
     transfer_desired[name] = want_on
     if want_on:
@@ -426,15 +430,21 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     r7 = act.get("r7_valve_pdc_to_integrazione_puffer")
     r13 = act.get("r13_pump_pdc_to_acs_puffer")
 
+    timers = cfg.get("timers", {})
+    vta_start = float(timers.get("volano_to_acs_start_s", 5))
+    vta_stop = float(timers.get("volano_to_acs_stop_s", 2))
+    vtp_start = float(timers.get("volano_to_puffer_start_s", 5))
+    vtp_stop = float(timers.get("volano_to_puffer_stop_s", 2))
+
     if want_vol_acs:
-        await _set_transfer_pair("volano_to_acs", r6, r13, True)
+        await _set_transfer_pair("volano_to_acs", r6, r13, True, vta_start, vta_stop)
         await _set_valve_only(r7, False)
     elif want_vol_puf:
         await _set_valve_only(r6, False)
-        await _set_transfer_pair("volano_to_puffer", r7, r13, True)
+        await _set_transfer_pair("volano_to_puffer", r7, r13, True, vtp_start, vtp_stop)
     else:
-        await _set_transfer_pair("volano_to_acs", r6, r13, False)
-        await _set_transfer_pair("volano_to_puffer", r7, r13, False)
+        await _set_transfer_pair("volano_to_acs", r6, r13, False, vta_start, vta_stop)
+        await _set_transfer_pair("volano_to_puffer", r7, r13, False, vtp_start, vtp_stop)
 
     await _set_pump_only(
         "puffer_to_acs",

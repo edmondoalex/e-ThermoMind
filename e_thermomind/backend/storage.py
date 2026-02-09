@@ -77,8 +77,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "invert_export_sign": False
   },
   "timers": {
-    "valve_to_pump_start_s": 5,
-    "valve_to_pump_stop_s": 2
+    "volano_to_acs_start_s": 5,
+    "volano_to_acs_stop_s": 2,
+    "volano_to_puffer_start_s": 5,
+    "volano_to_puffer_stop_s": 2
   },
   "runtime": {
     "mode": "dry-run",
@@ -175,10 +177,23 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
 
     timers = raw.get("timers", {})
     if isinstance(timers, dict):
-        if "valve_to_pump_start_s" in timers:
-            cfg["timers"]["valve_to_pump_start_s"] = int(_float(timers["valve_to_pump_start_s"], cfg["timers"]["valve_to_pump_start_s"]))
-        if "valve_to_pump_stop_s" in timers:
-            cfg["timers"]["valve_to_pump_stop_s"] = int(_float(timers["valve_to_pump_stop_s"], cfg["timers"]["valve_to_pump_stop_s"]))
+        # Backward compatibility for older shared timers
+        legacy_start = timers.get("valve_to_pump_start_s")
+        legacy_stop = timers.get("valve_to_pump_stop_s")
+        if legacy_start is not None:
+            cfg["timers"]["volano_to_acs_start_s"] = int(_float(legacy_start, cfg["timers"]["volano_to_acs_start_s"]))
+            cfg["timers"]["volano_to_puffer_start_s"] = int(_float(legacy_start, cfg["timers"]["volano_to_puffer_start_s"]))
+        if legacy_stop is not None:
+            cfg["timers"]["volano_to_acs_stop_s"] = int(_float(legacy_stop, cfg["timers"]["volano_to_acs_stop_s"]))
+            cfg["timers"]["volano_to_puffer_stop_s"] = int(_float(legacy_stop, cfg["timers"]["volano_to_puffer_stop_s"]))
+        if "volano_to_acs_start_s" in timers:
+            cfg["timers"]["volano_to_acs_start_s"] = int(_float(timers["volano_to_acs_start_s"], cfg["timers"]["volano_to_acs_start_s"]))
+        if "volano_to_acs_stop_s" in timers:
+            cfg["timers"]["volano_to_acs_stop_s"] = int(_float(timers["volano_to_acs_stop_s"], cfg["timers"]["volano_to_acs_stop_s"]))
+        if "volano_to_puffer_start_s" in timers:
+            cfg["timers"]["volano_to_puffer_start_s"] = int(_float(timers["volano_to_puffer_start_s"], cfg["timers"]["volano_to_puffer_start_s"]))
+        if "volano_to_puffer_stop_s" in timers:
+            cfg["timers"]["volano_to_puffer_stop_s"] = int(_float(timers["volano_to_puffer_stop_s"], cfg["timers"]["volano_to_puffer_stop_s"]))
 
     runtime = raw.get("runtime", {})
     if isinstance(runtime, dict):
@@ -223,10 +238,14 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             )
     timers = payload.get("timers", {})
     if isinstance(timers, dict):
-        if "valve_to_pump_start_s" in timers:
-            cfg["timers"]["valve_to_pump_start_s"] = int(_float(timers["valve_to_pump_start_s"], cfg["timers"]["valve_to_pump_start_s"]))
-        if "valve_to_pump_stop_s" in timers:
-            cfg["timers"]["valve_to_pump_stop_s"] = int(_float(timers["valve_to_pump_stop_s"], cfg["timers"]["valve_to_pump_stop_s"]))
+        if "volano_to_acs_start_s" in timers:
+            cfg["timers"]["volano_to_acs_start_s"] = int(_float(timers["volano_to_acs_start_s"], cfg["timers"]["volano_to_acs_start_s"]))
+        if "volano_to_acs_stop_s" in timers:
+            cfg["timers"]["volano_to_acs_stop_s"] = int(_float(timers["volano_to_acs_stop_s"], cfg["timers"]["volano_to_acs_stop_s"]))
+        if "volano_to_puffer_start_s" in timers:
+            cfg["timers"]["volano_to_puffer_start_s"] = int(_float(timers["volano_to_puffer_start_s"], cfg["timers"]["volano_to_puffer_start_s"]))
+        if "volano_to_puffer_stop_s" in timers:
+            cfg["timers"]["volano_to_puffer_stop_s"] = int(_float(timers["volano_to_puffer_stop_s"], cfg["timers"]["volano_to_puffer_stop_s"]))
     runtime = payload.get("runtime", {})
     if isinstance(runtime, dict):
         if "ui_poll_ms" in runtime:
