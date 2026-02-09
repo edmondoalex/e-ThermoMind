@@ -5,6 +5,10 @@
       <div class="top-actions">
         <button class="ghost" @click="saveAll">Salva tutto</button>
         <button class="ghost" @click="exportConfig">Esporta config</button>
+        <label class="ghost upload">
+          Importa config
+          <input type="file" accept="application/json" @change="importConfig"/>
+        </label>
       </div>
       <nav class="tabs">
         <button :class="{active: tab==='user'}" @click="tab='user'">User</button>
