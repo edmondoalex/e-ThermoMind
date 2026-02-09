@@ -9,7 +9,20 @@ from .storage import load_config, save_config, normalize_config, apply_setpoints
 from .ha_client import HAClient
 from .logic import compute_decision
 
-app = FastAPI(title="e-ThermoMind", version="0.1.0")
+def _read_app_version() -> str:
+    path = Path("/app/config.yaml")
+    if not path.exists():
+        return "0.0.0"
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip().startswith("version:"):
+                return line.split(":", 1)[1].strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return "0.0.0"
+
+APP_VERSION = _read_app_version()
+app = FastAPI(title="e-ThermoMind", version=APP_VERSION)
 ha = HAClient()
 cfg = load_config()
 ws_task: asyncio.Task | None = None
@@ -60,7 +73,7 @@ async def status():
     return JSONResponse({
         "ha_connected": bool(ha.enabled),
         "token_source": getattr(ha, "token_source", None),
-        "version": app.version,
+        "version": APP_VERSION,
     })
 
 @app.get("/api/assets")

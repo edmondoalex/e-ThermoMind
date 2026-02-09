@@ -11,6 +11,7 @@ RUN mkdir -p /app/static && cp -r /opt/web/dist/* /app/static/
 
 WORKDIR /app
 COPY backend /app/backend
+COPY config.yaml /app/config.yaml
 
 RUN pip install --no-cache-dir fastapi uvicorn[standard] aiohttp pydantic pydantic-settings
 
