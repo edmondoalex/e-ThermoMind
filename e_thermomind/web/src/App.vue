@@ -121,12 +121,13 @@
         <div v-if="act" class="form">
           <h3 class="section">Comandi manuali</h3>
           <div v-for="item in actuatorDefs" :key="`cmd-${item.key}`" class="row3">
-            <button class="ghost toggle" @click="toggleAct(item.key)">
-              <span class="mdi">{{ mdiIcon(act?.[item.key]?.attributes?.icon) }}</span>
-              {{ item.label }}: {{ stateLabel(act?.[item.key]?.state) }}
+            <button class="ghost toggle" :class="stateClass(act?.[item.key]?.state)" @click="toggleAct(item.key)">
+              <i v-if="mdiClass(act?.[item.key]?.attributes?.icon)" :class="mdiClass(act?.[item.key]?.attributes?.icon)"></i>
+              <span v-else class="mdi-fallback">⏻</span>
+              {{ item.label }}
             </button>
             <div class="muted">{{ act?.[item.key]?.entity_id || '-' }}</div>
-            <div class="muted">{{ act?.[item.key]?.state || '-' }}</div>
+            <div class="muted">{{ stateLabel(act?.[item.key]?.state) }}</div>
           </div>
         </div>
 
@@ -243,10 +244,18 @@ function toggleAct(key){
   const action = ent.state === 'on' ? 'off' : 'on'
   doAct(ent.entity_id, action)
 }
-function mdiIcon(icon){
+function mdiClass(icon){
   if (!icon || typeof icon !== 'string') return ''
-  if (icon.startsWith('mdi:')) return icon
-  return icon
+  if (icon.startsWith('mdi:')) {
+    const name = icon.slice(4)
+    return `mdi mdi-${name}`
+  }
+  return ''
+}
+function stateClass(state){
+  if (state === 'on') return 'state-on'
+  if (state === 'off') return 'state-off'
+  return 'state-unknown'
 }
 async function loadAll(){
   await load()
@@ -304,5 +313,8 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .pop-ok{color:#22c55e}
 .pop-no{color:#64748b}
 .toggle{justify-content:flex-start;gap:8px}
-.mdi{font-family:monospace}
+.mdi-fallback{font-size:14px;opacity:0.8}
+.state-on{border-color:#22c55e;color:#0b1f1c;background:#22c55e}
+.state-off{border-color:#64748b;color:#e2e8f0;background:#1f2937}
+.state-unknown{border-color:#ef4444;color:#fee2e2;background:#3f1d1d}
 </style>
