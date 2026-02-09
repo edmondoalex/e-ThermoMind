@@ -266,48 +266,71 @@
 
         <div v-if="sp" class="form setpoint-grid">
           <h3 class="section">Setpoint</h3>
-          <div class="field">
-            <label>Runtime mode</label>
-            <select v-model="sp.runtime.mode" @change="confirmMode">
-              <option value="dry-run">dry-run</option>
-              <option value="live">live</option>
-            </select>
-          </div>
-          <div class="field"><label>ACS setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.acs.setpoint_c"/></div>
-          <div class="field"><label>ACS MAX (C)</label><input type="number" step="0.5" v-model.number="sp.acs.max_c"/></div>
-          <div class="field"><label>Volano margine (C)</label><input type="number" step="0.5" v-model.number="sp.volano.margin_c"/></div>
-          <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/></div>
-          <div class="field"><label>Δ Start Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_start_c"/></div>
-          <div class="field"><label>Δ Hold Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_hold_c"/></div>
-          <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/></div>
-          <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/></div>
-          <div class="field">
-            <label>Sequenza Volano → ACS (valvola + pompa)</label>
-            <div class="row3">
-              <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_start_s" placeholder="Start (s)"/>
-              <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_stop_s" placeholder="Stop (s)"/>
+          <div class="set-section">
+            <div class="section-title">Runtime</div>
+            <div class="field">
+              <label>Runtime mode</label>
+              <select v-model="sp.runtime.mode" @change="confirmMode">
+                <option value="dry-run">dry-run</option>
+                <option value="live">live</option>
+              </select>
             </div>
-            <div class="help">Prima apre la valvola, poi parte la pompa. In stop: valvola OFF, pompa OFF con ritardo.</div>
-          </div>
-          <div class="field">
-            <label>Sequenza Volano → Puffer (valvola + pompa)</label>
-            <div class="row3">
-              <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_start_s" placeholder="Start (s)"/>
-              <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_stop_s" placeholder="Stop (s)"/>
-            </div>
-            <div class="help">Valvola ON → ritardo → pompa ON. In stop: valvola OFF → ritardo → pompa OFF.</div>
-          </div>
-          <div class="field">
-            <label>Soglie export (W) [1/2/3]</label>
-            <div class="row3">
-              <input type="number" v-model.number="sp.resistance.thresholds_w[0]"/>
-              <input type="number" v-model.number="sp.resistance.thresholds_w[1]"/>
-              <input type="number" v-model.number="sp.resistance.thresholds_w[2]"/>
+            <div class="field">
+              <label>Polling UI (ms)</label>
+              <input type="number" min="500" step="500" v-model.number="sp.runtime.ui_poll_ms"/>
             </div>
           </div>
-          <div class="field">
-            <label>Polling UI (ms)</label>
-            <input type="number" min="500" step="500" v-model.number="sp.runtime.ui_poll_ms"/>
+
+          <div class="set-section">
+            <div class="section-title">ACS</div>
+            <div class="field"><label>ACS setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.acs.setpoint_c"/></div>
+            <div class="field"><label>ACS MAX (C)</label><input type="number" step="0.5" v-model.number="sp.acs.max_c"/></div>
+          </div>
+
+          <div class="set-section">
+            <div class="section-title">Volano</div>
+            <div class="field"><label>Volano margine (C)</label><input type="number" step="0.5" v-model.number="sp.volano.margin_c"/></div>
+            <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/></div>
+            <div class="field"><label>Δ Start Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_start_c"/></div>
+            <div class="field"><label>Δ Hold Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_hold_c"/></div>
+          </div>
+
+          <div class="set-section">
+            <div class="section-title">Puffer</div>
+            <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/></div>
+          </div>
+
+          <div class="set-section">
+            <div class="section-title">Resistenze</div>
+            <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/></div>
+            <div class="field">
+              <label>Soglie export (W) [1/2/3]</label>
+              <div class="row3">
+                <input type="number" v-model.number="sp.resistance.thresholds_w[0]"/>
+                <input type="number" v-model.number="sp.resistance.thresholds_w[1]"/>
+                <input type="number" v-model.number="sp.resistance.thresholds_w[2]"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="set-section">
+            <div class="section-title">Sequenze Volano</div>
+            <div class="field">
+              <label>Volano → ACS (valvola + pompa)</label>
+              <div class="row3">
+                <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_start_s" placeholder="Start (s)"/>
+                <input type="number" step="1" v-model.number="sp.timers.volano_to_acs_stop_s" placeholder="Stop (s)"/>
+              </div>
+              <div class="help">Prima apre la valvola, poi parte la pompa. In stop: valvola OFF, pompa OFF con ritardo.</div>
+            </div>
+            <div class="field">
+              <label>Volano → Puffer (valvola + pompa)</label>
+              <div class="row3">
+                <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_start_s" placeholder="Start (s)"/>
+                <input type="number" step="1" v-model.number="sp.timers.volano_to_puffer_stop_s" placeholder="Stop (s)"/>
+              </div>
+              <div class="help">Valvola ON → ritardo → pompa ON. In stop: valvola OFF → ritardo → pompa OFF.</div>
+            </div>
           </div>
         </div>
 
@@ -896,6 +919,8 @@ details.form summary{cursor:pointer;list-style:none}
 .setpoint-grid{display:grid;gap:10px}
 .setpoint-grid .section{grid-column:1/-1}
 @media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.set-section{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(10,15,22,.45)}
+.set-section .section-title{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row3 input::placeholder{color:rgba(159,176,199,.6)}
 .chart-grid{display:grid;gap:12px}
