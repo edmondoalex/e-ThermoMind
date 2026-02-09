@@ -18,6 +18,11 @@ def _thr_list(value: Any) -> list[float]:
             out.append(base[idx])
     return out
 
+_LAST: Dict[str, Any] = {
+    "dest": None,
+    "source_to_acs": None
+}
+
 def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any]) -> Dict[str, Any]:
     ent = cfg.get("entities", {})
     acs_cfg = cfg.get("acs", {})
@@ -42,7 +47,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any]) -> Dict[str
 
     acs_sp = float(acs_cfg.get("setpoint_c", 55.0))
     acs_off_h = float(acs_cfg.get("off_hyst_c", 1.0))
-    acs_ok = t_acs >= (acs_sp + acs_off_h)
+    acs_on_delta = float(acs_cfg.get("on_delta_c", 2.0))
+    acs_off_delta = float(acs_cfg.get("off_hyst_c", 1.0))
+    acs_ok = t_acs >= (acs_sp + acs_off_delta)
+    acs_need = t_acs <= (acs_sp - acs_on_delta)
 
     acs_max = float(acs_cfg.get("max_c", 60.0))
     vol_max = float(vol_cfg.get("max_c", 60.0))
@@ -54,14 +62,14 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any]) -> Dict[str
 
     puf_sp = float(puf_cfg.get("setpoint_c", 55.0))
     puf_off_h = float(puf_cfg.get("off_hyst_c", 1.0))
-    puf_need = (t_puffer < (puf_sp - puf_off_h)) and (not puf_max_hit)
+    puf_need = (t_puffer <= (puf_sp - puf_off_h)) and (not puf_max_hit)
 
     if acs_max_hit:
         dest = "OFF"
         dest_reason = f"ACS_MAX: {t_acs:.1f}°C >= {acs_max:.1f}°C"
-    elif not acs_ok:
+    elif acs_need:
         dest = "ACS"
-        dest_reason = f"ACS non a regime: {t_acs:.1f}°C < {acs_sp + acs_off_h:.1f}°C"
+        dest_reason = f"ACS sotto target: {t_acs:.1f}°C <= {acs_sp - acs_on_delta:.1f}°C"
     elif puf_need:
         dest = "PUFFER"
         dest_reason = f"ACS ok; puffer sotto target: {t_puffer:.1f}°C < {puf_sp - puf_off_h:.1f}°C"
@@ -70,15 +78,22 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any]) -> Dict[str
         dest_reason = "Nessuna destinazione utile."
 
     solar_delta_on = 5.0
+    last_source = _LAST.get("source_to_acs")
+    delta_start = float(vol_cfg.get("delta_to_acs_start_c", 5.0))
+    delta_hold = float(vol_cfg.get("delta_to_acs_hold_c", 2.5))
+
     if dest == "ACS" and (t_sol >= t_acs + solar_delta_on) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}°C >= T_ACS+delta {t_acs + solar_delta_on:.1f}°C"
     elif dest == "ACS" and (t_puffer >= t_acs + 3.0):
         source_to_acs = "PUFFER"
         source_reason = f"T_PUF {t_puffer:.1f}°C >= T_ACS+delta {t_acs + 3.0:.1f}°C"
-    elif dest == "ACS" and (t_volano >= t_acs + float(vol_cfg.get("delta_to_acs_start_c", 5.0))) and (not vol_max_hit):
+    elif dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}°C >= T_ACS+delta_start"
+    elif dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (not vol_max_hit):
+        source_to_acs = "VOLANO"
+        source_reason = f"T_VOL {t_volano:.1f}°C >= T_ACS+delta_hold"
     else:
         source_to_acs = "OFF"
         source_reason = "Nessuna sorgente selezionata (v0.1)."
@@ -103,6 +118,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any]) -> Dict[str
             f"Export {export_w:.0f}W -> step {step}/3 (OFF delay {res_cfg.get('off_delay_s',5)}s in v0.2)."
         )
 
+    _LAST["dest"] = dest
+    _LAST["source_to_acs"] = source_to_acs
+
     return {
         "inputs": {
             "t_acs": t_acs,
@@ -114,6 +132,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any]) -> Dict[str
         "computed": {
             "acs_sp": acs_sp,
             "acs_ok": acs_ok,
+            "acs_need": acs_need,
             "dest": dest,
             "dest_reason": dest_reason,
             "source_to_acs": source_to_acs,
@@ -121,6 +140,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any]) -> Dict[str
             "charge_buffer": charge_buffer,
             "charge_reason": charge_reason,
             "resistance_step": step,
+            "state": {
+                "last_dest": _LAST.get("dest"),
+                "last_source_to_acs": _LAST.get("source_to_acs")
+            },
             "safety": {
                 "acs_max_hit": acs_max_hit,
                 "volano_max_hit": vol_max_hit,

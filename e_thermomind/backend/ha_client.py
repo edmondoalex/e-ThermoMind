@@ -104,6 +104,18 @@ class HAClient:
         for st in data:
             self.states[st["entity_id"]] = st
 
+    async def call_service(self, entity_id: str, action: str) -> bool:
+        if not self._session:
+            return False
+        if "." not in entity_id:
+            return False
+        domain, _ = entity_id.split(".", 1)
+        service = "turn_on" if action == "on" else "turn_off"
+        payload = {"entity_id": entity_id}
+        url = f"{self._http_url}/services/{domain}/{service}"
+        async with self._session.post(url, json=payload) as r:
+            return r.status == 200
+
     async def loop(self):
         if self._ws is None:
             return

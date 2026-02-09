@@ -13,6 +13,17 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_solare_mandata": None,
     "grid_export_w": None
   },
+  "actuators": {
+    "pump_acs": None,
+    "valve_acs": None,
+    "pump_puffer": None,
+    "valve_puffer": None,
+    "pump_volano": None,
+    "valve_volano": None,
+    "resistance_1": None,
+    "resistance_2": None,
+    "resistance_3": None
+  },
   "acs": {
     "setpoint_c": 55.0,
     "on_delta_c": 2.0,
@@ -93,6 +104,15 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             elif isinstance(val, str):
                 cfg["entities"][key] = val.strip() or None
 
+    act = raw.get("actuators", {})
+    if isinstance(act, dict):
+        for key in cfg["actuators"].keys():
+            val = act.get(key)
+            if val is None:
+                cfg["actuators"][key] = None
+            elif isinstance(val, str):
+                cfg["actuators"][key] = val.strip() or None
+
     for section, keys in _NUM_KEYS.items():
         src = raw.get(section, {})
         if isinstance(src, dict):
@@ -163,6 +183,22 @@ def apply_entities(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, An
                 cfg["entities"][key] = None
             elif isinstance(val, str):
                 cfg["entities"][key] = val.strip() or None
+    return cfg
+
+def apply_actuators(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, Any]:
+    cfg = normalize_config(cfg)
+    if not isinstance(payload, dict):
+        return cfg
+    act = payload.get("actuators", payload)
+    if not isinstance(act, dict):
+        return cfg
+    for key in cfg["actuators"].keys():
+        if key in act:
+            val = act.get(key)
+            if val is None:
+                cfg["actuators"][key] = None
+            elif isinstance(val, str):
+                cfg["actuators"][key] = val.strip() or None
     return cfg
 
 def load_config() -> Dict[str, Any]:

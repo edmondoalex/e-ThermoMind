@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .storage import load_config, save_config, normalize_config, apply_setpoints, apply_entities
+from .storage import load_config, save_config, normalize_config, apply_setpoints, apply_entities, apply_actuators
 from .ha_client import HAClient
 from .logic import compute_decision
 
@@ -115,3 +115,41 @@ async def set_entities(payload: dict):
     cfg = apply_entities(cfg, payload)
     save_config(cfg)
     return JSONResponse({"ok": True})
+
+@app.get("/api/actuators")
+async def get_actuators():
+    act = cfg.get("actuators", {})
+    states = {}
+    for k, eid in act.items():
+        if eid:
+            states[k] = {
+                "entity_id": eid,
+                "state": ha.states.get(eid, {}).get("state")
+            }
+        else:
+            states[k] = {"entity_id": None, "state": None}
+    return JSONResponse(states)
+
+@app.post("/api/actuators")
+async def set_actuators(payload: dict):
+    global cfg
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    cfg = apply_actuators(cfg, payload)
+    save_config(cfg)
+    return JSONResponse({"ok": True})
+
+@app.post("/api/actuate")
+async def actuate(payload: dict):
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    entity_id = payload.get("entity_id")
+    action = payload.get("action")
+    if action not in ("on", "off"):
+        raise HTTPException(status_code=400, detail="Invalid action")
+    if not entity_id or not isinstance(entity_id, str):
+        raise HTTPException(status_code=400, detail="Invalid entity_id")
+    if not ha.enabled:
+        raise HTTPException(status_code=400, detail="HA offline")
+    ok = await ha.call_service(entity_id, action)
+    return JSONResponse({"ok": bool(ok)})
