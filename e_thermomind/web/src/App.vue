@@ -878,15 +878,15 @@ watch(tab, (val) => {
 </script>
 
 <style>
-:root{--bg:#0a0f16;--card:#0f1624;--muted:#9fb0c7;--text:#e8f1ff;--accent:#57e3d6;--accent-2:#7aa7ff;--border:rgba(255,255,255,.08)}
-*{box-sizing:border-box} body{margin:0;font-family:"Space Grotesk","IBM Plex Sans","Trebuchet MS",sans-serif;background:radial-gradient(1200px 500px at 20% -10%, rgba(122,167,255,.12), transparent),radial-gradient(900px 500px at 80% 0%, rgba(87,227,214,.10), transparent),var(--bg);color:var(--text)}
+:root{--bg:#070a0f;--card:#0b101a;--muted:#9fb0c7;--text:#e8f1ff;--accent:#57e3d6;--accent-2:#7aa7ff;--border:rgba(255,255,255,.08)}
+*{box-sizing:border-box} body{margin:0;font-family:"Space Grotesk","IBM Plex Sans","Trebuchet MS",sans-serif;background:radial-gradient(1200px 500px at 20% -10%, rgba(122,167,255,.08), transparent),radial-gradient(900px 500px at 80% 0%, rgba(87,227,214,.06), transparent),var(--bg);color:var(--text)}
 .wrap{min-height:100vh;display:flex;flex-direction:column}
 .top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,15,22,.85);backdrop-filter:blur(14px)}
 .brand{font-weight:800;letter-spacing:.3px}
 .tabs button{background:transparent;color:var(--text);border:1px solid var(--border);padding:8px 12px;border-radius:12px;margin-left:8px;cursor:pointer}
 .tabs button.active{border-color:var(--accent);color:var(--accent)}
 .main{padding:18px;max-width:1100px;margin:0 auto;width:100%}
-.card{background:linear-gradient(180deg, rgba(15,22,36,.98), rgba(12,18,29,.98));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.28)}
+.card{background:linear-gradient(180deg, rgba(11,16,26,.98), rgba(9,14,22,.98));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.38)}
 .card.inner{margin-top:14px}
 .muted{color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
@@ -953,11 +953,11 @@ details.form summary{cursor:pointer;list-style:none}
 .input-on{background:rgba(239,68,68,.12) !important}
 .dot-toggle{border:0;background:transparent;cursor:pointer;padding:0 2px}
 .diagram{margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:16px;background:
-  radial-gradient(900px 320px at 70% 10%, rgba(87,227,214,.12), transparent),
-  radial-gradient(800px 300px at 20% 90%, rgba(122,167,255,.12), transparent),
-  repeating-linear-gradient(135deg, rgba(255,255,255,.015), rgba(255,255,255,.015) 12px, transparent 12px, transparent 24px),
-  linear-gradient(180deg, rgba(9,14,22,.72), rgba(9,14,22,.35));
-  box-shadow: inset 0 0 40px rgba(0,0,0,.35)}
+  radial-gradient(900px 320px at 70% 10%, rgba(87,227,214,.08), transparent),
+  radial-gradient(800px 300px at 20% 90%, rgba(122,167,255,.08), transparent),
+  repeating-linear-gradient(135deg, rgba(255,255,255,.01), rgba(255,255,255,.01) 12px, transparent 12px, transparent 24px),
+  linear-gradient(180deg, rgba(6,10,16,.85), rgba(6,10,16,.55));
+  box-shadow: inset 0 0 50px rgba(0,0,0,.55)}
 .diagram svg{width:100%;height:auto}
 .node{fill:url(#nodeGrad);stroke:rgba(255,255,255,.08);filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))}
 .node-active{stroke:rgba(87,227,214,.75);filter:drop-shadow(0 0 12px rgba(87,227,214,.55))}
