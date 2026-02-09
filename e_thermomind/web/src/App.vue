@@ -118,7 +118,7 @@
 
         <div v-if="actions.length" class="card inner">
           <div class="row"><strong>Ultime azioni</strong></div>
-          <div v-for="(line, idx) in actions" :key="`a-${idx}`" class="muted">{{ line }}</div>
+          <div v-for="(line, idx) in actions.slice().reverse()" :key="`a-${idx}`" class="muted">{{ line }}</div>
         </div>
       </section>
 
