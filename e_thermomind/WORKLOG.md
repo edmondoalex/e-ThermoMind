@@ -65,3 +65,4 @@
 - UI User: "Ultime azioni" in ordine inverso (nuove in cima).
 - Input attuatori: bordo verde per entita presente + riempimento rosso quando ON.
 - Forzato riempimento rosso input ON con !important.
+- WebSocket UI: aggiornamento live per User/Admin senza sovrascrivere input in editing.

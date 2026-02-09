@@ -3,7 +3,7 @@ import json
 import logging
 import time
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -34,6 +34,7 @@ entity_icon_map: dict[str, str] = {}
 last_dry_run_signature: str | None = None
 recent_ui_actuations: dict[str, float] = {}
 pending_auto_off: dict[str, asyncio.Task] = {}
+ws_clients: set[WebSocket] = set()
 
 @app.on_event("startup")
 async def on_startup():
@@ -106,6 +107,46 @@ def _get_state(entity_id: str | None) -> str | None:
     if not entity_id:
         return None
     return ha.states.get(entity_id, {}).get("state")
+
+def _build_snapshot() -> dict:
+    data = compute_decision(cfg, ha.states)
+    act = {}
+    for k, eid in (cfg.get("actuators", {}) or {}).items():
+        if eid:
+            st = ha.states.get(eid, {})
+            act[k] = {
+                "entity_id": eid,
+                "state": st.get("state"),
+                "attributes": st.get("attributes", {}),
+                "icon": entity_icon_map.get(eid)
+            }
+        else:
+            act[k] = {"entity_id": None, "state": None, "attributes": {}, "icon": None}
+    ent = {}
+    for k, eid in (cfg.get("entities", {}) or {}).items():
+        if eid:
+            st = ha.states.get(eid, {})
+            ent[k] = {
+                "entity_id": eid,
+                "state": st.get("state"),
+                "attributes": st.get("attributes", {}),
+                "icon": entity_icon_map.get(eid)
+            }
+        else:
+            ent[k] = {"entity_id": None, "state": None, "attributes": {}, "icon": None}
+    return {
+        "decision": data,
+        "status": {
+            "ha_connected": bool(ha.enabled),
+            "token_source": getattr(ha, "token_source", None),
+            "version": APP_VERSION,
+            "runtime_mode": cfg.get("runtime", {}).get("mode", "dry-run"),
+        },
+        "actions": action_log[-20:],
+        "actuators": act,
+        "entities": ent,
+        "modules": cfg.get("modules_enabled", {}),
+    }
 
 def _actuator_key_for_entity(entity_id: str) -> str | None:
     for key, eid in (cfg.get("actuators", {}) or {}).items():
@@ -298,6 +339,19 @@ async def status():
         "version": APP_VERSION,
         "runtime_mode": cfg.get("runtime", {}).get("mode", "dry-run"),
     })
+
+@app.websocket("/ws")
+async def ws_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    ws_clients.add(websocket)
+    try:
+        while True:
+            await websocket.send_json(_build_snapshot())
+            await asyncio.sleep(2)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        ws_clients.discard(websocket)
 
 @app.get("/api/actions")
 async def actions():

@@ -312,7 +312,8 @@ const sp = ref(null)
 const ent = ref(null)
 const act = ref(null)
 const status = ref(null)
-let pollTimer = null
+  let pollTimer = null
+  let ws = null
 const lastUpdate = ref(null)
 const pollMs = ref(3000)
 const actions = ref([])
@@ -373,9 +374,24 @@ const filteredActuators = computed(() => {
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
 
+function mergeEntities(next){
+  if (!ent.value) { ent.value = next; return }
+  for (const key of Object.keys(next || {})) {
+    const prev = ent.value[key] || { entity_id: null }
+    const keepId = editingCount.value > 0 ? prev.entity_id : next[key]?.entity_id
+    ent.value[key] = { ...next[key], entity_id: keepId }
+  }
+}
+function mergeActuators(next){
+  if (!act.value) { act.value = next; return }
+  for (const key of Object.keys(next || {})) {
+    const prev = act.value[key] || { entity_id: null }
+    const keepId = editingCount.value > 0 ? prev.entity_id : next[key]?.entity_id
+    act.value[key] = { ...next[key], entity_id: keepId }
+  }
+}
 async function refresh(){
-  if (tab.value === 'admin') return
-  if (editingCount.value > 0) return
+  if (tab.value === 'admin' || editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
   const s = await fetch('/api/status'); status.value = await s.json()
   const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
@@ -510,6 +526,26 @@ function stateClass(state){
   if (state === 'off') return 'state-off'
   return 'state-unknown'
 }
+function connectWS(){
+  if (ws) ws.close()
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws'
+  ws = new WebSocket(`${proto}://${location.host}/ws`)
+  ws.onmessage = (ev) => {
+    let payload = null
+    try { payload = JSON.parse(ev.data) } catch { return }
+    if (!payload) return
+    d.value = payload.decision || d.value
+    status.value = payload.status || status.value
+    actions.value = payload.actions || actions.value
+    modules.value = payload.modules || modules.value
+    mergeEntities(payload.entities || {})
+    mergeActuators(payload.actuators || {})
+    lastUpdate.value = new Date()
+  }
+  ws.onclose = () => {
+    setTimeout(connectWS, 2000)
+  }
+}
 async function loadAll(){
   await load()
   await loadEntities()
@@ -538,6 +574,7 @@ function onBlur(){
 onMounted(async()=>{ 
   await loadAll(); 
   startPolling();
+  connectWS();
   focusInHandler = (e) => {
     const tag = e.target?.tagName
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') onFocus()
@@ -551,6 +588,7 @@ onMounted(async()=>{
 })
 onBeforeUnmount(()=>{ 
   stopPolling();
+  if (ws) ws.close()
   if (focusInHandler) window.removeEventListener('focusin', focusInHandler)
   if (focusOutHandler) window.removeEventListener('focusout', focusOutHandler)
 })
