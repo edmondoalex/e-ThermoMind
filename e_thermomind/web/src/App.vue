@@ -240,7 +240,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 const tab = ref('user')
 const d = ref(null)
 const sp = ref(null)
@@ -300,6 +300,7 @@ const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
 
 async function refresh(){
+  if (tab.value === 'admin') return
   if (editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
   const s = await fetch('/api/status'); status.value = await s.json()
@@ -459,6 +460,13 @@ onBeforeUnmount(()=>{
   stopPolling();
   if (focusInHandler) window.removeEventListener('focusin', focusInHandler)
   if (focusOutHandler) window.removeEventListener('focusout', focusOutHandler)
+})
+watch(tab, (val) => {
+  if (val === 'admin') {
+    stopPolling()
+  } else {
+    startPolling()
+  }
 })
 </script>
 
