@@ -333,7 +333,18 @@ function confirmMode(){
   }
 }
 async function loadEntities(){
-  const r = await fetch('/api/entities'); ent.value = await r.json()
+  const r = await fetch('/api/entities')
+  const data = await r.json()
+  const out = {}
+  for (const key of Object.keys(data || {})) {
+    const val = data[key]
+    if (typeof val === 'string' || val === null) {
+      out[key] = { entity_id: val || null, state: null, attributes: {}, icon: null }
+    } else {
+      out[key] = val
+    }
+  }
+  ent.value = out
 }
 async function saveEntities(){
   const payload = {}

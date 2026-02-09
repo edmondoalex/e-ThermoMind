@@ -45,3 +45,4 @@
 - Import config anche in header.
 - User: nomi completi resistenze + icone colorate per stato.
 - Dry-run: log simulato step/export in "Ultime azioni".
+- Compatibilita load sensori (stringa -> oggetto UI).
