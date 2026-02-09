@@ -27,3 +27,4 @@
 - Etichette attuatori piu chiare (descrizione funzione).
 - Etichetta pompa ACS specificata come PDC -> ACS.
 - UI attuatori completa con canali R1-R30 (mapping manuale in Admin).
+- Simbolo fisso per attuatori implementati (UI).

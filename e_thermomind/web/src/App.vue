@@ -91,7 +91,10 @@
         <div v-if="act" class="form">
           <h3 class="section">Attuatori Home Assistant</h3>
           <div v-for="item in actuatorDefs" :key="item.key" class="field">
-            <label>{{ item.label }}</label>
+            <label>
+              <span v-if="item.impl" class="impl">●</span>
+              {{ item.label }}
+            </label>
             <input type="text" v-model="act[item.key].entity_id" :placeholder="`switch.${item.key}`"/>
           </div>
           <div class="actions">
@@ -131,36 +134,36 @@ const lastUpdate = ref(null)
 const pollMs = ref(3000)
 
 const actuatorDefs = [
-  { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)' },
-  { key: 'r2_valve_comparto_mandata_imp_pt', label: 'R2 Valvola Comparto Mandata Imp PT (riscaldamento)' },
-  { key: 'r3_valve_comparto_mandata_imp_m1p', label: 'R3 Valvola Comparto Mandata Imp M+1P (riscaldamento)' },
-  { key: 'r4_valve_impianto_da_puffer', label: 'R4 Valvola Impianto da Puffer' },
-  { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC' },
-  { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS' },
-  { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer' },
-  { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp' },
-  { key: 'r9_valve_solare_normal_funz', label: 'R9 Valvola Solare Normal Funz' },
-  { key: 'r10_valve_solare_precedenza_acs', label: 'R10 Valvola Solare Precedenza ACS' },
-  { key: 'r11_pump_mandata_laboratorio', label: 'R11 Pompa Mandata Laboratorio' },
-  { key: 'r12_pump_mandata_piani', label: 'R12 Pompa Mandata Piani' },
-  { key: 'r13_pump_pdc_to_acs_puffer', label: 'R13 Pompa PDC -> ACS/Puffer' },
-  { key: 'r14_pump_puffer_to_acs', label: 'R14 Pompa Puffer -> ACS' },
-  { key: 'r15_pump_caldaia_legna', label: 'R15 Pompa Caldaia Legna -> Puffer' },
-  { key: 'r16_cmd_miscelatrice_alza', label: 'R16 CMD Miscelatrice ALZA' },
-  { key: 'r17_cmd_miscelatrice_abbassa', label: 'R17 CMD Miscelatrice ABBASSA' },
-  { key: 'r18_valve_ritorno_solare_basso', label: 'R18 Valvola Ritorno Solare Basso' },
-  { key: 'r19_valve_ritorno_solare_alto', label: 'R19 Valvola Ritorno Solare Alto' },
-  { key: 'r20_ta_caldaia_legna', label: 'R20 TA Caldaia Legna' },
-  { key: 'r21_libero', label: 'R21 Libero' },
-  { key: 'r22_resistenza_1_volano_pdc', label: 'R22 Resistenza 1 Volano PDC' },
-  { key: 'r23_resistenza_2_volano_pdc', label: 'R23 Resistenza 2 Volano PDC' },
-  { key: 'r24_resistenza_3_volano_pdc', label: 'R24 Resistenza 3 Volano PDC' },
-  { key: 'r25_comparto_generale_pdc', label: 'R25 Comparto Generale PDC' },
-  { key: 'r26_comparto_pdc1_avvio', label: 'R26 Comparto PDC 1 Avvio' },
-  { key: 'r27_comparto_pdc2_avvio', label: 'R27 Comparto PDC 2 Avvio' },
-  { key: 'r28_scarico_antigelo_mandata_pdc', label: 'R28 Scarico Antigelo Mandata PDC' },
-  { key: 'r29_scarico_antigelo_ritorno_pdc', label: 'R29 Scarico Antigelo Ritorno PDC' },
-  { key: 'r30_alimentazione_caldaia_legna', label: 'R30 Alimentazione Caldaia Legna' }
+  { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)', impl: false },
+  { key: 'r2_valve_comparto_mandata_imp_pt', label: 'R2 Valvola Comparto Mandata Imp PT (riscaldamento)', impl: false },
+  { key: 'r3_valve_comparto_mandata_imp_m1p', label: 'R3 Valvola Comparto Mandata Imp M+1P (riscaldamento)', impl: false },
+  { key: 'r4_valve_impianto_da_puffer', label: 'R4 Valvola Impianto da Puffer', impl: false },
+  { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC', impl: false },
+  { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS', impl: false },
+  { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer', impl: false },
+  { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp', impl: false },
+  { key: 'r9_valve_solare_normal_funz', label: 'R9 Valvola Solare Normal Funz', impl: false },
+  { key: 'r10_valve_solare_precedenza_acs', label: 'R10 Valvola Solare Precedenza ACS', impl: false },
+  { key: 'r11_pump_mandata_laboratorio', label: 'R11 Pompa Mandata Laboratorio', impl: false },
+  { key: 'r12_pump_mandata_piani', label: 'R12 Pompa Mandata Piani', impl: false },
+  { key: 'r13_pump_pdc_to_acs_puffer', label: 'R13 Pompa PDC -> ACS/Puffer', impl: false },
+  { key: 'r14_pump_puffer_to_acs', label: 'R14 Pompa Puffer -> ACS', impl: false },
+  { key: 'r15_pump_caldaia_legna', label: 'R15 Pompa Caldaia Legna -> Puffer', impl: false },
+  { key: 'r16_cmd_miscelatrice_alza', label: 'R16 CMD Miscelatrice ALZA', impl: false },
+  { key: 'r17_cmd_miscelatrice_abbassa', label: 'R17 CMD Miscelatrice ABBASSA', impl: false },
+  { key: 'r18_valve_ritorno_solare_basso', label: 'R18 Valvola Ritorno Solare Basso', impl: false },
+  { key: 'r19_valve_ritorno_solare_alto', label: 'R19 Valvola Ritorno Solare Alto', impl: false },
+  { key: 'r20_ta_caldaia_legna', label: 'R20 TA Caldaia Legna', impl: false },
+  { key: 'r21_libero', label: 'R21 Libero', impl: false },
+  { key: 'r22_resistenza_1_volano_pdc', label: 'R22 Resistenza 1 Volano PDC', impl: true },
+  { key: 'r23_resistenza_2_volano_pdc', label: 'R23 Resistenza 2 Volano PDC', impl: true },
+  { key: 'r24_resistenza_3_volano_pdc', label: 'R24 Resistenza 3 Volano PDC', impl: true },
+  { key: 'r25_comparto_generale_pdc', label: 'R25 Comparto Generale PDC', impl: false },
+  { key: 'r26_comparto_pdc1_avvio', label: 'R26 Comparto PDC 1 Avvio', impl: false },
+  { key: 'r27_comparto_pdc2_avvio', label: 'R27 Comparto PDC 2 Avvio', impl: false },
+  { key: 'r28_scarico_antigelo_mandata_pdc', label: 'R28 Scarico Antigelo Mandata PDC', impl: false },
+  { key: 'r29_scarico_antigelo_ritorno_pdc', label: 'R29 Scarico Antigelo Ritorno PDC', impl: false },
+  { key: 'r30_alimentazione_caldaia_legna', label: 'R30 Alimentazione Caldaia Legna', impl: false }
 ]
 
 const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}C` : 'n/d')
@@ -253,4 +256,5 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:#0b1f1c;background:var(--accent)}
 .badge.off{color:#f5f7fa;background:#3b3f46}
+.impl{display:inline-block;margin-right:6px;color:var(--accent)}
 </style>
