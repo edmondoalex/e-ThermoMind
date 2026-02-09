@@ -42,7 +42,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "invert_export_sign": False
   },
   "runtime": {
-    "mode": "dry-run"
+    "mode": "dry-run",
+    "ui_poll_ms": 3000
   }
 }
 
@@ -113,8 +114,11 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             )
 
     runtime = raw.get("runtime", {})
-    if isinstance(runtime, dict) and isinstance(runtime.get("mode"), str):
-        cfg["runtime"]["mode"] = runtime["mode"]
+    if isinstance(runtime, dict):
+        if isinstance(runtime.get("mode"), str):
+            cfg["runtime"]["mode"] = runtime["mode"]
+        if "ui_poll_ms" in runtime:
+            cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
 
     return cfg
 
@@ -140,6 +144,9 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["resistance"]["thresholds_w"] = _float_list_3(
                 res["thresholds_w"], cfg["resistance"]["thresholds_w"]
             )
+    runtime = payload.get("runtime", {})
+    if isinstance(runtime, dict) and "ui_poll_ms" in runtime:
+        cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
     return cfg
 
 def apply_entities(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, Any]:

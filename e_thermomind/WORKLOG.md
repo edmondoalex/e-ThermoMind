@@ -20,3 +20,4 @@
 - Mostrata versione add-on in User/Admin via `/api/status`.
 - Versione UI ora letta da `config.yaml` (coerente con add-on).
 - Polling UI automatico (refresh ogni 3s).
+- Polling UI configurabile e timestamp ultimo aggiornamento in UI.

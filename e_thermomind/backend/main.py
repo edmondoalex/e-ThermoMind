@@ -91,6 +91,7 @@ async def get_setpoints():
         "puffer": cfg.get("puffer", {}),
         "volano": cfg.get("volano", {}),
         "resistance": cfg.get("resistance", {}),
+        "runtime": cfg.get("runtime", {}),
     })
 
 @app.post("/api/setpoints")
