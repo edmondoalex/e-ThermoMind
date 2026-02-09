@@ -109,6 +109,12 @@
                 R24 Resistenza 3 Volano PDC
               </div>
             </div>
+            <div class="kpi" :class="stateClass(act?.generale_resistenze_volano_pdc?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon), stateClass(act?.generale_resistenze_volano_pdc?.state)]"></i>
+                R0 Generale Resistenze Volano PDC
+              </div>
+            </div>
             <div class="kpi">
               <div class="k">
                 <i v-if="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)"></i>
