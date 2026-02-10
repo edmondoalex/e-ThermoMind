@@ -373,7 +373,7 @@
               <div v-for="z in zones" :key="z.entity_id" class="zone-chip" :class="z.active | 'zone-on' : 'zone-off'">
                 <div class="zone-title">{{ z.group }} | {{ z.entity_id }}</div>
                 <div class="zone-sub">{{ z.state || '-' }} | {{ z.hvac_action || '-' }}</div>
-                <div class="zone-sub">T: {{ fmtNum(z.temperature) }}|C | SP: {{ fmtNum(z.setpoint) }}|C</div>
+                <div class="zone-sub">T: {{ fmtNum(z.temperature) }}°C | SP: {{ fmtNum(z.setpoint) }}°C</div>
               </div>
             </div>
           </div>
