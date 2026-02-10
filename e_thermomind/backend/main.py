@@ -702,6 +702,23 @@ async def _apply_impianto_live() -> None:
     if not ha.enabled:
         return
     if not cfg.get("modules_enabled", {}).get("impianto", True):
+        ent = cfg.get("entities", {})
+        act = cfg.get("actuators", {})
+        imp = cfg.get("impianto", {})
+        r4 = act.get("r4_valve_impianto_da_puffer")
+        r5 = act.get("r5_valve_impianto_da_pdc")
+        r31 = act.get("r31_valve_impianto_da_volano")
+        r12 = act.get("r12_pump_mandata_piani")
+        clima = ent.get("puffer_consenso_riscaldamento_piani")
+        off_centralina = ent.get("off_centralina_termoregolazione")
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
+        await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        await _set_actuator(r4, False)
+        await _set_actuator(r5, False)
+        await _set_actuator(r31, False)
+        await _set_climate_hvac_mode(clima, "off")
+        await _set_actuator(off_centralina, True)
         return
 
     ent = cfg.get("entities", {})
