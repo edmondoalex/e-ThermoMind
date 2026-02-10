@@ -148,7 +148,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     _LAST["dest"] = dest
     _LAST["source_to_acs"] = source_to_acs
-_LAST["volano_to_puffer"] = volano_to_puffer
+    _LAST["volano_to_puffer"] = volano_to_puffer
 
     ent_cfg = cfg.get("entities", {})
     sel_eid = ent_cfg.get("hvac_riscaldamento_select")
