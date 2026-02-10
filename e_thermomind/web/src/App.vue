@@ -751,10 +751,22 @@
           </div>
           <div class="modal-body">
             <svg viewBox="0 0 600 220" class="history-chart" role="img" aria-label="Grafico storico">
+              <line :x1="historyModal.padL" :y1="historyModal.padT" :x2="historyModal.padL" :y2="historyModal.h - historyModal.padB" class="axis"/>
+              <line :x1="historyModal.padL" :y1="historyModal.h - historyModal.padB" :x2="historyModal.w - historyModal.padR" :y2="historyModal.h - historyModal.padB" class="axis"/>
+              <g v-for="t in historyModal.yTicks" :key="t.label">
+                <line :x1="historyModal.padL - 4" :y1="t.y" :x2="historyModal.padL" :y2="t.y" class="axis"/>
+                <text :x="historyModal.padL - 8" :y="t.y + 4" class="axis-label" text-anchor="end">{{ t.label }}</text>
+              </g>
+              <g v-for="t in historyModal.xTicks" :key="t.label">
+                <line :x1="t.x" :y1="historyModal.h - historyModal.padB" :x2="t.x" :y2="historyModal.h - historyModal.padB + 4" class="axis"/>
+                <text :x="t.x" :y="historyModal.h - historyModal.padB + 16" class="axis-label" text-anchor="middle">{{ t.label }}</text>
+              </g>
               <polyline :points="historyModal.points" class="spark acs"/>
             </svg>
             <div class="legend small">
               <span class="legend-item"><span class="legend-dot acs"></span>{{ historyModal.title }}</span>
+              <span class="legend-item muted">Y: °C ({{ historyModal.minY }}–{{ historyModal.maxY }})</span>
+              <span class="legend-item muted">X: {{ historyModal.rangeLabel }}</span>
             </div>
           </div>
         </div>
@@ -783,7 +795,7 @@ const history = ref({
   t_volano: [],
   export_w: []
 })
-const historyModal = ref({ open: false, title: '', points: '' })
+const historyModal = ref({ open: false, title: '', points: '', minY: '-', maxY: '-', rangeLabel: '', xTicks: [], yTicks: [], w: 600, h: 220, padL: 40, padR: 10, padT: 10, padB: 20 })
 const maxPoints = 60
   const filterAct = ref('')
   const editingCount = ref(0)
@@ -889,12 +901,30 @@ async function openHistory(key, title){
   const maxY = Math.max(...ys)
   const spanX = Math.max(1, maxX - minX)
   const spanY = Math.max(0.1, maxY - minY)
+  const w = 600
+  const h = 220
+  const padL = 40
+  const padR = 10
+  const padT = 10
+  const padB = 20
+  const innerW = w - padL - padR
+  const innerH = h - padT - padB
   const pts = reduced.map(([x,y]) => {
-    const px = ((x - minX) / spanX) * 600
-    const py = 220 - ((y - minY) / spanY) * 200 - 10
+    const px = padL + ((x - minX) / spanX) * innerW
+    const py = h - padB - ((y - minY) / spanY) * innerH
     return `${px.toFixed(1)},${py.toFixed(1)}`
   }).join(' ')
-  historyModal.value = { open: true, title, points: pts }
+  const fmtTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const xTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({
+    x: padL + t * innerW,
+    label: fmtTime(minX + t * spanX)
+  }))
+  const yTicks = [0, 0.5, 1].map(t => ({
+    y: h - padB - t * innerH,
+    label: (minY + t * spanY).toFixed(1)
+  }))
+  const rangeLabel = `${new Date(minX).toLocaleDateString()} ${fmtTime(minX)} → ${fmtTime(maxX)}`
+  historyModal.value = { open: true, title, points: pts, minY: minY.toFixed(1), maxY: maxY.toFixed(1), rangeLabel, xTicks, yTicks, w, h, padL, padR, padT, padB }
 }
 function closeHistory(){
   historyModal.value.open = false
@@ -1408,6 +1438,8 @@ details.form summary{cursor:pointer;list-style:none}
 .modal{background:linear-gradient(180deg, rgba(11,16,26,.98), rgba(9,14,22,.98));border:1px solid var(--border);border-radius:16px;max-width:760px;width:90%;padding:14px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
 .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .modal-title{font-weight:700}
+.axis{stroke:#2b3447;stroke-width:1}
+.axis-label{fill:#9fb0c7;font-size:10px}
 .history-chart{width:100%;height:auto}
 .module-reasons{display:grid;gap:8px;margin-top:6px}
 .module-row{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.45)}
