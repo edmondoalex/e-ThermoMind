@@ -235,6 +235,9 @@ async def _on_state_changed(entity_id: str, new_state: dict) -> None:
     module_key = _module_for_actuator_key(key)
     if module_key and not cfg.get("modules_enabled", {}).get(module_key, True):
         return
+    # Se non appartiene a nessun modulo, lascialo manuale (no auto-off)
+    if module_key is None:
+        return
     if entity_id in pending_auto_off:
         return
     pending_auto_off[entity_id] = asyncio.create_task(_auto_off_after_delay(entity_id, module_key))
