@@ -78,6 +78,38 @@
           <span class="muted">Ultimo aggiornamento: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</span>
         </div>
 
+
+        
+        <div class="card inner">
+          <div class="row"><strong>Moduli (User)</strong></div>
+          <div class="row3">
+            <button class="ghost toggle" :class="modules.resistenze_volano ? 'on' : 'off'" @click="toggleModule('resistenze_volano')">
+              Resistenze Volano: {{ modules.resistenze_volano ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.volano_to_acs ? 'on' : 'off'" @click="toggleModule('volano_to_acs')">
+              Volano → ACS: {{ modules.volano_to_acs ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.volano_to_puffer ? 'on' : 'off'" @click="toggleModule('volano_to_puffer')">
+              Volano → Puffer: {{ modules.volano_to_puffer ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.puffer_to_acs ? 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
+              Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
+              Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
+              Solare: {{ modules.solare ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.miscelatrice ? 'on' : 'off'" @click="toggleModule('miscelatrice')">
+              Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.pdc ? 'on' : 'off'" @click="toggleModule('pdc')">
+              PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
+            </button>
+          </div>
+        </div>
+
 <div class="card inner">
           <div class="row"><strong>Impianto riscaldamento (interno)</strong></div>
           <div class="row3">
@@ -113,37 +145,6 @@
             </div>
           </div>
           <div class="help">I checkbox sono manuali nel solo add-on. Richiesta calore e consenso miscelatrice sono in sola lettura.</div>
-        </div>
-
-        
-        <div class="card inner">
-          <div class="row"><strong>Moduli (User)</strong></div>
-          <div class="row3">
-            <button class="ghost toggle" :class="modules.resistenze_volano ? 'on' : 'off'" @click="toggleModule('resistenze_volano')">
-              Resistenze Volano: {{ modules.resistenze_volano ? 'ON' : 'OFF' }}
-            </button>
-            <button class="ghost toggle" :class="modules.volano_to_acs ? 'on' : 'off'" @click="toggleModule('volano_to_acs')">
-              Volano → ACS: {{ modules.volano_to_acs ? 'ON' : 'OFF' }}
-            </button>
-            <button class="ghost toggle" :class="modules.volano_to_puffer ? 'on' : 'off'" @click="toggleModule('volano_to_puffer')">
-              Volano → Puffer: {{ modules.volano_to_puffer ? 'ON' : 'OFF' }}
-            </button>
-            <button class="ghost toggle" :class="modules.puffer_to_acs ? 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
-              Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
-            </button>
-            <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
-              Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
-            </button>
-            <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
-              Solare: {{ modules.solare ? 'ON' : 'OFF' }}
-            </button>
-            <button class="ghost toggle" :class="modules.miscelatrice ? 'on' : 'off'" @click="toggleModule('miscelatrice')">
-              Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
-            </button>
-            <button class="ghost toggle" :class="modules.pdc ? 'on' : 'off'" @click="toggleModule('pdc')">
-              PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
-            </button>
-          </div>
         </div>
 
         <div v-if="d" class="card inner">
