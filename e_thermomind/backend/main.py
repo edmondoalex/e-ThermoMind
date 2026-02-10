@@ -1033,6 +1033,24 @@ async def set_setpoints(payload: dict):
     save_config(cfg)
     return JSONResponse({"ok": True})
 
+@app.post("/api/climate_setpoint")
+async def climate_setpoint(payload: dict):
+    if cfg.get("runtime", {}).get("mode") != "live":
+        raise HTTPException(status_code=400, detail="Runtime not live")
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    entity_id = payload.get("entity_id")
+    temperature = payload.get("temperature")
+    if not entity_id or temperature is None:
+        raise HTTPException(status_code=400, detail="Missing params")
+    try:
+        temperature = float(temperature)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid temperature")
+    await ha.call_service_named("climate", "set_temperature", {"entity_id": entity_id, "temperature": temperature})
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} CLIMATE {entity_id} -> {temperature:.1f}")
+    return JSONResponse({"ok": True})
+
 @app.get("/api/modules")
 async def get_modules():
     return JSONResponse(cfg.get("modules_enabled", {}))

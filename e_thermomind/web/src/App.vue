@@ -404,7 +404,7 @@
           <div class="zones-card">
             <div class="row"><strong>Zone attive</strong></div>
             <div class="zones-grid">
-              <div v-for="z in zones" :key="z.entity_id" class="zone-chip" :class="z.active ? 'zone-on' : 'zone-off'">
+              <div v-for="z in zones" :key="z.entity_id" class="zone-chip" :class="z.active ? 'zone-on' : 'zone-off'" @click="openZone(z)">
                 <div class="zone-title">{{ z.group }} | {{ z.entity_id }}</div>
                 <div class="zone-sub">{{ z.state || '-' }} | {{ z.hvac_action || '-' }}</div>
                 <div class="zone-sub">T: {{ fmtNum(z.temperature) }}°C | SP: {{ fmtNum(z.setpoint) }}°C</div>
@@ -955,6 +955,28 @@
           </div>
         </div>
       </div>
+
+      <div v-if="zoneModal.open" class="modal-backdrop" @click.self="closeZone">
+        <div class="modal thermo-modal">
+          <div class="modal-head">
+            <div class="modal-title">{{ zoneModal.title }}</div>
+            <button class="ghost" @click="closeZone">Chiudi</button>
+          </div>
+          <div class="thermo-body">
+            <div class="thermo-ring" :style="thermoStyle">
+              <div class="thermo-center">
+                <div class="thermo-state">{{ hvacLabel(zoneModal.hvac_action) }}</div>
+                <div class="thermo-value">{{ fmtNum(zoneModal.setpoint) }}&deg;C</div>
+                <div class="thermo-sub">T attuale {{ fmtNum(zoneModal.temperature) }}&deg;C</div>
+              </div>
+            </div>
+            <div class="thermo-controls">
+              <button class="thermo-btn" @click="changeZoneSetpoint(-0.5)">−</button>
+              <button class="thermo-btn" @click="changeZoneSetpoint(0.5)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -983,6 +1005,7 @@ const history = ref({
   miscelatrice_setpoint: [],
   export_w: []
 })
+const zoneModal = ref({ open: false, entity_id: '', title: '', temperature: 0, setpoint: 0, hvac_action: '' })
 const historyModal = ref({ open: false, title: '', points: '', minY: '-', maxY: '-', rangeLabel: '', xTicks: [], yTicks: [], w: 600, h: 220, padL: 40, padR: 10, padT: 10, padB: 20 })
 const maxPoints = 60
   const filterAct = ref('')
@@ -1044,7 +1067,7 @@ const filteredActuators = computed(() => {
   return actuatorDefs.filter(a => (a.label.toLowerCase().includes(q) || a.key.toLowerCase().includes(q)))
 })
 
-const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}?C` : 'n/d')
+const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}°C` : 'n/d')
 const fmtDelta = (a, b) => {
   const da = Number(a)
   const db = Number(b)
@@ -1148,6 +1171,45 @@ async function openHistory(key, title){
 }
 function closeHistory(){
   historyModal.value.open = false
+}
+function openZone(z){
+  if (!z?.entity_id) return
+  zoneModal.value = {
+    open: true,
+    entity_id: z.entity_id,
+    title: `${z.group} — ${z.entity_id}`,
+    temperature: Number(z.temperature) || 0,
+    setpoint: Number(z.setpoint) || 0,
+    hvac_action: z.hvac_action || z.state || ''
+  }
+}
+function closeZone(){
+  zoneModal.value.open = false
+}
+const thermoStyle = computed(() => {
+  const sp = Number(zoneModal.value.setpoint) || 0
+  const min = 10
+  const max = 30
+  const pct = Math.max(0, Math.min(1, (sp - min) / (max - min)))
+  const deg = Math.round(300 * pct)
+  return { background: `conic-gradient(#ff8a3c ${deg}deg, rgba(255,255,255,0.08) ${deg}deg)` }
+})
+const hvacLabel = (s) => {
+  const v = String(s || '').toLowerCase()
+  if (v.includes('heat')) return 'In riscaldamento'
+  if (v.includes('cool')) return 'In raffrescamento'
+  if (v.includes('off')) return 'Spento'
+  return v ? v : '—'
+}
+const changeZoneSetpoint = async (delta) => {
+  if (!zoneModal.value.entity_id) return
+  const next = Math.round((Number(zoneModal.value.setpoint) + delta) * 10) / 10
+  zoneModal.value.setpoint = next
+  await fetch('/api/climate_setpoint', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entity_id: zoneModal.value.entity_id, temperature: next })
+  })
 }
 const flowSolarToAcs = computed(() => d.value?.computed?.source_to_acs === 'SOLAR')
 const flowVolanoToAcs = computed(() => d.value?.computed?.source_to_acs === 'VOLANO')
@@ -1566,6 +1628,16 @@ details.form summary{cursor:pointer;list-style:none}
 .set-section{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(10,15,22,.45)}
 .set-section .section-title{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .subsection{margin-top:10px;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.zone-chip{cursor:pointer}
+.thermo-modal{max-width:520px}
+.thermo-body{display:flex;flex-direction:column;align-items:center;gap:18px;padding:8px 0 16px}
+.thermo-ring{width:260px;height:260px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 10px rgba(255,255,255,.04),0 20px 60px rgba(0,0,0,.35)}
+.thermo-center{width:180px;height:180px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.08), rgba(0,0,0,.2));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.thermo-state{color:#ffb15e;font-weight:600;letter-spacing:.4px}
+.thermo-value{font-size:44px;font-weight:700;margin:6px 0}
+.thermo-sub{color:var(--muted);font-size:12px}
+.thermo-controls{display:flex;gap:12px}
+.thermo-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);font-size:22px}
 .warn{margin-top:8px;color:#ffb15e;background:rgba(255,177,94,.08);border:1px solid rgba(255,177,94,.25);padding:8px 10px;border-radius:10px;font-size:12px}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row3 input::placeholder{color:rgba(159,176,199,.6)}
