@@ -726,6 +726,14 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     act = cfg.get("actuators", {})
     cfg_misc = cfg.get("miscelatrice", {})
 
+    r16 = act.get("r16_cmd_miscelatrice_alza")
+    r17 = act.get("r17_cmd_miscelatrice_abbassa")
+    # interblocco hard: mai entrambi ON
+    if _get_state(r16) == "on":
+        await _set_actuator(r17, False)
+    if _get_state(r17) == "on":
+        await _set_actuator(r16, False)
+
     t_mandata = _get_num(ent.get("t_mandata_miscelata"))
     if t_mandata is None:
         return
@@ -753,8 +761,8 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
 
     # safety
     if t_mandata < min_t or t_mandata > max_t:
-        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
-        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        await _set_actuator(r16, False)
+        await _set_actuator(r17, False)
         miscelatrice_last_action = "STOP"
         return
 
@@ -767,8 +775,8 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         factor = max(dt_min_f, min(dt_max_f, dt / dt_ref))
         kp_eff = kp_base * factor
     if abs(err) <= hyst:
-        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
-        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        await _set_actuator(r16, False)
+        await _set_actuator(r17, False)
         miscelatrice_last_action = "STOP"
         return
 
@@ -788,14 +796,14 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
 
     if direction == "ALZA":
-        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        await _set_actuator(r17, False)
         miscelatrice_task = asyncio.create_task(
-            _pulse_actuator("miscelatrice_alza", act.get("r16_cmd_miscelatrice_alza"), duration)
+            _pulse_actuator("miscelatrice_alza", r16, duration)
         )
     else:
-        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        await _set_actuator(r16, False)
         miscelatrice_task = asyncio.create_task(
-            _pulse_actuator("miscelatrice_abbassa", act.get("r17_cmd_miscelatrice_abbassa"), duration)
+            _pulse_actuator("miscelatrice_abbassa", r17, duration)
         )
 
     miscelatrice_last_action = direction
