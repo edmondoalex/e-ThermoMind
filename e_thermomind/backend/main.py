@@ -544,9 +544,11 @@ async def _set_valve_only(valve_eid: str | None, want_on: bool) -> None:
 async def _pulse_actuator(task_name: str, eid: str | None, duration_s: float) -> None:
     if not eid:
         return
-    await _set_actuator(eid, True)
-    await asyncio.sleep(max(0.1, duration_s))
-    await _set_actuator(eid, False)
+    try:
+        await _set_actuator(eid, True)
+        await asyncio.sleep(max(0.1, duration_s))
+    finally:
+        await _set_actuator(eid, False)
 
 async def _apply_resistance_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
@@ -781,6 +783,9 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     if miscelatrice_task and not miscelatrice_task.done():
         miscelatrice_task.cancel()
         miscelatrice_task = None
+        # ensure both outputs are off after cancellation
+        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
 
     if direction == "ALZA":
         await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
