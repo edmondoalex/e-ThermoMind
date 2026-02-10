@@ -758,6 +758,13 @@ async def _apply_impianto_live() -> None:
     zones_mans = imp.get("zones_mans", [])
     zones_lab = imp.get("zones_lab", [])
     zone_scala = imp.get("zone_scala") or ""
+    season = str(imp.get("season_mode", "winter")).lower()
+    if season == "winter":
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "heat")
+    elif season == "summer":
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
 
     pt_active = any(_zone_active(z, cooling_blocked) for z in zones_pt)
     p1_active = any(_zone_active(z, cooling_blocked) for z in zones_p1)
@@ -769,7 +776,7 @@ async def _apply_impianto_live() -> None:
 
     # Se non ci sono zone configurate, usa richiesta_on
     demand_on = any_active if (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala) else richiesta_on
-    if str(imp.get("season_mode", "winter")).lower() == "summer":
+    if season == "summer":
         demand_on = False
 
     r12 = act.get("r12_pump_mandata_piani")
@@ -794,8 +801,6 @@ async def _apply_impianto_live() -> None:
     await _set_pump_delayed("impianto:pump", r12, demand_on, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
     if not demand_on:
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_actuator(r31, False)
@@ -815,8 +820,6 @@ async def _apply_impianto_live() -> None:
         source = None
 
     if not source:
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
@@ -826,9 +829,6 @@ async def _apply_impianto_live() -> None:
         if cfg.get("modules_enabled", {}).get("miscelatrice", True):
             await _set_actuator(misc_enable, False)
         return
-
-    for z in _collect_zones(imp):
-        await _set_climate_hvac_mode(z, "heat")
 
     if source == "PDC":
         await _set_actuator(r5, True)
