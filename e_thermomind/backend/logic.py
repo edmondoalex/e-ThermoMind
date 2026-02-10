@@ -165,6 +165,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     req_state = ha_states.get(req_eid, {}).get("state") if req_eid else ("on" if imp_cfg.get("richiesta_heat") else "off")
     pdc_ready = _is_on_state(ha_states.get(pdc_eid, {}).get("state") if pdc_eid else ("on" if imp_cfg.get("pdc_ready") else "off"))
     vol_ready = _is_on_state(ha_states.get(vol_eid, {}).get("state") if vol_eid else ("on" if imp_cfg.get("volano_ready") else "off"))
+    puf_ready = _is_on_state(ha_states.get(ent_cfg.get("source_puffer_ready"), {}).get("state")) if ent_cfg.get("source_puffer_ready") else bool(imp_cfg.get("puffer_ready", True))
     req_on = _is_on_state(req_state)
     sel_norm = str(sel_state or "AUTO").strip().upper()
     vol_min = float(imp_cfg.get("volano_min_c", 35.0))
@@ -178,14 +179,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         sel_norm = "AUTO"
     if sel_norm == "AUTO" or (
         (sel_norm == "PDC" and not pdc_ready) or
-        (sel_norm == "VOLANO" and not vol_ready)
+        (sel_norm == "VOLANO" and not vol_ready) or
+        (sel_norm == "PUFFER" and not puf_ready)
     ):
         if pdc_ready:
             source = "PDC"
         elif vol_ready:
             source = "VOLANO"
         else:
-            source = "PUFFER"
+            source = "PUFFER" if puf_ready else "OFF"
     else:
         source = sel_norm
 
@@ -196,6 +198,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         f"Richiesta={ 'ON' if req_on else 'OFF' } | Sel={sel_norm} | "
         f"PDC={'ON' if pdc_ready else 'OFF'} "
         f"VOL={'ON' if vol_ready else 'OFF'} "
+        f"PUF={'ON' if puf_ready else 'OFF'} "
         f"Source={source} "
         f"| Miscelatrice={'ON' if miscelatrice_on else 'OFF'}"
     )
@@ -231,6 +234,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "miscelatrice": miscelatrice_on,
                 "pdc_ready": pdc_ready,
                 "volano_ready": vol_ready,
+                "puffer_ready": puf_ready,
                 "volano_temp_ok": vol_ok,
                 "puffer_temp_ok": puf_ok,
                 "blocked_cold": blocked_cold,

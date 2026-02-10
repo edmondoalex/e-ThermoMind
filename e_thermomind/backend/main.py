@@ -719,6 +719,7 @@ async def _apply_impianto_live() -> None:
 
     pdc_ready = _state_is_on(ent.get("source_pdc_ready")) if ent.get("source_pdc_ready") else bool(imp_cfg.get("pdc_ready"))
     volano_ready = _state_is_on(ent.get("source_volano_ready")) if ent.get("source_volano_ready") else bool(imp_cfg.get("volano_ready"))
+    puffer_ready = _state_is_on(ent.get("source_puffer_ready")) if ent.get("source_puffer_ready") else bool(imp_cfg.get("puffer_ready", True))
     misc_enable = ent.get("miscelatrice_enable")
 
     if sel_state not in ("AUTO", "PDC", "VOLANO", "PUFFER"):
@@ -735,14 +736,15 @@ async def _apply_impianto_live() -> None:
     # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
     if sel_state == "AUTO" or (
         (sel_state == "PDC" and not pdc_ready) or
-        (sel_state == "VOLANO" and not volano_ready)
+        (sel_state == "VOLANO" and not volano_ready) or
+        (sel_state == "PUFFER" and not puffer_ready)
     ):
         if pdc_ready:
             source = "PDC"
         elif volano_ready and vol_temp_ok:
             source = "VOLANO"
         else:
-            source = "PUFFER" if puf_temp_ok else None
+            source = "PUFFER" if (puffer_ready and puf_temp_ok) else None
     else:
         source = sel_state
 
@@ -808,8 +810,8 @@ async def _apply_impianto_live() -> None:
 
     # blocco termostati sorgenti
     if source == "VOLANO" and t_volano is not None and t_volano <= vol_min:
-        source = None if forced_source else ("PUFFER" if puf_temp_ok else None)
-    if source == "PUFFER" and not puf_temp_ok:
+        source = None if forced_source else ("PUFFER" if (puffer_ready and puf_temp_ok) else None)
+    if source == "PUFFER" and (not puffer_ready or not puf_temp_ok):
         source = None
 
     if not source:
