@@ -439,6 +439,10 @@
               <div class="v">{{ fmtDelta(d?.inputs?.t_mandata_miscelata, d?.inputs?.t_ritorno_miscelato) }}</div>
             </div>
             <div class="kpi kpi-center">
+              <div class="k">Kp eff</div>
+              <div class="v">{{ (d?.computed?.miscelatrice?.kp_eff ?? 0).toFixed(2) }}</div>
+            </div>
+            <div class="kpi kpi-center">
               <div class="k">Stato</div>
               <div class="v">{{ d?.computed?.miscelatrice?.action || 'STOP' }}</div>
             </div>
