@@ -131,6 +131,16 @@ class HAClient:
         async with self._session.post(url, json=payload) as r:
             return r.status == 200
 
+
+    async def api_get(self, path: str, params: Dict[str, Any] | None = None) -> Any:
+        if not self._session:
+            return None
+        url = f"{self._http_url}/{path.lstrip('/')}"
+        async with self._session.get(url, params=params or {}) as r:
+            if r.status != 200:
+                return None
+            return await r.json()
+
     async def loop(self):
         if self._ws is None:
             return

@@ -744,6 +744,7 @@ async def get_setpoints():
         "runtime": cfg.get("runtime", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),
         "impianto": cfg.get("impianto", {}),
+        "history": cfg.get("history", {}),
         "security": cfg.get("security", {}),
     })
 
@@ -775,6 +776,36 @@ async def set_modules(payload: dict):
     cfg = apply_setpoints(cfg, {"modules_enabled": modules})
     save_config(cfg)
     return JSONResponse({"ok": True})
+
+@app.get("/api/history")
+async def history(entity_id: str, hours: int = 24):
+    if not ha.enabled:
+        raise HTTPException(status_code=400, detail="HA offline")
+    hours = max(1, min(int(hours), 48))
+    # allow only configured temp sensors with history flag
+    ent_cfg = cfg.get("entities", {})
+    hist_cfg = cfg.get("history", {})
+    allowed = {"t_acs", "t_puffer", "t_volano", "t_solare_mandata"}
+    key = None
+    for k in allowed:
+        if ent_cfg.get(k) == entity_id:
+            key = k
+            break
+    if not key or not hist_cfg.get(key):
+        raise HTTPException(status_code=403, detail="History disabled")
+
+    import datetime as dt
+    end = dt.datetime.utcnow()
+    start = end - dt.timedelta(hours=hours)
+    path = f"history/period/{start.isoformat()}"
+    params = {
+        "filter_entity_id": entity_id,
+        "end_time": end.isoformat(),
+        "minimal_response": "1",
+        "no_attributes": "1"
+    }
+    data = await ha.api_get(path, params=params)
+    return JSONResponse({"items": data or []})
 
 @app.get("/api/entities")
 async def get_entities():

@@ -124,6 +124,12 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "caldaia_ready": False,
     "richiesta_heat": False
   },
+  "history": {
+    "t_acs": False,
+    "t_puffer": False,
+    "t_volano": False,
+    "t_solare_mandata": False
+  },
   "security": {
     "user_pin": ""
   }
@@ -255,6 +261,12 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
 
+    hist = raw.get("history", {})
+    if isinstance(hist, dict):
+        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata"):
+            if key in hist:
+                cfg["history"][key] = bool(hist[key])
+
     security = raw.get("security", {})
     if isinstance(security, dict) and isinstance(security.get("user_pin"), str):
         cfg["security"]["user_pin"] = security.get("user_pin", "")
@@ -322,6 +334,12 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
         for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
+
+    hist = payload.get("history", {})
+    if isinstance(hist, dict):
+        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata"):
+            if key in hist:
+                cfg["history"][key] = bool(hist[key])
 
     security = payload.get("security", {})
     if isinstance(security, dict) and isinstance(security.get("user_pin"), str):

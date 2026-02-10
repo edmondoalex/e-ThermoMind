@@ -22,15 +22,15 @@
         <p class="muted">Dry-run: nessun comando agli attuatori. Serve per validare la logica.</p>
 
         <div v-if="d" class="grid">
-          <div class="kpi">
+          <div class="kpi" :class="historyEnabled('t_acs') ? 'clickable' : ''" @click="openHistory('t_acs','T_ACS')">
             <div class="k"><i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i> T_ACS</div>
             <div class="v">{{ fmtTemp(d.inputs.t_acs) }}</div>
           </div>
-          <div class="kpi">
+          <div class="kpi" :class="historyEnabled('t_puffer') ? 'clickable' : ''" @click="openHistory('t_puffer','T_Puffer')">
             <div class="k"><i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i> T_Puffer</div>
             <div class="v">{{ fmtTemp(d.inputs.t_puffer) }}</div>
           </div>
-          <div class="kpi">
+          <div class="kpi" :class="historyEnabled('t_volano') ? 'clickable' : ''" @click="openHistory('t_volano','T_Volano')">
             <div class="k"><i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i> T_Volano</div>
             <div class="v">{{ fmtTemp(d.inputs.t_volano) }}</div>
           </div>
@@ -273,7 +273,7 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Solare</strong></div>
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_solare_mandata') ? 'clickable' : ''" @click="openHistory('t_solare_mandata','T_Solare mandata')">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i>
                 T_Solare mandata
@@ -614,6 +614,9 @@
                        @input="dirtyEnt.t_acs = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="mini-toggle">
+              <label><input type="checkbox" v-model="sp.history.t_acs"/> Storico</label>
+            </div>
           </div>
           <div class="field">
             <label>
@@ -628,6 +631,9 @@
                        placeholder="sensor.puffer_temp"
                        @input="dirtyEnt.t_puffer = true"
                        @focus="onFocus" @blur="onBlur"/>
+            </div>
+            <div class="mini-toggle">
+              <label><input type="checkbox" v-model="sp.history.t_puffer"/> Storico</label>
             </div>
           </div>
           <div class="field">
@@ -644,6 +650,9 @@
                        @input="dirtyEnt.t_volano = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="mini-toggle">
+              <label><input type="checkbox" v-model="sp.history.t_volano"/> Storico</label>
+            </div>
           </div>
           <div class="field">
             <label>
@@ -658,6 +667,9 @@
                        placeholder="sensor.solar_mandata"
                        @input="dirtyEnt.t_solare_mandata = true"
                        @focus="onFocus" @blur="onBlur"/>
+            </div>
+            <div class="mini-toggle">
+              <label><input type="checkbox" v-model="sp.history.t_solare_mandata"/> Storico</label>
             </div>
           </div>
             <div class="field">
@@ -739,6 +751,22 @@
           <button class="ghost" @click="loadAll">Ricarica</button>
         </div>
       </section>
+      <div v-if="historyModal.open" class="modal-backdrop" @click.self="closeHistory">
+        <div class="modal">
+          <div class="modal-head">
+            <div class="modal-title">Storico 24h — {{ historyModal.title }}</div>
+            <button class="ghost" @click="closeHistory">Chiudi</button>
+          </div>
+          <div class="modal-body">
+            <svg viewBox="0 0 600 220" class="history-chart" role="img" aria-label="Grafico storico">
+              <polyline :points="historyModal.points" class="spark acs"/>
+            </svg>
+            <div class="legend small">
+              <span class="legend-item"><span class="legend-dot acs"></span>{{ historyModal.title }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -763,6 +791,7 @@ const history = ref({
   t_volano: [],
   export_w: []
 })
+const historyModal = ref({ open: false, title: '', points: '' })
 const maxPoints = 60
   const filterAct = ref('')
   const editingCount = ref(0)
@@ -841,6 +870,43 @@ const fmtEntity = (e) => {
   if (Number.isFinite(num)) return `${num} ${unit}`.trim()
   return `${raw} ${unit}`.trim()
 }
+const historyEnabled = (key) => !!sp.value?.history?.[key]
+async function openHistory(key, title){
+  if (!historyEnabled(key)) return
+  const entId = ent.value?.[key]?.entity_id
+  if (!entId) return
+  const r = await fetch(`/api/history?entity_id=${encodeURIComponent(entId)}&hours=24`)
+  if (!r.ok) return
+  const data = await r.json()
+  const items = Array.isArray(data?.items) ? data.items.flat() : []
+  const points = []
+  for (const st of items){
+    const v = Number(st.state)
+    if (!Number.isFinite(v)) continue
+    const ts = new Date(st.last_changed || st.last_updated || st.last_reported || Date.now()).getTime()
+    points.push([ts, v])
+  }
+  if (points.length === 0) return
+  const step = Math.max(1, Math.floor(points.length / 200))
+  const reduced = points.filter((_, i) => i % step === 0)
+  const xs = reduced.map(p => p[0])
+  const ys = reduced.map(p => p[1])
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const spanX = Math.max(1, maxX - minX)
+  const spanY = Math.max(0.1, maxY - minY)
+  const pts = reduced.map(([x,y]) => {
+    const px = ((x - minX) / spanX) * 600
+    const py = 220 - ((y - minY) / spanY) * 200 - 10
+    return `${px.toFixed(1)},${py.toFixed(1)}`
+  }).join(' ')
+  historyModal.value = { open: true, title, points: pts }
+}
+function closeHistory(){
+  historyModal.value.open = false
+}
 const flowSolarToAcs = computed(() => d.value?.computed?.source_to_acs === 'SOLAR')
 const flowVolanoToAcs = computed(() => d.value?.computed?.source_to_acs === 'VOLANO')
 const flowPufferToAcs = computed(() => d.value?.computed?.source_to_acs === 'PUFFER')
@@ -918,6 +984,9 @@ async function load(){
       volano_to_puffer_start_s: 5,
       volano_to_puffer_stop_s: 2
     }
+  }
+  if (!sp.value?.history) {
+    sp.value.history = { t_acs: false, t_puffer: false, t_volano: false, t_solare_mandata: false }
   }
   if (!sp.value?.solare) {
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
@@ -1342,6 +1411,12 @@ details.form summary{cursor:pointer;list-style:none}
 .legend-item{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
 .legend-dot{width:10px;height:10px;border-radius:999px;background:#2b3447}
 .legend-dot.on{background:#4fd1c5}
+.mini-toggle{margin-top:6px;font-size:11px;color:var(--muted)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50}
+.modal{background:linear-gradient(180deg, rgba(11,16,26,.98), rgba(9,14,22,.98));border:1px solid var(--border);border-radius:16px;max-width:760px;width:90%;padding:14px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.modal-title{font-weight:700}
+.history-chart{width:100%;height:auto}
 .module-reasons{display:grid;gap:8px;margin-top:6px}
 .module-row{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.45)}
 .module-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
