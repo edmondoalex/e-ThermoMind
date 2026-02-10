@@ -93,6 +93,9 @@
             <button class="ghost toggle" :class="modules.puffer_to_acs ? 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
               Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
             </button>
+            <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
+              Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
+            </button>
             <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
               Solare: {{ modules.solare ? 'ON' : 'OFF' }}
             </button>
@@ -540,6 +543,9 @@
             <button class="ghost toggle" :class="modules.puffer_to_acs ? 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
               Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
             </button>
+            <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
+              Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
+            </button>
             <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
               Solare: {{ modules.solare ? 'ON' : 'OFF' }}
             </button>
@@ -729,6 +735,7 @@ const modules = ref({
   volano_to_acs: false,
   volano_to_puffer: false,
   puffer_to_acs: false,
+  impianto: false,
   solare: false,
   miscelatrice: false,
   pdc: false
@@ -813,6 +820,7 @@ const moduleReasonsList = computed(() => {
     { key: 'volano_to_acs', label: 'Volano -> ACS', active: !!flags.volano_to_acs },
     { key: 'volano_to_puffer', label: 'Volano -> Puffer', active: !!flags.volano_to_puffer },
     { key: 'puffer_to_acs', label: 'Puffer -> ACS', active: !!flags.puffer_to_acs },
+    { key: 'impianto', label: 'Impianto Riscaldamento', active: false },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
   return labels

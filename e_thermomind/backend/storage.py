@@ -105,7 +105,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "puffer_to_acs": False,
     "solare": False,
     "miscelatrice": False,
-    "pdc": False
+    "pdc": False,
+    "impianto": False
   },
   "security": {
     "user_pin": ""

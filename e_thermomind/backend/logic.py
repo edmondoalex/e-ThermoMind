@@ -177,7 +177,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     if volano_to_puffer
                     else f"T_VOL {t_volano:.1f}?C < T_PUF+{puf_delta_hold:.1f}?C ({t_puffer + puf_delta_hold:.1f}?C)"
                 ),
-                "resistenze_volano": charge_reason
+                "resistenze_volano": charge_reason,
+                "impianto": "Modulo impianto riscaldamento: logica automatica non configurata."
             },
             "state": {
                 "last_dest": _LAST.get("dest"),

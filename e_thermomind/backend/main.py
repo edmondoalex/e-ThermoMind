@@ -167,6 +167,8 @@ def _actuator_key_for_entity(entity_id: str) -> str | None:
 def _module_for_actuator_key(key: str) -> str | None:
     if "resistenza" in key:
         return "resistenze_volano"
+    if "impianto" in key or "comparto" in key or "mandata" in key:
+        return "impianto"
     if "solare" in key or "ritorno_solare" in key:
         return "solare"
     if "miscelatrice" in key:
