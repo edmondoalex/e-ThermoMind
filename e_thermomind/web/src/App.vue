@@ -829,6 +829,9 @@ function toggleAct(key){
   const ent = act.value?.[key]
   if (!ent?.entity_id) return
   const action = ent.state === 'on' ? 'off' : 'on'
+  const label = actuatorDefs.find(a => a.key === key)?.label || ent.entity_id
+  const ok = window.confirm(`Comando manuale su ${label} (${action.toUpperCase()}). Confermi?`)
+  if (!ok) return
   doAct(ent.entity_id, action, { manual: true })
 }
 function mdiClass(icon){
