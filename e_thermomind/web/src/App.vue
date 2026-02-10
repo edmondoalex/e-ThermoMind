@@ -283,6 +283,20 @@
               </div>
             </div>
           </div>
+          <div class="row3">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r18_valve_ritorno_solare_basso?.state)" @click="userToggleManual(act?.r18_valve_ritorno_solare_basso)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r18_valve_ritorno_solare_basso?.attributes?.icon)" :class="[mdiClass(act?.r18_valve_ritorno_solare_basso?.attributes?.icon), stateClass(act?.r18_valve_ritorno_solare_basso?.state)]"></i>
+                R18 Ritorno Solare Basso
+              </div>
+            </div>
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r19_valve_ritorno_solare_alto?.state)" @click="userToggleManual(act?.r19_valve_ritorno_solare_alto)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r19_valve_ritorno_solare_alto?.attributes?.icon)" :class="[mdiClass(act?.r19_valve_ritorno_solare_alto?.attributes?.icon), stateClass(act?.r19_valve_ritorno_solare_alto?.state)]"></i>
+                R19 Ritorno Solare Alto
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="act" class="card inner">
@@ -930,6 +944,14 @@ function userToggle(entityObj, moduleKey){
   if (moduleKey && !modules.value?.[moduleKey]) return
   const action = entityObj.state === 'on' ? 'off' : 'on'
   doAct(entityObj.entity_id, action)
+}
+
+function userToggleManual(entityObj){
+  if (!entityObj?.entity_id) return
+  const action = entityObj.state === 'on' ? 'off' : 'on'
+  const ok = window.confirm(`Manuale solare: ${action.toUpperCase()} ${entityObj.entity_id}. Confermi?`)
+  if (!ok) return
+  doAct(entityObj.entity_id, action, { manual: true })
 }
 function stateLabel(state){
   if (state === 'on') return 'ON'
