@@ -98,10 +98,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         source_reason = f"T_SOL {t_sol:.1f}?C >= T_ACS+delta_hold {t_acs + solar_delta_hold:.1f}?C"
     elif dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit):
         source_to_acs = "VOLANO"
-        source_reason = f"T_VOL {t_volano:.1f}?C >= T_ACS+delta_start"
+        source_reason = f"T_VOL {t_volano:.1f}?C >= T_ACS+{delta_start:.1f}?C ({t_acs + delta_start:.1f}?C)"
     elif dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (not vol_max_hit):
         source_to_acs = "VOLANO"
-        source_reason = f"T_VOL {t_volano:.1f}?C >= T_ACS+delta_hold"
+        source_reason = f"T_VOL {t_volano:.1f}?C >= T_ACS+{delta_hold:.1f}?C ({t_acs + delta_hold:.1f}?C)"
     elif dest == "ACS" and (t_puffer >= t_acs + puf_to_acs_start):
         source_to_acs = "PUFFER"
         source_reason = f"T_PUF {t_puffer:.1f}?C >= T_ACS+delta {t_acs + puf_to_acs_start:.1f}?C"
@@ -172,7 +172,11 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "solare": source_reason if source_to_acs == "SOLAR" else "Solare non attivo per ACS.",
                 "volano_to_acs": source_reason if source_to_acs == "VOLANO" else "Volano → ACS non attivo.",
                 "puffer_to_acs": source_reason if source_to_acs == "PUFFER" else "Puffer → ACS non attivo.",
-                "volano_to_puffer": "Volano → Puffer attivo." if volano_to_puffer else "Volano → Puffer non attivo.",
+                "volano_to_puffer": (
+                    f"T_VOL {t_volano:.1f}?C >= T_PUF+{puf_delta_start:.1f}?C ({t_puffer + puf_delta_start:.1f}?C)"
+                    if volano_to_puffer
+                    else f"T_VOL {t_volano:.1f}?C < T_PUF+{puf_delta_hold:.1f}?C ({t_puffer + puf_delta_hold:.1f}?C)"
+                ),
                 "resistenze_volano": charge_reason
             },
             "state": {

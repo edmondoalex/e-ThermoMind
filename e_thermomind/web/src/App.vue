@@ -119,7 +119,17 @@
             <div class="row"><strong>Moduli</strong></div>
             <div class="module-reasons">
               <div v-for="item in moduleReasonsList" :key="item.key" class="module-row">
-                <div class="module-label">{{ item.label }}</div>
+                <div class="module-head">
+                  <div class="module-label">{{ item.label }}</div>
+                  <div class="module-badges">
+                    <span class="badge-mini" :class="item.enabled ? 'on' : 'off'">
+                      {{ item.enabled ? 'MOD ON' : 'MOD OFF' }}
+                    </span>
+                    <span class="badge-mini" :class="item.active ? 'active' : 'idle'">
+                      {{ item.active ? 'ATTIVO' : 'INATTIVO' }}
+                    </span>
+                  </div>
+                </div>
                 <div class="muted">{{ item.reason }}</div>
               </div>
             </div>
@@ -796,16 +806,22 @@ const flowMiscelatrice = computed(() => false)
 const flowCaldaiaToPuffer = computed(() => false)
 const moduleReasonsList = computed(() => {
   const mr = d.value?.computed?.module_reasons || {}
+  const flags = d.value?.computed?.flags || {}
+  const step = Number(d.value?.computed?.resistance_step || 0)
   const labels = [
-    { key: 'solare', label: 'Solare' },
-    { key: 'volano_to_acs', label: 'Volano -> ACS' },
-    { key: 'volano_to_puffer', label: 'Volano -> Puffer' },
-    { key: 'puffer_to_acs', label: 'Puffer -> ACS' },
-    { key: 'resistenze_volano', label: 'Resistenze Volano' }
+    { key: 'solare', label: 'Solare', active: !!flags.solare_to_acs },
+    { key: 'volano_to_acs', label: 'Volano -> ACS', active: !!flags.volano_to_acs },
+    { key: 'volano_to_puffer', label: 'Volano -> Puffer', active: !!flags.volano_to_puffer },
+    { key: 'puffer_to_acs', label: 'Puffer -> ACS', active: !!flags.puffer_to_acs },
+    { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
   return labels
     .filter(item => mr[item.key])
-    .map(item => ({ ...item, reason: mr[item.key] }))
+    .map(item => ({
+      ...item,
+      enabled: modules.value?.[item.key] !== false,
+      reason: mr[item.key]
+    }))
 })
 
 const solarModeClass = computed(() => {
@@ -1274,6 +1290,13 @@ details.form summary{cursor:pointer;list-style:none}
 .legend-dot.on{background:#4fd1c5}
 .module-reasons{display:grid;gap:8px;margin-top:6px}
 .module-row{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.45)}
+.module-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .module-label{font-size:12px;font-weight:700;letter-spacing:.3px}
+.module-badges{display:flex;gap:6px;align-items:center}
+.badge-mini{font-size:10px;border:1px solid var(--border);padding:2px 6px;border-radius:999px;color:var(--muted)}
+.badge-mini.on{background:rgba(87,227,214,.12);border-color:rgba(87,227,214,.4);color:#c6fff6}
+.badge-mini.off{background:rgba(148,163,184,.08)}
+.badge-mini.active{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.4);color:#ffd4d4}
+.badge-mini.idle{background:rgba(148,163,184,.08)}
 @keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-36}}
 </style>
