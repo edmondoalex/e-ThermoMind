@@ -623,12 +623,13 @@ async def _apply_impianto_live() -> None:
     off_centralina = ent.get("off_centralina_termoregolazione")
     r4 = act.get("r4_valve_impianto_da_puffer")
 
-    sel_state = str(_get_state(sel) or "AUTO").strip().upper()
-    richiesta_on = _state_is_on(richiesta)
+    imp_cfg = cfg.get("impianto", {})
+    sel_state = str(_get_state(sel) or imp_cfg.get("source_mode", "AUTO") or "AUTO").strip().upper()
+    richiesta_on = _state_is_on(richiesta) if richiesta else bool(imp_cfg.get("richiesta_heat"))
 
-    pdc_ready = _state_is_on(ent.get("source_pdc_ready"))
-    volano_ready = _state_is_on(ent.get("source_volano_ready"))
-    caldaia_ready = _state_is_on(ent.get("source_caldaia_ready"))
+    pdc_ready = _state_is_on(ent.get("source_pdc_ready")) if ent.get("source_pdc_ready") else bool(imp_cfg.get("pdc_ready"))
+    volano_ready = _state_is_on(ent.get("source_volano_ready")) if ent.get("source_volano_ready") else bool(imp_cfg.get("volano_ready"))
+    caldaia_ready = _state_is_on(ent.get("source_caldaia_ready")) if ent.get("source_caldaia_ready") else bool(imp_cfg.get("caldaia_ready"))
     misc_enable = ent.get("miscelatrice_enable")
 
     if sel_state not in ("AUTO", "PDC", "VOLANO", "CALDAIA", "PUFFER"):
@@ -739,6 +740,7 @@ async def get_setpoints():
         "timers": cfg.get("timers", {}),
         "runtime": cfg.get("runtime", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),
+        "impianto": cfg.get("impianto", {}),
         "security": cfg.get("security", {}),
     })
 

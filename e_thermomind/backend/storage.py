@@ -117,6 +117,13 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "pdc": False,
     "impianto": False
   },
+  "impianto": {
+    "source_mode": "AUTO",
+    "pdc_ready": False,
+    "volano_ready": False,
+    "caldaia_ready": False,
+    "richiesta_heat": False
+  },
   "security": {
     "user_pin": ""
   }
@@ -240,6 +247,14 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             if key in modules:
                 cfg["modules_enabled"][key] = bool(modules[key])
 
+    imp = raw.get("impianto", {})
+    if isinstance(imp, dict):
+        if isinstance(imp.get("source_mode"), str):
+            cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
+        for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
+            if key in imp:
+                cfg["impianto"][key] = bool(imp[key])
+
     security = raw.get("security", {})
     if isinstance(security, dict) and isinstance(security.get("user_pin"), str):
         cfg["security"]["user_pin"] = security.get("user_pin", "")
@@ -299,6 +314,14 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
         for key in cfg["modules_enabled"].keys():
             if key in modules:
                 cfg["modules_enabled"][key] = bool(modules[key])
+
+    imp = payload.get("impianto", {})
+    if isinstance(imp, dict):
+        if isinstance(imp.get("source_mode"), str):
+            cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
+        for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
+            if key in imp:
+                cfg["impianto"][key] = bool(imp[key])
 
     security = payload.get("security", {})
     if isinstance(security, dict) and isinstance(security.get("user_pin"), str):

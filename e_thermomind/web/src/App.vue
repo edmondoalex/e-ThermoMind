@@ -108,6 +108,43 @@
           </div>
         </div>
 
+        <div class="card inner">
+          <div class="row"><strong>Impianto riscaldamento (interno)</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Sorgente</div>
+              <select v-model="sp.impianto.source_mode">
+                <option value="AUTO">AUTO</option>
+                <option value="PDC">PDC</option>
+                <option value="VOLANO">VOLANO</option>
+                <option value="CALDAIA">CALDAIA</option>
+                <option value="PUFFER">PUFFER</option>
+              </select>
+            </div>
+            <label class="kpi kpi-center checkbox">
+              <input type="checkbox" v-model="sp.impianto.pdc_ready"/>
+              <span>PDC ready</span>
+            </label>
+            <label class="kpi kpi-center checkbox">
+              <input type="checkbox" v-model="sp.impianto.volano_ready"/>
+              <span>Volano ready</span>
+            </label>
+            <label class="kpi kpi-center checkbox">
+              <input type="checkbox" v-model="sp.impianto.caldaia_ready"/>
+              <span>Caldaia ready</span>
+            </label>
+            <div class="kpi kpi-center">
+              <div class="k">Richiesta calore</div>
+              <div class="v">{{ d?.computed?.impianto?.richiesta ? 'ON' : 'OFF' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Consenso miscelatrice</div>
+              <div class="v">{{ d?.computed?.impianto?.miscelatrice ? 'ON' : 'OFF' }}</div>
+            </div>
+          </div>
+          <div class="help">I checkbox sono manuali nel solo add-on. Richiesta calore e consenso miscelatrice sono in sola lettura.</div>
+        </div>
+
         <div v-if="d" class="card inner">
           <div class="row"><strong>Destinazione surplus:</strong> {{ d.computed.dest }}</div>
           <div class="muted">{{ d.computed.dest_reason }}</div>
@@ -978,6 +1015,9 @@ async function load(){
   if (!sp.value?.solare) {
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
   }
+  if (!sp.value?.impianto) {
+    sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, caldaia_ready: false, richiesta_heat: false }
+  }
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }
@@ -1258,6 +1298,8 @@ watch(
 .kpi{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}
 .kpi.kpi-center{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:72px}
 .kpi.kpi-center .k{display:flex;align-items:center;gap:6px;justify-content:center}
+.checkbox{gap:8px}
+.checkbox input{accent-color:#57e3d6}
 .kpi.clickable{cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
 .kpi.clickable:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .mode-night{border-color:rgba(59,130,246,.6);background:rgba(59,130,246,.12);box-shadow:0 0 0 1px rgba(59,130,246,.2) inset, 0 0 18px rgba(59,130,246,.25)}
