@@ -43,6 +43,7 @@ ws_clients: set[WebSocket] = set()
 miscelatrice_task: asyncio.Task | None = None
 miscelatrice_pause_until: float = 0.0
 miscelatrice_last_action: str = "STOP"
+miscelatrice_shutdown_until: float = 0.0
 
 @app.on_event("startup")
 async def on_startup():
@@ -267,7 +268,8 @@ def _zone_active(entity_id: str | None, cooling_blocked: set[str]) -> bool:
     if dom in ("switch", "binary_sensor", "input_boolean"):
         return state in ("on", "true", "1", "yes")
     if dom == "climate":
-        return state in ("heat", "cool", "auto", "heat_cool") or hvac_action in ("heating", "cooling")
+        # usa solo azione reale (heating/cooling) per evitare oscillazioni
+        return hvac_action in ("heating", "cooling")
     # default: treat truthy text as active
     return state in ("on", "true", "1", "yes", "heat", "heating")
 
@@ -711,7 +713,7 @@ async def _apply_solar_live(decision_data: dict) -> None:
         await _set_actuator(r9, True)
 
 async def _apply_miscelatrice_live(decision_data: dict) -> None:
-    global miscelatrice_task, miscelatrice_pause_until, miscelatrice_last_action
+    global miscelatrice_task, miscelatrice_pause_until, miscelatrice_last_action, miscelatrice_shutdown_until
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
@@ -722,18 +724,61 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
         return
 
-    # miscelatrice attiva solo con richiesta calore e sorgente disponibile
-    imp = (decision_data.get("computed", {}) or {}).get("impianto", {}) or {}
-    if (not cfg.get("modules_enabled", {}).get("impianto", True)) or (not imp.get("richiesta")) or (imp.get("blocked_cold")) or (imp.get("source") in (None, "OFF")):
-        act = cfg.get("actuators", {})
-        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
-        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
-        miscelatrice_last_action = "STOP"
-        return
-
     ent = cfg.get("entities", {})
     act = cfg.get("actuators", {})
     cfg_misc = cfg.get("miscelatrice", {})
+    imp = (decision_data.get("computed", {}) or {}).get("impianto", {}) or {}
+    imp_active = (
+        cfg.get("modules_enabled", {}).get("impianto", True)
+        and imp.get("richiesta")
+        and (not imp.get("blocked_cold"))
+        and (imp.get("source") not in (None, "OFF"))
+    )
+
+    # miscelatrice: se impianto inattivo -> chiusura forzata 180s, poi stop
+    if not imp_active:
+        now = time.time()
+        close_s = 180.0
+        r16 = act.get("r16_cmd_miscelatrice_alza")
+        r17 = act.get("r17_cmd_miscelatrice_abbassa")
+        # shutdown completato: non riarmare finché impianto non torna attivo
+        if miscelatrice_shutdown_until < 0:
+            await _set_actuator(r16, False)
+            await _set_actuator(r17, False)
+            miscelatrice_last_action = "STOP"
+            return
+        # shutdown in corso: continua senza riarmare
+        if miscelatrice_shutdown_until > now:
+            await _set_actuator(r16, False)
+            return
+        # se era in corso ed è finito, segna completato
+        if miscelatrice_shutdown_until > 0 and miscelatrice_shutdown_until <= now:
+            miscelatrice_shutdown_until = -1.0
+            await _set_actuator(r16, False)
+            await _set_actuator(r17, False)
+            miscelatrice_last_action = "STOP"
+            return
+        # avvia chiusura lunga una sola volta
+        if miscelatrice_task and not miscelatrice_task.done():
+            miscelatrice_task.cancel()
+            miscelatrice_task = None
+        await _set_actuator(r16, False)
+        miscelatrice_shutdown_until = now + close_s
+        miscelatrice_last_action = "ABBASSA"
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MISCELATRICE SHUTDOWN close {int(close_s)}s")
+        miscelatrice_task = asyncio.create_task(
+            _pulse_actuator("miscelatrice_shutdown_close", r17, close_s)
+        )
+        return
+
+    # impianto tornato attivo: cancella eventuale chiusura
+    if miscelatrice_shutdown_until != 0:
+        miscelatrice_shutdown_until = 0.0
+        if miscelatrice_task and not miscelatrice_task.done():
+            miscelatrice_task.cancel()
+            miscelatrice_task = None
+        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
 
     r16 = act.get("r16_cmd_miscelatrice_alza")
     r17 = act.get("r17_cmd_miscelatrice_abbassa")
@@ -890,12 +935,18 @@ async def _apply_impianto_live() -> None:
     puf_h = float(imp_cfg.get("puffer_hyst_c", 2.0))
 
     forced_source = sel_state != "AUTO"
-    # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
+
+    vol_active = _state_is_on(act.get("r5_valve_impianto_da_pdc"))
+    puf_active = _state_is_on(act.get("r4_valve_impianto_da_puffer"))
+    vol_temp_ok = (t_volano is None) or (t_volano >= vol_min + vol_h) or (vol_active and t_volano > vol_min)
+    puf_temp_ok = (t_puffer is None) or (t_puffer >= puf_min + puf_h) or (puf_active and t_puffer > puf_min)
+
+    # Se selector AUTO o sorgente non disponibile -> fallback con priorità
     if sel_state == "AUTO" or (
-        (sel_state == "PDC" and not pdc_volano_ready) or
-        (sel_state == "PUFFER" and not puffer_ready)
+        (sel_state == "PDC" and (not pdc_volano_ready or not vol_temp_ok)) or
+        (sel_state == "PUFFER" and (not puffer_ready or not puf_temp_ok))
     ):
-        if pdc_volano_ready:
+        if pdc_volano_ready and vol_temp_ok:
             source = "PDC"
         else:
             source = "PUFFER" if (puffer_ready and puf_temp_ok) else None
@@ -912,12 +963,6 @@ async def _apply_impianto_live() -> None:
     zones_lab = imp.get("zones_lab", [])
     zone_scala = imp.get("zone_scala") or ""
     season = str(imp.get("season_mode", "winter")).lower()
-    if season == "winter":
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "heat")
-    elif season == "summer":
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
 
     pt_active = any(_zone_active(z, cooling_blocked) for z in zones_pt)
     p1_active = any(_zone_active(z, cooling_blocked) for z in zones_p1)
@@ -937,10 +982,57 @@ async def _apply_impianto_live() -> None:
     r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
     r1 = act.get("r1_valve_comparto_laboratorio")
 
-    vol_active = _state_is_on(r5)
-    puf_active = _state_is_on(r4)
-    vol_temp_ok = (t_volano is None) or (t_volano >= vol_min + vol_h) or (vol_active and t_volano > vol_min)
-    puf_temp_ok = (t_puffer is None) or (t_puffer >= puf_min + puf_h) or (puf_active and t_puffer > puf_min)
+    # blocco se nessuna fonte valida o troppo fredda
+    if not source:
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
+        if r2:
+            await _set_actuator(r2, False)
+        if r3:
+            await _set_actuator(r3, False)
+        if r1:
+            await _set_actuator(r1, False)
+        await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        await _set_actuator(r4, False)
+        await _set_actuator(r5, False)
+        await _set_climate_hvac_mode(clima, "off")
+        await _set_actuator(off_centralina, True)
+        # miscelatrice gestita solo dal suo modulo
+        return
+
+    # in inverno abilita termostati solo se c'è una fonte valida
+    if season == "winter":
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "heat")
+    else:
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
+
+    if not demand_on:
+        if r2:
+            await _set_actuator(r2, False)
+        if r3:
+            await _set_actuator(r3, False)
+        if r1:
+            await _set_actuator(r1, False)
+        await _set_actuator(r4, False)
+        await _set_actuator(r5, False)
+        await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        await _set_climate_hvac_mode(clima, "off")
+        await _set_actuator(off_centralina, True)
+        # miscelatrice gestita solo dal suo modulo
+        return
+
+    # Consenso/centralina
+    await _set_actuator(off_centralina, False)
+
+    # in inverno abilita termostati solo se c'è una fonte valida
+    if season == "winter":
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "heat")
+    else:
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
 
     # Valvole zone (mansarda e 1P condividono R3)
     if r2:
@@ -951,35 +1043,7 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r1, lab_active)
 
     # Pompa con ritardi
-    await _set_pump_delayed("impianto:pump", r12, demand_on, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-
-    if not demand_on:
-        await _set_actuator(r4, False)
-        await _set_actuator(r5, False)
-        await _set_climate_hvac_mode(clima, "off")
-        await _set_actuator(off_centralina, True)
-        # miscelatrice gestita solo dal suo modulo
-        return
-
-    # Consenso/centralina
-    await _set_actuator(off_centralina, False)
-
-    # blocco termostati sorgenti
-    if source == "PDC" and t_volano is not None and t_volano <= vol_min:
-        source = None if forced_source else ("PUFFER" if (puffer_ready and puf_temp_ok) else None)
-    if source == "PUFFER" and (not puffer_ready or not puf_temp_ok):
-        source = None
-
-    if not source:
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
-        await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-        await _set_actuator(r4, False)
-        await _set_actuator(r5, False)
-        await _set_climate_hvac_mode(clima, "off")
-        await _set_actuator(off_centralina, True)
-        # miscelatrice gestita solo dal suo modulo
-        return
+    await _set_pump_delayed("impianto:pump", r12, True, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
     if source == "PDC":
         await _set_actuator(r5, True)

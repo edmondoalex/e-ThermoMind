@@ -182,15 +182,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
     if sel_norm == "AUTO" or (
-        (sel_norm == "PDC" and not pdc_vol_ready) or
-        (sel_norm == "PUFFER" and not puf_ready)
+        (sel_norm == "PDC" and (not pdc_vol_ready or not vol_ok)) or
+        (sel_norm == "PUFFER" and (not puf_ready or not puf_ok))
     ):
-        if pdc_vol_ready:
+        if pdc_vol_ready and vol_ok:
             source = "PDC"
         else:
-            source = "PUFFER" if puf_ready else "OFF"
+            source = "PUFFER" if (puf_ready and puf_ok) else "OFF"
     else:
-        source = sel_norm
+        source = sel_norm if ((sel_norm == "PDC" and vol_ok) or (sel_norm == "PUFFER" and puf_ok)) else "OFF"
 
     mix_sp = get_num(ent.get("miscelatrice_setpoint"), float(misc_cfg.get("setpoint_c", 45.0)))
     mix_h = float(misc_cfg.get("hyst_c", 0.5))
@@ -220,8 +220,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 mix_action = "ABBASSA"
                 mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | ΔT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
 
-    miscelatrice_on = req_on and cfg.get("modules_enabled", {}).get("miscelatrice", True)
-    blocked_cold = req_on and (not pdc_ready) and (not vol_ok) and (not puf_ok)
+    miscelatrice_on = req_on and (source != "OFF") and cfg.get("modules_enabled", {}).get("miscelatrice", True)
+    blocked_cold = req_on and (source == "OFF")
 
     if blocked_cold:
         impianto_reason = "Bloccato: nessuna fonte disponibile o troppo fredda."
