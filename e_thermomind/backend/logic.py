@@ -78,7 +78,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         dest = "OFF"
         dest_reason = "Nessuna destinazione utile."
 
-    solar_delta_on = 5.0
+    solar_cfg = cfg.get("solare", {})
+    solar_delta_on = float(solar_cfg.get("delta_on_c", 5.0))
+    solar_delta_hold = float(solar_cfg.get("delta_hold_c", 2.5))
     last_source = _LAST.get("source_to_acs")
     delta_start = float(vol_cfg.get("delta_to_acs_start_c", 5.0))
     delta_hold = float(vol_cfg.get("delta_to_acs_hold_c", 2.5))
@@ -91,6 +93,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if dest == "ACS" and (t_sol >= t_acs + solar_delta_on) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}?C >= T_ACS+delta {t_acs + solar_delta_on:.1f}?C"
+    elif dest == "ACS" and last_source == "SOLAR" and (t_sol >= t_acs + solar_delta_hold) and (not acs_max_hit):
+        source_to_acs = "SOLAR"
+        source_reason = f"T_SOL {t_sol:.1f}?C >= T_ACS+delta_hold {t_acs + solar_delta_hold:.1f}?C"
     elif dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}?C >= T_ACS+delta_start"

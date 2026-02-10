@@ -423,6 +423,21 @@
             </div>
           </div>
 
+          <div class="set-section">
+            <div class="section-title">Solare</div>
+            <div class="field">
+              <label>Modalità</label>
+              <select v-model="sp.solare.mode">
+                <option value="auto">auto (sun.sun)</option>
+                <option value="night">notte fissa</option>
+              </select>
+            </div>
+            <div class="field"><label>Δ Start Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_on_c"/></div>
+            <div class="field"><label>Δ Hold Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_hold_c"/></div>
+            <div class="field"><label>Solare MAX (C)</label><input type="number" step="0.5" v-model.number="sp.solare.max_c"/></div>
+            <div class="help">In NOTTE: R8 ON e R9 OFF. R18/R19 restano manuali con interblocco.</div>
+          </div>
+
         </div>
 
         <div class="form">
@@ -642,9 +657,9 @@ const actuatorDefs = [
   { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC', impl: false },
   { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS', impl: true },
   { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer', impl: true },
-  { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp', impl: false },
-  { key: 'r9_valve_solare_normal_funz', label: 'R9 Valvola Solare Normal Funz', impl: false },
-  { key: 'r10_valve_solare_precedenza_acs', label: 'R10 Valvola Solare Precedenza ACS', impl: false },
+  { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp', impl: true },
+  { key: 'r9_valve_solare_normal_funz', label: 'R9 Valvola Solare Normal Funz', impl: true },
+  { key: 'r10_valve_solare_precedenza_acs', label: 'R10 Valvola Solare Precedenza ACS', impl: true },
   { key: 'r11_pump_mandata_laboratorio', label: 'R11 Pompa Mandata Laboratorio', impl: false },
   { key: 'r12_pump_mandata_piani', label: 'R12 Pompa Mandata Piani', impl: false },
   { key: 'r13_pump_pdc_to_acs_puffer', label: 'R13 Pompa PDC -> ACS/Puffer', impl: true },
@@ -652,8 +667,8 @@ const actuatorDefs = [
   { key: 'r15_pump_caldaia_legna', label: 'R15 Pompa Caldaia Legna -> Puffer', impl: false },
   { key: 'r16_cmd_miscelatrice_alza', label: 'R16 CMD Miscelatrice ALZA', impl: false },
   { key: 'r17_cmd_miscelatrice_abbassa', label: 'R17 CMD Miscelatrice ABBASSA', impl: false },
-  { key: 'r18_valve_ritorno_solare_basso', label: 'R18 Valvola Ritorno Solare Basso', impl: false },
-  { key: 'r19_valve_ritorno_solare_alto', label: 'R19 Valvola Ritorno Solare Alto', impl: false },
+  { key: 'r18_valve_ritorno_solare_basso', label: 'R18 Valvola Ritorno Solare Basso', impl: true },
+  { key: 'r19_valve_ritorno_solare_alto', label: 'R19 Valvola Ritorno Solare Alto', impl: true },
   { key: 'r20_ta_caldaia_legna', label: 'R20 TA Caldaia Legna', impl: false },
   { key: 'r21_libero', label: 'R21 Libero', impl: false },
   { key: 'r22_resistenza_1_volano_pdc', label: 'R22 Resistenza 1 Volano PDC', impl: true },
@@ -743,6 +758,9 @@ async function load(){
       volano_to_puffer_start_s: 5,
       volano_to_puffer_stop_s: 2
     }
+  }
+  if (!sp.value?.solare) {
+    sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90 }
   }
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000

@@ -105,6 +105,7 @@ async def decision():
     data = compute_decision(cfg, ha.states)
     await _apply_resistance_live(data)
     await _apply_transfer_live(data)
+    await _apply_solar_live(data)
     return JSONResponse(data)
 
 def _get_state(entity_id: str | None) -> str | None:
@@ -116,6 +117,7 @@ async def _build_snapshot() -> dict:
     data = compute_decision(cfg, ha.states)
     await _apply_resistance_live(data)
     await _apply_transfer_live(data)
+    await _apply_solar_live(data)
     act = {}
     for k, eid in (cfg.get("actuators", {}) or {}).items():
         if eid:
@@ -323,6 +325,10 @@ async def _set_actuator(entity_id: str | None, want_on: bool) -> None:
         await ha.call_service(entity_id, "off")
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
 
+def _sun_is_night() -> bool:
+    st = ha.states.get("sun.sun", {})
+    return st.get("state") == "below_horizon"
+
 def _cancel_transfer_task(key: str) -> None:
     task = transfer_tasks.pop(key, None)
     if task:
@@ -464,6 +470,51 @@ async def _apply_transfer_live(decision_data: dict) -> None:
         want_puf_acs,
     )
 
+async def _apply_solar_live(decision_data: dict) -> None:
+    if cfg.get("runtime", {}).get("mode") != "live":
+        return
+    if not ha.enabled:
+        return
+    if not cfg.get("modules_enabled", {}).get("solare", True):
+        return
+
+    sol_cfg = cfg.get("solare", {})
+    mode = sol_cfg.get("mode", "auto")
+    night = (mode == "night") or (mode == "auto" and _sun_is_night())
+
+    act = cfg.get("actuators", {})
+    r8 = act.get("r8_valve_solare_notte_low_temp")
+    r9 = act.get("r9_valve_solare_normal_funz")
+    r10 = act.get("r10_valve_solare_precedenza_acs")
+
+    # Cutback: se ACS o solare troppo caldi
+    ent = cfg.get("entities", {})
+    t_acs = ha.states.get(ent.get("t_acs"), {}).get("state")
+    t_sol = ha.states.get(ent.get("t_solare_mandata"), {}).get("state")
+    try:
+        t_acs = float(t_acs)
+    except Exception:
+        t_acs = None
+    try:
+        t_sol = float(t_sol)
+    except Exception:
+        t_sol = None
+    acs_max = float(cfg.get("acs", {}).get("max_c", 60.0))
+    sol_max = float(sol_cfg.get("max_c", 90.0))
+    cutback = (t_acs is not None and t_acs >= acs_max) or (t_sol is not None and t_sol >= sol_max)
+
+    # R8/R9: mai tutte chiuse
+    if night:
+        await _set_actuator(r8, True)
+        await _set_actuator(r9, False)
+    else:
+        await _set_actuator(r8, False)
+        await _set_actuator(r9, True)
+
+    # R10: precedenza ACS solo se solare attivo e non in night/cutback
+    solar_active = decision_data.get("computed", {}).get("source_to_acs") == "SOLAR"
+    await _set_actuator(r10, bool(solar_active and (not night) and (not cutback)))
+
 @app.get("/api/status")
 async def status():
     return JSONResponse({
@@ -505,6 +556,7 @@ async def get_setpoints():
         "puffer": cfg.get("puffer", {}),
         "volano": cfg.get("volano", {}),
         "resistance": cfg.get("resistance", {}),
+        "solare": cfg.get("solare", {}),
         "timers": cfg.get("timers", {}),
         "runtime": cfg.get("runtime", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),
@@ -607,9 +659,19 @@ async def actuate(payload: dict):
         raise HTTPException(status_code=400, detail="HA offline")
     recent_ui_actuations[entity_id] = time.time()
     if manual:
+        # Manuale puro in Admin: non va toccato dalla logica
         if action == "on":
             manual_overrides[entity_id] = True
         else:
             manual_overrides.pop(entity_id, None)
+        # Interlock R18/R19: accendine una spegne l'altra
+        act = cfg.get("actuators", {})
+        r18 = act.get("r18_valve_ritorno_solare_basso")
+        r19 = act.get("r19_valve_ritorno_solare_alto")
+        if entity_id in (r18, r19) and action == "on":
+            other = r19 if entity_id == r18 else r18
+            if other:
+                manual_overrides.pop(other, None)
+                await ha.call_service(other, "off")
     ok = await ha.call_service(entity_id, action)
     return JSONResponse({"ok": bool(ok)})

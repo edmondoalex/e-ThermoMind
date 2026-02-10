@@ -78,6 +78,12 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "thresholds_w": [1100, 2200, 3300],
     "invert_export_sign": False
   },
+  "solare": {
+    "mode": "auto",
+    "delta_on_c": 5.0,
+    "delta_hold_c": 2.5,
+    "max_c": 90.0
+  },
   "timers": {
     "volano_to_acs_start_s": 5,
     "volano_to_acs_stop_s": 2,
@@ -105,6 +111,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 _NUM_KEYS = {
   "acs": ["setpoint_c", "on_delta_c", "off_hyst_c", "max_c", "max_hyst_c"],
   "puffer": ["setpoint_c", "off_hyst_c", "max_c", "max_hyst_c", "delta_to_acs_start_c", "delta_to_acs_hold_c"],
+  "solare": ["delta_on_c", "delta_hold_c", "max_c"],
   "volano": [
     "margin_c",
     "max_c",
@@ -176,6 +183,13 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["resistance"]["thresholds_w"] = _float_list_3(
                 res["thresholds_w"], cfg["resistance"]["thresholds_w"]
             )
+    sol = raw.get("solare", {})
+    if isinstance(sol, dict):
+        if isinstance(sol.get("mode"), str):
+            cfg["solare"]["mode"] = sol.get("mode", "auto")
+        for key in _NUM_KEYS["solare"]:
+            if key in sol:
+                cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
 
     timers = raw.get("timers", {})
     if isinstance(timers, dict):
@@ -238,6 +252,13 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["resistance"]["thresholds_w"] = _float_list_3(
                 res["thresholds_w"], cfg["resistance"]["thresholds_w"]
             )
+    sol = payload.get("solare", {})
+    if isinstance(sol, dict):
+        if isinstance(sol.get("mode"), str):
+            cfg["solare"]["mode"] = sol.get("mode", "auto")
+        for key in _NUM_KEYS["solare"]:
+            if key in sol:
+                cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
     timers = payload.get("timers", {})
     if isinstance(timers, dict):
         if "volano_to_acs_start_s" in timers:
