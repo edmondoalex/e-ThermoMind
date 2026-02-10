@@ -254,7 +254,7 @@
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_solare_mandata) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="solarModeClass">
               <div class="k">Modalità</div>
               <div class="v">{{ sp?.solare?.mode || 'auto' }}</div>
             </div>
@@ -767,6 +767,11 @@ const flowVolanoToImpianto = computed(() => false)
 const flowPufferToLab = computed(() => false)
 const flowMiscelatrice = computed(() => false)
 const flowCaldaiaToPuffer = computed(() => false)
+
+const solarModeClass = computed(() => {
+  const mode = sp.value?.solare?.mode || 'auto'
+  return mode === 'night' ? 'mode-night' : 'mode-day'
+})
 const flowChargeVolano = computed(() => (d.value?.computed?.resistance_step || 0) > 0)
 const flowPdcToVolano = computed(() => false)
 
@@ -1086,6 +1091,8 @@ watch(
 .kpi.kpi-center .k{display:flex;align-items:center;gap:6px;justify-content:center}
 .kpi.clickable{cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
 .kpi.clickable:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.mode-night{border-color:rgba(59,130,246,.6);box-shadow:0 0 0 1px rgba(59,130,246,.15) inset, 0 0 18px rgba(59,130,246,.25)}
+.mode-day{border-color:rgba(250,204,21,.6);box-shadow:0 0 0 1px rgba(250,204,21,.15) inset, 0 0 18px rgba(250,204,21,.25)}
 .k{font-size:12px;color:var(--muted)} .v{font-size:18px;font-weight:700;margin-top:2px}
 .actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
 button{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
