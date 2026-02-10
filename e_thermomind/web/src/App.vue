@@ -668,7 +668,7 @@
             <div class="field">
               <label>Selettore sorgente riscaldamento</label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.hvac_riscaldamento_select?.entity_id) ? 'logic-ok' : 'logic-no'">???</span>
+                <span class="logic-dot" :class="isFilled(ent?.hvac_riscaldamento_select?.entity_id) ? 'logic-ok' : 'logic-no'">&#x25CF;</span>
                 <input type="text"
                        :class="isFilled(ent?.hvac_riscaldamento_select?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.hvac_riscaldamento_select.entity_id"
@@ -680,7 +680,7 @@
             <div class="field">
               <label>Richiesta calore piani</label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.richiesta_heat_piani?.entity_id) ? 'logic-ok' : 'logic-no'">???</span>
+                <span class="logic-dot" :class="isFilled(ent?.richiesta_heat_piani?.entity_id) ? 'logic-ok' : 'logic-no'">&#x25CF;</span>
                 <input type="text"
                        :class="isFilled(ent?.richiesta_heat_piani?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.richiesta_heat_piani.entity_id"
@@ -692,7 +692,7 @@
             <div class="field">
               <label>Consenso puffer riscaldamento (climate)</label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.puffer_consenso_riscaldamento_piani?.entity_id) ? 'logic-ok' : 'logic-no'">???</span>
+                <span class="logic-dot" :class="isFilled(ent?.puffer_consenso_riscaldamento_piani?.entity_id) ? 'logic-ok' : 'logic-no'">&#x25CF;</span>
                 <input type="text"
                        :class="isFilled(ent?.puffer_consenso_riscaldamento_piani?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.puffer_consenso_riscaldamento_piani.entity_id"
@@ -704,12 +704,48 @@
             <div class="field">
               <label>Off centralina termoregolazione</label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.off_centralina_termoregolazione?.entity_id) ? 'logic-ok' : 'logic-no'">???</span>
+                <span class="logic-dot" :class="isFilled(ent?.off_centralina_termoregolazione?.entity_id) ? 'logic-ok' : 'logic-no'">&#x25CF;</span>
                 <input type="text"
                        :class="isFilled(ent?.off_centralina_termoregolazione?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.off_centralina_termoregolazione.entity_id"
                        placeholder="input_boolean.off_centralina_termoregolazione"
                        @input="dirtyEnt.off_centralina_termoregolazione = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Sorgente PDC disponibile</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.source_pdc_ready?.entity_id) ? 'logic-ok' : 'logic-no'">&#x25CF;</span>
+                <input type="text"
+                       :class="isFilled(ent?.source_pdc_ready?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.source_pdc_ready.entity_id"
+                       placeholder="input_boolean.pdc_ready"
+                       @input="dirtyEnt.source_pdc_ready = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Sorgente Volano disponibile</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.source_volano_ready?.entity_id) ? 'logic-ok' : 'logic-no'">&#x25CF;</span>
+                <input type="text"
+                       :class="isFilled(ent?.source_volano_ready?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.source_volano_ready.entity_id"
+                       placeholder="input_boolean.volano_ready"
+                       @input="dirtyEnt.source_volano_ready = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Sorgente Caldaia disponibile</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.source_caldaia_ready?.entity_id) ? 'logic-ok' : 'logic-no'">&#x25CF;</span>
+                <input type="text"
+                       :class="isFilled(ent?.source_caldaia_ready?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.source_caldaia_ready.entity_id"
+                       placeholder="input_boolean.caldaia_ready"
+                       @input="dirtyEnt.source_caldaia_ready = true"
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
@@ -796,6 +832,7 @@ const actuatorDefs = [
   { key: 'r3_valve_comparto_mandata_imp_m1p', label: 'R3 Valvola Comparto Mandata Imp M+1P (riscaldamento)', impl: false },
   { key: 'r4_valve_impianto_da_puffer', label: 'R4 Valvola Impianto da Puffer', impl: false },
   { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC', impl: false },
+  { key: 'r31_valve_impianto_da_volano', label: 'R31 Valvola Impianto da Volano', impl: false },
   { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS', impl: true },
   { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer', impl: true },
   { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp', impl: true },

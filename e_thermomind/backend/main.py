@@ -111,6 +111,16 @@ async def decision():
     await _apply_impianto_live()
     return JSONResponse(data)
 
+
+
+def _state_is_on(entity_id: str | None) -> bool:
+    if not entity_id:
+        return False
+    val = ha.states.get(entity_id, {}).get("state")
+    if val is None:
+        return False
+    sval = str(val).strip().lower()
+    return sval in ("on", "true", "1", "yes", "heat", "heating")
 def _get_state(entity_id: str | None) -> str | None:
     if not entity_id:
         return None
@@ -613,23 +623,73 @@ async def _apply_impianto_live() -> None:
     off_centralina = ent.get("off_centralina_termoregolazione")
     r4 = act.get("r4_valve_impianto_da_puffer")
 
-    sel_state = _get_state(sel)
-    richiesta_on = (_get_state(richiesta) == "on")
-    use_puffer = (str(sel_state).upper() == "PUFFER")
+    sel_state = str(_get_state(sel) or "AUTO").strip().upper()
+    richiesta_on = _state_is_on(richiesta)
 
-    # Consenso puffer (climate): PUFFER -> cool, else off
-    if use_puffer:
-        await _set_climate_hvac_mode(clima, "cool")
-    else:
-        await _set_climate_hvac_mode(clima, "off")
+    pdc_ready = _state_is_on(ent.get("source_pdc_ready"))
+    volano_ready = _state_is_on(ent.get("source_volano_ready"))
+    caldaia_ready = _state_is_on(ent.get("source_caldaia_ready"))
 
-    # Valvola impianto da puffer e centralina termoregolazione
-    if richiesta_on and use_puffer:
-        await _set_actuator(r4, True)
-        await _set_actuator(off_centralina, False)
+    if sel_state not in ("AUTO", "PDC", "VOLANO", "CALDAIA", "PUFFER"):
+        sel_state = "AUTO"
+
+    # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
+    if sel_state == "AUTO" or (
+        (sel_state == "PDC" and not pdc_ready) or
+        (sel_state == "VOLANO" and not volano_ready) or
+        (sel_state == "CALDAIA" and not caldaia_ready)
+    ):
+        if pdc_ready:
+            source = "PDC"
+        elif volano_ready:
+            source = "VOLANO"
+        elif caldaia_ready:
+            source = "CALDAIA"
+        else:
+            source = "PUFFER"
     else:
+        source = sel_state
+
+    r5 = act.get("r5_valve_impianto_da_pdc")
+    r31 = act.get("r31_valve_impianto_da_volano")
+    r15 = act.get("r15_pump_caldaia_legna")
+
+    if not richiesta_on:
         await _set_actuator(r4, False)
+        await _set_actuator(r5, False)
+        await _set_actuator(r31, False)
+        await _set_actuator(r15, False)
+        await _set_climate_hvac_mode(clima, "off")
         await _set_actuator(off_centralina, True)
+        return
+
+    # Consenso/centralina
+    await _set_actuator(off_centralina, False)
+
+    if source == "PDC":
+        await _set_actuator(r5, True)
+        await _set_actuator(r31, False)
+        await _set_actuator(r4, False)
+        await _set_actuator(r15, False)
+        await _set_climate_hvac_mode(clima, "off")
+    elif source == "VOLANO":
+        await _set_actuator(r31, True)
+        await _set_actuator(r5, False)
+        await _set_actuator(r4, False)
+        await _set_actuator(r15, False)
+        await _set_climate_hvac_mode(clima, "off")
+    elif source == "CALDAIA":
+        await _set_actuator(r15, True)
+        await _set_actuator(r4, True)
+        await _set_actuator(r5, False)
+        await _set_actuator(r31, False)
+        await _set_climate_hvac_mode(clima, "cool")
+    else:  # PUFFER
+        await _set_actuator(r4, True)
+        await _set_actuator(r5, False)
+        await _set_actuator(r31, False)
+        await _set_actuator(r15, False)
+        await _set_climate_hvac_mode(clima, "cool")
 
 @app.get("/api/status")
 async def status():

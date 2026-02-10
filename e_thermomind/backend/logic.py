@@ -6,6 +6,13 @@ def _f(x: Any, default: float = 0.0) -> float:
     except Exception:
         return default
 
+
+
+def _is_on_state(state: Any) -> bool:
+    if state is None:
+        return False
+    sval = str(state).strip().lower()
+    return sval in ("on", "true", "1", "yes", "heat", "heating")
 def _thr_list(value: Any) -> list[float]:
     base = [1100.0, 2200.0, 3300.0]
     if not isinstance(value, (list, tuple)):
@@ -141,7 +148,26 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     _LAST["dest"] = dest
     _LAST["source_to_acs"] = source_to_acs
-    _LAST["volano_to_puffer"] = volano_to_puffer
+_LAST["volano_to_puffer"] = volano_to_puffer
+
+    ent_cfg = cfg.get("entities", {})
+    sel_eid = ent_cfg.get("hvac_riscaldamento_select")
+    req_eid = ent_cfg.get("richiesta_heat_piani")
+    pdc_eid = ent_cfg.get("source_pdc_ready")
+    vol_eid = ent_cfg.get("source_volano_ready")
+    cal_eid = ent_cfg.get("source_caldaia_ready")
+    sel_state = ha_states.get(sel_eid, {}).get("state") if sel_eid else None
+    req_state = ha_states.get(req_eid, {}).get("state") if req_eid else None
+    pdc_ready = _is_on_state(ha_states.get(pdc_eid, {}).get("state") if pdc_eid else None)
+    vol_ready = _is_on_state(ha_states.get(vol_eid, {}).get("state") if vol_eid else None)
+    cal_ready = _is_on_state(ha_states.get(cal_eid, {}).get("state") if cal_eid else None)
+    req_on = _is_on_state(req_state)
+    impianto_reason = (
+        f"Richiesta={ 'ON' if req_on else 'OFF' } | Sel={sel_state or 'AUTO'} | "
+        f"PDC={'ON' if pdc_ready else 'OFF'} "
+        f"VOL={'ON' if vol_ready else 'OFF'} "
+        f"CAL={'ON' if cal_ready else 'OFF'}"
+    )
 
     return {
         "inputs": {
@@ -178,7 +204,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     else f"T_VOL {t_volano:.1f}?C < T_PUF+{puf_delta_hold:.1f}?C ({t_puffer + puf_delta_hold:.1f}?C)"
                 ),
                 "resistenze_volano": charge_reason,
-                "impianto": "Modulo impianto riscaldamento: logica automatica non configurata."
+                "impianto": impianto_reason
             },
             "state": {
                 "last_dest": _LAST.get("dest"),

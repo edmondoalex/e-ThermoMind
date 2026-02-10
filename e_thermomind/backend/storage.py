@@ -17,7 +17,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "hvac_riscaldamento_select": None,
     "richiesta_heat_piani": None,
     "puffer_consenso_riscaldamento_piani": None,
-    "off_centralina_termoregolazione": None
+    "off_centralina_termoregolazione": None,
+    "source_pdc_ready": None,
+    "source_volano_ready": None,
+    "source_caldaia_ready": None
   },
   "actuators": {
     "r1_valve_comparto_laboratorio": None,
@@ -25,6 +28,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "r3_valve_comparto_mandata_imp_m1p": None,
     "r4_valve_impianto_da_puffer": None,
     "r5_valve_impianto_da_pdc": None,
+    "r31_valve_impianto_da_volano": None,
     "r6_valve_pdc_to_integrazione_acs": None,
     "r7_valve_pdc_to_integrazione_puffer": None,
     "r8_valve_solare_notte_low_temp": None,
