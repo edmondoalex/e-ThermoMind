@@ -689,6 +689,7 @@ const modules = ref({
   miscelatrice: false,
   pdc: false
 })
+const solareModeInit = ref(false)
 
 const actuatorDefs = [
   { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)', impl: false },
@@ -1023,6 +1024,7 @@ onMounted(async()=>{
   await loadAll(); 
   startPolling();
   connectWS();
+  solareModeInit.value = true
   focusInHandler = (e) => {
     const tag = e.target?.tagName
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') onFocus()
@@ -1047,6 +1049,15 @@ watch(tab, (val) => {
     startPolling()
   }
 })
+
+watch(
+  () => sp.value?.solare?.mode,
+  async (val, old) => {
+    if (!solareModeInit.value) return
+    if (val === undefined || val === old) return
+    await save()
+  }
+)
 </script>
 
 <style>
