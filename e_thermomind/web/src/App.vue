@@ -500,6 +500,8 @@
             <div class="section-title">Volano</div>
             <div class="field"><label>Volano margine (C)</label><input type="number" step="0.5" v-model.number="sp.volano.margin_c"/></div>
             <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/></div>
+            <div class="field"><label>Volano min → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.volano.min_to_acs_c"/></div>
+            <div class="field"><label>Volano isteresi → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.volano.hyst_to_acs_c"/></div>
             <div class="field"><label>Δ Start Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_start_c"/></div>
             <div class="field"><label>Δ Hold Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_hold_c"/></div>
             <div class="field"><label>Δ Start Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_start_c"/></div>
@@ -537,6 +539,8 @@
           <div class="set-section">
             <div class="section-title">Puffer</div>
             <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/></div>
+            <div class="field"><label>Puffer min → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.min_to_acs_c"/></div>
+            <div class="field"><label>Puffer isteresi → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.hyst_to_acs_c"/></div>
             <div class="field"><label>Δ Start Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_start_c"/></div>
             <div class="field"><label>Δ Hold Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_hold_c"/></div>
           </div>

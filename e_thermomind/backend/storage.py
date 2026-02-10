@@ -69,6 +69,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "off_hyst_c": 1.0,
     "max_c": 75.0,
     "max_hyst_c": 3.0,
+    "min_to_acs_c": 60.0,
+    "hyst_to_acs_c": 5.0,
     "delta_to_acs_start_c": 3.0,
     "delta_to_acs_hold_c": 1.5
   },
@@ -76,6 +78,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "margin_c": 3.0,
     "max_c": 60.0,
     "max_hyst_c": 2.0,
+    "min_to_acs_c": 50.0,
+    "hyst_to_acs_c": 5.0,
     "delta_to_acs_start_c": 5.0,
     "delta_to_acs_hold_c": 2.5,
     "delta_to_puffer_start_c": 5.0,
@@ -149,12 +153,14 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 
 _NUM_KEYS = {
   "acs": ["setpoint_c", "on_delta_c", "off_hyst_c", "max_c", "max_hyst_c"],
-  "puffer": ["setpoint_c", "off_hyst_c", "max_c", "max_hyst_c", "delta_to_acs_start_c", "delta_to_acs_hold_c"],
+  "puffer": ["setpoint_c", "off_hyst_c", "max_c", "max_hyst_c", "min_to_acs_c", "hyst_to_acs_c", "delta_to_acs_start_c", "delta_to_acs_hold_c"],
   "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
   "volano": [
     "margin_c",
     "max_c",
     "max_hyst_c",
+    "min_to_acs_c",
+    "hyst_to_acs_c",
     "delta_to_acs_start_c",
     "delta_to_acs_hold_c",
     "delta_to_puffer_start_c",

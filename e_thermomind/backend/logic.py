@@ -95,6 +95,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     puf_delta_hold = float(vol_cfg.get("delta_to_puffer_hold_c", 2.5))
     puf_to_acs_start = float(puf_cfg.get("delta_to_acs_start_c", 3.0))
     puf_to_acs_hold = float(puf_cfg.get("delta_to_acs_hold_c", 1.5))
+    vol_min_acs = float(vol_cfg.get("min_to_acs_c", 50.0))
+    vol_h_acs = float(vol_cfg.get("hyst_to_acs_c", 5.0))
+    puf_min_acs = float(puf_cfg.get("min_to_acs_c", 60.0))
+    puf_h_acs = float(puf_cfg.get("hyst_to_acs_c", 5.0))
     last_vol_to_puf = bool(_LAST.get("volano_to_puffer"))
 
     if dest == "ACS" and (t_sol >= t_acs + solar_delta_on) and (not acs_max_hit):
@@ -103,16 +107,16 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     elif dest == "ACS" and last_source == "SOLAR" and (t_sol >= t_acs + solar_delta_hold) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}?C >= T_ACS+delta_hold {t_acs + solar_delta_hold:.1f}?C"
-    elif dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit):
+    elif dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit) and (t_volano >= vol_min_acs + vol_h_acs):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}?C >= T_ACS+{delta_start:.1f}?C ({t_acs + delta_start:.1f}?C)"
-    elif dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (not vol_max_hit):
+    elif dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (not vol_max_hit) and (t_volano >= vol_min_acs):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}?C >= T_ACS+{delta_hold:.1f}?C ({t_acs + delta_hold:.1f}?C)"
-    elif dest == "ACS" and (t_puffer >= t_acs + puf_to_acs_start):
+    elif dest == "ACS" and (t_puffer >= t_acs + puf_to_acs_start) and (t_puffer >= puf_min_acs + puf_h_acs):
         source_to_acs = "PUFFER"
         source_reason = f"T_PUF {t_puffer:.1f}?C >= T_ACS+delta {t_acs + puf_to_acs_start:.1f}?C"
-    elif dest == "ACS" and last_source == "PUFFER" and (t_puffer >= t_acs + puf_to_acs_hold):
+    elif dest == "ACS" and last_source == "PUFFER" and (t_puffer >= t_acs + puf_to_acs_hold) and (t_puffer >= puf_min_acs):
         source_to_acs = "PUFFER"
         source_reason = f"T_PUF {t_puffer:.1f}?C >= T_ACS+delta_hold {t_acs + puf_to_acs_hold:.1f}?C"
     else:
