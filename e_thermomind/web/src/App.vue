@@ -373,18 +373,13 @@
               <div class="k">Sorgente</div>
               <select v-model="sp.impianto.source_mode">
                 <option value="AUTO">AUTO</option>
-                <option value="PDC">PDC</option>
-                <option value="VOLANO">VOLANO</option>
+                <option value="PDC">PDC/Volano</option>
                 <option value="PUFFER">PUFFER</option>
               </select>
             </div>
             <label class="kpi kpi-center checkbox">
               <input type="checkbox" v-model="sp.impianto.pdc_ready"/>
-              <span>PDC ready</span>
-            </label>
-            <label class="kpi kpi-center checkbox">
-              <input type="checkbox" v-model="sp.impianto.volano_ready"/>
-              <span>Volano ready</span>
+              <span>PDC/Volano ready</span>
             </label>
             <label class="kpi kpi-center checkbox">
               <input type="checkbox" v-model="sp.impianto.puffer_ready"/>
@@ -914,7 +909,6 @@ const actuatorDefs = [
   { key: 'r3_valve_comparto_mandata_imp_m1p', label: 'R3 Valvola Comparto Mandata Imp M+1P (riscaldamento)', impl: false },
   { key: 'r4_valve_impianto_da_puffer', label: 'R4 Valvola Impianto da Puffer', impl: false },
   { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC', impl: false },
-  { key: 'r31_valve_impianto_da_volano', label: 'R31 Valvola Impianto da Volano', impl: false },
   { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS', impl: true },
   { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer', impl: true },
   { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp', impl: true },
