@@ -22,20 +22,20 @@
         <p class="muted">Dry-run: nessun comando agli attuatori. Serve per validare la logica.</p>
 
         <div v-if="d" class="grid">
-          <div class="kpi" :class="historyEnabled('t_acs') | 'clickable' : ''" @click="openHistory('t_acs','T_ACS')">
-            <div class="k"><i v-if="mdiClass(ent|.t_acs|.attributes|.icon)" :class="mdiClass(ent|.t_acs|.attributes|.icon)"></i> T_ACS</div>
+          <div class="kpi" :class="historyEnabled('t_acs') ? 'clickable' : ''" @click="openHistory('t_acs','T_ACS')">
+            <div class="k"><i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i> T_ACS</div>
             <div class="v">{{ fmtTemp(d.inputs.t_acs) }}</div>
           </div>
-          <div class="kpi" :class="historyEnabled('t_puffer') | 'clickable' : ''" @click="openHistory('t_puffer','T_Puffer')">
-            <div class="k"><i v-if="mdiClass(ent|.t_puffer|.attributes|.icon)" :class="mdiClass(ent|.t_puffer|.attributes|.icon)"></i> T_Puffer</div>
+          <div class="kpi" :class="historyEnabled('t_puffer') ? 'clickable' : ''" @click="openHistory('t_puffer','T_Puffer')">
+            <div class="k"><i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i> T_Puffer</div>
             <div class="v">{{ fmtTemp(d.inputs.t_puffer) }}</div>
           </div>
-          <div class="kpi" :class="historyEnabled('t_volano') | 'clickable' : ''" @click="openHistory('t_volano','T_Volano')">
-            <div class="k"><i v-if="mdiClass(ent|.t_volano|.attributes|.icon)" :class="mdiClass(ent|.t_volano|.attributes|.icon)"></i> T_Volano</div>
+          <div class="kpi" :class="historyEnabled('t_volano') ? 'clickable' : ''" @click="openHistory('t_volano','T_Volano')">
+            <div class="k"><i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i> T_Volano</div>
             <div class="v">{{ fmtTemp(d.inputs.t_volano) }}</div>
           </div>
           <div class="kpi">
-            <div class="k"><i v-if="mdiClass(ent|.grid_export_w|.attributes|.icon)" :class="mdiClass(ent|.grid_export_w|.attributes|.icon)"></i> Export rete</div>
+            <div class="k"><i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i> Export rete</div>
             <div class="v">{{ fmtW(d.inputs.grid_export_w) }}</div>
           </div>
         </div>
@@ -73,13 +73,13 @@
         </div>
 
         <div class="statusline">
-          <span class="muted">v{{ status|.version || '-' }}</span>
-          <span class="muted">mode: {{ status|.runtime_mode || '-' }}</span>
-          <span class="badge" :class="status|.ha_connected | 'ok' : 'off'">
-            {{ status|.ha_connected | 'Online' : 'Offline' }}
+          <span class="muted">v{{ status?.version || '-' }}</span>
+          <span class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
+          <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
+            {{ status?.ha_connected ? 'Online' : 'Offline' }}
           </span>
           <span class="muted">HA</span>
-          <span class="muted">Ultimo aggiornamento: {{ lastUpdate | lastUpdate.toLocaleTimeString() : '-' }}</span>
+          <span class="muted">Ultimo aggiornamento: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</span>
         </div>
 
 
@@ -87,29 +87,29 @@
         <div class="card inner">
           <div class="row"><strong>Moduli (User)</strong></div>
           <div class="row3">
-            <button class="ghost toggle" :class="modules.resistenze_volano | 'on' : 'off'" @click="toggleModule('resistenze_volano')">
-              Resistenze Volano: {{ modules.resistenze_volano | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.resistenze_volano ? 'on' : 'off'" @click="toggleModule('resistenze_volano')">
+              Resistenze Volano: {{ modules.resistenze_volano ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.volano_to_acs | 'on' : 'off'" @click="toggleModule('volano_to_acs')">
-              Volano → ACS: {{ modules.volano_to_acs | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.volano_to_acs ? 'on' : 'off'" @click="toggleModule('volano_to_acs')">
+              Volano → ACS: {{ modules.volano_to_acs ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.volano_to_puffer | 'on' : 'off'" @click="toggleModule('volano_to_puffer')">
-              Volano → Puffer: {{ modules.volano_to_puffer | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.volano_to_puffer ? 'on' : 'off'" @click="toggleModule('volano_to_puffer')">
+              Volano → Puffer: {{ modules.volano_to_puffer ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.puffer_to_acs | 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
-              Puffer → ACS: {{ modules.puffer_to_acs | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.puffer_to_acs ? 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
+              Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.impianto | 'on' : 'off'" @click="toggleModule('impianto')">
-              Impianto Riscaldamento: {{ modules.impianto | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
+              Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.solare | 'on' : 'off'" @click="toggleModule('solare')">
-              Solare: {{ modules.solare | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
+              Solare: {{ modules.solare ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.miscelatrice | 'on' : 'off'" @click="toggleModule('miscelatrice')">
-              Miscelatrice: {{ modules.miscelatrice | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.miscelatrice ? 'on' : 'off'" @click="toggleModule('miscelatrice')">
+              Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.pdc | 'on' : 'off'" @click="toggleModule('pdc')">
-              PDC: {{ modules.pdc | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.pdc ? 'on' : 'off'" @click="toggleModule('pdc')">
+              PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
             </button>
           </div>
         </div>
@@ -132,11 +132,11 @@
                 <div class="module-head">
                   <div class="module-label">{{ item.label }}</div>
                   <div class="module-badges">
-                    <span class="badge-mini" :class="item.enabled | 'on' : 'off'">
-                      {{ item.enabled | 'MOD ON' : 'MOD OFF' }}
+                    <span class="badge-mini" :class="item.enabled ? 'on' : 'off'">
+                      {{ item.enabled ? 'MOD ON' : 'MOD OFF' }}
                     </span>
-                    <span class="badge-mini" :class="item.active | 'active' : 'idle'">
-                      {{ item.active | 'ATTIVO' : 'INATTIVO' }}
+                    <span class="badge-mini" :class="item.active ? 'active' : 'idle'">
+                      {{ item.active ? 'ATTIVO' : 'INATTIVO' }}
                     </span>
                   </div>
                 </div>
@@ -149,43 +149,43 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Resistenze volano</strong></div>
           <div class="row3">
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r22_resistenza_1_volano_pdc|.state)" @click="userToggle(act|.r22_resistenza_1_volano_pdc, 'resistenze_volano')">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)" @click="userToggle(act?.r22_resistenza_1_volano_pdc, 'resistenze_volano')">
               <div class="k">
-                <i v-if="mdiClass(act|.r22_resistenza_1_volano_pdc|.attributes|.icon)" :class="[mdiClass(act|.r22_resistenza_1_volano_pdc|.attributes|.icon), stateClass(act|.r22_resistenza_1_volano_pdc|.state)]"></i>
+                <i v-if="mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon), stateClass(act?.r22_resistenza_1_volano_pdc?.state)]"></i>
                 R22 Resistenza 1 Volano PDC
               </div>
             </div>
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r23_resistenza_2_volano_pdc|.state)" @click="userToggle(act|.r23_resistenza_2_volano_pdc, 'resistenze_volano')">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)" @click="userToggle(act?.r23_resistenza_2_volano_pdc, 'resistenze_volano')">
               <div class="k">
-                <i v-if="mdiClass(act|.r23_resistenza_2_volano_pdc|.attributes|.icon)" :class="[mdiClass(act|.r23_resistenza_2_volano_pdc|.attributes|.icon), stateClass(act|.r23_resistenza_2_volano_pdc|.state)]"></i>
+                <i v-if="mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon), stateClass(act?.r23_resistenza_2_volano_pdc?.state)]"></i>
                 R23 Resistenza 2 Volano PDC
               </div>
             </div>
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r24_resistenza_3_volano_pdc|.state)" @click="userToggle(act|.r24_resistenza_3_volano_pdc, 'resistenze_volano')">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)" @click="userToggle(act?.r24_resistenza_3_volano_pdc, 'resistenze_volano')">
               <div class="k">
-                <i v-if="mdiClass(act|.r24_resistenza_3_volano_pdc|.attributes|.icon)" :class="[mdiClass(act|.r24_resistenza_3_volano_pdc|.attributes|.icon), stateClass(act|.r24_resistenza_3_volano_pdc|.state)]"></i>
+                <i v-if="mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon), stateClass(act?.r24_resistenza_3_volano_pdc?.state)]"></i>
                 R24 Resistenza 3 Volano PDC
               </div>
             </div>
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.generale_resistenze_volano_pdc|.state)" @click="userToggle(act|.generale_resistenze_volano_pdc, 'resistenze_volano')">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.generale_resistenze_volano_pdc?.state)" @click="userToggle(act?.generale_resistenze_volano_pdc, 'resistenze_volano')">
               <div class="k">
-                <i :class="[mdiClass(act|.generale_resistenze_volano_pdc|.attributes|.icon) || 'mdi mdi-power', stateClass(act|.generale_resistenze_volano_pdc|.state)]"></i>
+                <i :class="[mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon) || 'mdi mdi-power', stateClass(act?.generale_resistenze_volano_pdc?.state)]"></i>
                 R0 Generale Resistenze Volano PDC
               </div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">
-                <i v-if="mdiClass(ent|.resistenze_volano_power|.attributes|.icon)" :class="mdiClass(ent|.resistenze_volano_power|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)"></i>
                 Potenza Resistenze
               </div>
-              <div class="v">{{ fmtEntity(ent|.resistenze_volano_power) }}</div>
+              <div class="v">{{ fmtEntity(ent?.resistenze_volano_power) }}</div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">
-                <i v-if="mdiClass(ent|.resistenze_volano_energy|.attributes|.icon)" :class="mdiClass(ent|.resistenze_volano_energy|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)"></i>
                 Energia Resistenze
               </div>
-              <div class="v">{{ fmtEntity(ent|.resistenze_volano_energy) }}</div>
+              <div class="v">{{ fmtEntity(ent?.resistenze_volano_energy) }}</div>
             </div>
           </div>
         </div>
@@ -195,39 +195,39 @@
           <div class="row3">
             <div class="kpi kpi-center">
               <div class="k">
-                <i v-if="mdiClass(ent|.t_volano|.attributes|.icon)" :class="mdiClass(ent|.t_volano|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
                 T_Volano
               </div>
-              <div class="v">{{ fmtTemp(d|.inputs|.t_volano) }}</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_volano) }}</div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">
-                <i v-if="mdiClass(ent|.t_acs|.attributes|.icon)" :class="mdiClass(ent|.t_acs|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
                 T_ACS
               </div>
-              <div class="v">{{ fmtTemp(d|.inputs|.t_acs) }}</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_acs) }}</div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">Delta (Volano - ACS)</div>
-              <div class="v">{{ fmtDelta(d|.inputs|.t_volano, d|.inputs|.t_acs) }}</div>
+              <div class="v">{{ fmtDelta(d?.inputs?.t_volano, d?.inputs?.t_acs) }}</div>
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r6_valve_pdc_to_integrazione_acs|.state)" @click="userToggle(act|.r6_valve_pdc_to_integrazione_acs, 'volano_to_acs')">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)" @click="userToggle(act?.r6_valve_pdc_to_integrazione_acs, 'volano_to_acs')">
               <div class="k">
-                <i v-if="mdiClass(act|.r6_valve_pdc_to_integrazione_acs|.attributes|.icon)" :class="[mdiClass(act|.r6_valve_pdc_to_integrazione_acs|.attributes|.icon), stateClass(act|.r6_valve_pdc_to_integrazione_acs|.state)]"></i>
+                <i v-if="mdiClass(act?.r6_valve_pdc_to_integrazione_acs?.attributes?.icon)" :class="[mdiClass(act?.r6_valve_pdc_to_integrazione_acs?.attributes?.icon), stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)]"></i>
                 Valvola PDC → ACS
               </div>
             </div>
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r13_pump_pdc_to_acs_puffer|.state)" @click="userToggle(act|.r13_pump_pdc_to_acs_puffer, 'volano_to_acs')">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)" @click="userToggle(act?.r13_pump_pdc_to_acs_puffer, 'volano_to_acs')">
               <div class="k">
-                <i v-if="mdiClass(act|.r13_pump_pdc_to_acs_puffer|.attributes|.icon)" :class="[mdiClass(act|.r13_pump_pdc_to_acs_puffer|.attributes|.icon), stateClass(act|.r13_pump_pdc_to_acs_puffer|.state)]"></i>
+                <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
                 R13 Pompa PDC → ACS/Puffer
               </div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">Stato logica</div>
-              <div class="v">{{ d|.computed|.flags|.volano_to_acs | 'ATTIVO' : 'STOP' }}</div>
+              <div class="v">{{ d?.computed?.flags?.volano_to_acs ? 'ATTIVO' : 'STOP' }}</div>
             </div>
           </div>
         </div>
@@ -237,39 +237,39 @@
           <div class="row3">
             <div class="kpi kpi-center">
               <div class="k">
-                <i v-if="mdiClass(ent|.t_volano|.attributes|.icon)" :class="mdiClass(ent|.t_volano|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
                 T_Volano
               </div>
-              <div class="v">{{ fmtTemp(d|.inputs|.t_volano) }}</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_volano) }}</div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">
-                <i v-if="mdiClass(ent|.t_puffer|.attributes|.icon)" :class="mdiClass(ent|.t_puffer|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
                 T_Puffer
               </div>
-              <div class="v">{{ fmtTemp(d|.inputs|.t_puffer) }}</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_puffer) }}</div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">Delta (Volano - Puffer)</div>
-              <div class="v">{{ fmtDelta(d|.inputs|.t_volano, d|.inputs|.t_puffer) }}</div>
+              <div class="v">{{ fmtDelta(d?.inputs?.t_volano, d?.inputs?.t_puffer) }}</div>
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r7_valve_pdc_to_integrazione_puffer|.state)" @click="userToggle(act|.r7_valve_pdc_to_integrazione_puffer, 'volano_to_puffer')">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)" @click="userToggle(act?.r7_valve_pdc_to_integrazione_puffer, 'volano_to_puffer')">
               <div class="k">
-                <i v-if="mdiClass(act|.r7_valve_pdc_to_integrazione_puffer|.attributes|.icon)" :class="[mdiClass(act|.r7_valve_pdc_to_integrazione_puffer|.attributes|.icon), stateClass(act|.r7_valve_pdc_to_integrazione_puffer|.state)]"></i>
+                <i v-if="mdiClass(act?.r7_valve_pdc_to_integrazione_puffer?.attributes?.icon)" :class="[mdiClass(act?.r7_valve_pdc_to_integrazione_puffer?.attributes?.icon), stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)]"></i>
                 R7 Valvola PDC → Puffer
               </div>
             </div>
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r13_pump_pdc_to_acs_puffer|.state)" @click="userToggle(act|.r13_pump_pdc_to_acs_puffer, 'volano_to_puffer')">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)" @click="userToggle(act?.r13_pump_pdc_to_acs_puffer, 'volano_to_puffer')">
               <div class="k">
-                <i v-if="mdiClass(act|.r13_pump_pdc_to_acs_puffer|.attributes|.icon)" :class="[mdiClass(act|.r13_pump_pdc_to_acs_puffer|.attributes|.icon), stateClass(act|.r13_pump_pdc_to_acs_puffer|.state)]"></i>
+                <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
                 R13 Pompa PDC → ACS/Puffer
               </div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">Stato logica</div>
-              <div class="v">{{ d|.computed|.flags|.volano_to_puffer | 'ATTIVO' : 'STOP' }}</div>
+              <div class="v">{{ d?.computed?.flags?.volano_to_puffer ? 'ATTIVO' : 'STOP' }}</div>
             </div>
           </div>
         </div>
@@ -277,52 +277,52 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Solare</strong></div>
           <div class="row3">
-            <div class="kpi kpi-center" :class="historyEnabled('t_solare_mandata') | 'clickable' : ''" @click="openHistory('t_solare_mandata','T_Solare mandata')">
+            <div class="kpi kpi-center" :class="historyEnabled('t_solare_mandata') ? 'clickable' : ''" @click="openHistory('t_solare_mandata','T_Solare mandata')">
               <div class="k">
-                <i v-if="mdiClass(ent|.t_solare_mandata|.attributes|.icon)" :class="mdiClass(ent|.t_solare_mandata|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i>
                 T_Solare mandata
               </div>
-              <div class="v">{{ fmtTemp(d|.inputs|.t_solare_mandata) }}</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_solare_mandata) }}</div>
             </div>
             <div class="kpi kpi-center" :class="solarModeClass">
               <div class="k">Modalità</div>
-              <div class="v">{{ sp|.solare|.mode || 'auto' }}</div>
+              <div class="v">{{ sp?.solare?.mode || 'auto' }}</div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">Cutback</div>
-              <div class="v">{{ d|.computed|.safety|.acs_max_hit | 'ACS_MAX' : (d|.inputs|.t_solare_mandata >= (sp|.solare|.max_c || 90) | 'SOL_MAX' : 'OK') }}</div>
+              <div class="v">{{ d?.computed?.safety?.acs_max_hit ? 'ACS_MAX' : (d?.inputs?.t_solare_mandata >= (sp?.solare?.max_c || 90) ? 'SOL_MAX' : 'OK') }}</div>
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center" :class="stateClass(act|.r8_valve_solare_notte_low_temp|.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r8_valve_solare_notte_low_temp?.state)">
               <div class="k">
-                <i v-if="mdiClass(act|.r8_valve_solare_notte_low_temp|.attributes|.icon)" :class="[mdiClass(act|.r8_valve_solare_notte_low_temp|.attributes|.icon), stateClass(act|.r8_valve_solare_notte_low_temp|.state)]"></i>
+                <i v-if="mdiClass(act?.r8_valve_solare_notte_low_temp?.attributes?.icon)" :class="[mdiClass(act?.r8_valve_solare_notte_low_temp?.attributes?.icon), stateClass(act?.r8_valve_solare_notte_low_temp?.state)]"></i>
                 R8 Solare Notte/Low
               </div>
             </div>
-            <div class="kpi kpi-center" :class="stateClass(act|.r9_valve_solare_normal_funz|.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r9_valve_solare_normal_funz?.state)">
               <div class="k">
-                <i v-if="mdiClass(act|.r9_valve_solare_normal_funz|.attributes|.icon)" :class="[mdiClass(act|.r9_valve_solare_normal_funz|.attributes|.icon), stateClass(act|.r9_valve_solare_normal_funz|.state)]"></i>
+                <i v-if="mdiClass(act?.r9_valve_solare_normal_funz?.attributes?.icon)" :class="[mdiClass(act?.r9_valve_solare_normal_funz?.attributes?.icon), stateClass(act?.r9_valve_solare_normal_funz?.state)]"></i>
                 R9 Solare Normal
               </div>
             </div>
-            <div class="kpi kpi-center" :class="stateClass(act|.r10_valve_solare_precedenza_acs|.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r10_valve_solare_precedenza_acs?.state)">
               <div class="k">
-                <i v-if="mdiClass(act|.r10_valve_solare_precedenza_acs|.attributes|.icon)" :class="[mdiClass(act|.r10_valve_solare_precedenza_acs|.attributes|.icon), stateClass(act|.r10_valve_solare_precedenza_acs|.state)]"></i>
+                <i v-if="mdiClass(act?.r10_valve_solare_precedenza_acs?.attributes?.icon)" :class="[mdiClass(act?.r10_valve_solare_precedenza_acs?.attributes?.icon), stateClass(act?.r10_valve_solare_precedenza_acs?.state)]"></i>
                 R10 Precedenza ACS
               </div>
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r18_valve_ritorno_solare_basso|.state)" @click="userToggleManual(act|.r18_valve_ritorno_solare_basso)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r18_valve_ritorno_solare_basso?.state)" @click="userToggleManual(act?.r18_valve_ritorno_solare_basso)">
               <div class="k">
-                <i v-if="mdiClass(act|.r18_valve_ritorno_solare_basso|.attributes|.icon)" :class="[mdiClass(act|.r18_valve_ritorno_solare_basso|.attributes|.icon), stateClass(act|.r18_valve_ritorno_solare_basso|.state)]"></i>
+                <i v-if="mdiClass(act?.r18_valve_ritorno_solare_basso?.attributes?.icon)" :class="[mdiClass(act?.r18_valve_ritorno_solare_basso?.attributes?.icon), stateClass(act?.r18_valve_ritorno_solare_basso?.state)]"></i>
                 R18 Ritorno Solare Basso
               </div>
             </div>
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r19_valve_ritorno_solare_alto|.state)" @click="userToggleManual(act|.r19_valve_ritorno_solare_alto)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r19_valve_ritorno_solare_alto?.state)" @click="userToggleManual(act?.r19_valve_ritorno_solare_alto)">
               <div class="k">
-                <i v-if="mdiClass(act|.r19_valve_ritorno_solare_alto|.attributes|.icon)" :class="[mdiClass(act|.r19_valve_ritorno_solare_alto|.attributes|.icon), stateClass(act|.r19_valve_ritorno_solare_alto|.state)]"></i>
+                <i v-if="mdiClass(act?.r19_valve_ritorno_solare_alto?.attributes?.icon)" :class="[mdiClass(act?.r19_valve_ritorno_solare_alto?.attributes?.icon), stateClass(act?.r19_valve_ritorno_solare_alto?.state)]"></i>
                 R19 Ritorno Solare Alto
               </div>
             </div>
@@ -332,7 +332,41 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Puffer → ACS</strong></div>
 
-<div class="card inner">
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
+                T_Puffer
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_puffer) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
+                T_ACS
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_acs) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Delta (Puffer - ACS)</div>
+              <div class="v">{{ fmtDelta(d?.inputs?.t_puffer, d?.inputs?.t_acs) }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r14_pump_puffer_to_acs?.state)" @click="userToggle(act?.r14_pump_puffer_to_acs, 'puffer_to_acs')">
+              <div class="k">
+                <i v-if="mdiClass(act?.r14_pump_puffer_to_acs?.attributes?.icon)" :class="[mdiClass(act?.r14_pump_puffer_to_acs?.attributes?.icon), stateClass(act?.r14_pump_puffer_to_acs?.state)]"></i>
+                R14 Pompa Puffer → ACS
+              </div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Stato logica</div>
+              <div class="v">{{ d?.computed?.flags?.puffer_to_acs ? 'ATTIVO' : 'STOP' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="act" class="card inner">
           <div class="row"><strong>Impianto riscaldamento (interno)</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
@@ -359,57 +393,22 @@
             </label>
             <div class="kpi kpi-center">
               <div class="k">Richiesta calore</div>
-              <div class="v">{{ d|.computed|.impianto|.richiesta | 'ON' : 'OFF' }}</div>
+              <div class="v">{{ d?.computed?.impianto?.richiesta ? 'ON' : 'OFF' }}</div>
             </div>
             <div class="kpi kpi-center">
               <div class="k">Consenso miscelatrice</div>
-              <div class="v">{{ d|.computed|.impianto|.miscelatrice | 'ON' : 'OFF' }}</div>
+              <div class="v">{{ d?.computed?.impianto?.miscelatrice ? 'ON' : 'OFF' }}</div>
             </div>
           </div>
           <div class="help">I checkbox sono manuali nel solo add-on. Richiesta calore e consenso miscelatrice sono in sola lettura.</div>
           <div class="zones-card">
             <div class="row"><strong>Zone attive</strong></div>
             <div class="zones-grid">
-              <div v-for="z in zones" :key="z.entity_id" class="zone-chip" :class="z.active | 'zone-on' : 'zone-off'">
+              <div v-for="z in zones" :key="z.entity_id" class="zone-chip" :class="z.active ? 'zone-on' : 'zone-off'">
                 <div class="zone-title">{{ z.group }} | {{ z.entity_id }}</div>
                 <div class="zone-sub">{{ z.state || '-' }} | {{ z.hvac_action || '-' }}</div>
                 <div class="zone-sub">T: {{ fmtNum(z.temperature) }}°C | SP: {{ fmtNum(z.setpoint) }}°C</div>
               </div>
-            </div>
-          </div>
-
-        </div>
-
-          <div class="row3">
-            <div class="kpi kpi-center">
-              <div class="k">
-                <i v-if="mdiClass(ent|.t_puffer|.attributes|.icon)" :class="mdiClass(ent|.t_puffer|.attributes|.icon)"></i>
-                T_Puffer
-              </div>
-              <div class="v">{{ fmtTemp(d|.inputs|.t_puffer) }}</div>
-            </div>
-            <div class="kpi kpi-center">
-              <div class="k">
-                <i v-if="mdiClass(ent|.t_acs|.attributes|.icon)" :class="mdiClass(ent|.t_acs|.attributes|.icon)"></i>
-                T_ACS
-              </div>
-              <div class="v">{{ fmtTemp(d|.inputs|.t_acs) }}</div>
-            </div>
-            <div class="kpi kpi-center">
-              <div class="k">Delta (Puffer - ACS)</div>
-              <div class="v">{{ fmtDelta(d|.inputs|.t_puffer, d|.inputs|.t_acs) }}</div>
-            </div>
-          </div>
-          <div class="row3">
-            <div class="kpi kpi-center clickable" :class="stateClass(act|.r14_pump_puffer_to_acs|.state)" @click="userToggle(act|.r14_pump_puffer_to_acs, 'puffer_to_acs')">
-              <div class="k">
-                <i v-if="mdiClass(act|.r14_pump_puffer_to_acs|.attributes|.icon)" :class="[mdiClass(act|.r14_pump_puffer_to_acs|.attributes|.icon), stateClass(act|.r14_pump_puffer_to_acs|.state)]"></i>
-                R14 Pompa Puffer → ACS
-              </div>
-            </div>
-            <div class="kpi kpi-center">
-              <div class="k">Stato logica</div>
-              <div class="v">{{ d|.computed|.flags|.puffer_to_acs | 'ATTIVO' : 'STOP' }}</div>
             </div>
           </div>
         </div>
@@ -427,20 +426,20 @@
               </defs>
 
               <!-- Dots animati sui punti chiave (senza nuove linee sopra i componenti) -->
-              <circle cx="1045" cy="205" r="10" class="pulse" :class="flowSolarToPuffer | 'pulse-on' : ''"/>
-              <circle cx="1180" cy="260" r="10" class="pulse" :class="flowSolarToAcs | 'pulse-on' : ''"/>
-              <circle cx="955" cy="360" r="10" class="pulse" :class="flowPufferToAcs | 'pulse-on' : ''"/>
-              <circle cx="835" cy="360" r="10" class="pulse" :class="flowPufferToImpianto | 'pulse-on' : ''"/>
-              <circle cx="380" cy="250" r="10" class="pulse" :class="flowPufferToLab | 'pulse-on' : ''"/>
-              <circle cx="850" cy="520" r="10" class="pulse" :class="flowVolanoToPuffer | 'pulse-on' : ''"/>
-              <circle cx="980" cy="520" r="10" class="pulse" :class="flowCaldaiaToPuffer | 'pulse-on' : ''"/>
-              <circle cx="900" cy="600" r="10" class="pulse" :class="flowVolanoToAcs | 'pulse-on' : ''"/>
-              <circle cx="300" cy="620" r="10" class="pulse" :class="flowPdcToVolano | 'pulse-on' : ''"/>
-              <circle cx="260" cy="470" r="10" class="pulse" :class="flowPdcToVolano | 'pulse-on' : ''"/>
-              <circle cx="250" cy="140" r="10" class="pulse" :class="flowVolanoToImpianto | 'pulse-on' : ''"/>
+              <circle cx="1045" cy="205" r="10" class="pulse" :class="flowSolarToPuffer ? 'pulse-on' : ''"/>
+              <circle cx="1180" cy="260" r="10" class="pulse" :class="flowSolarToAcs ? 'pulse-on' : ''"/>
+              <circle cx="955" cy="360" r="10" class="pulse" :class="flowPufferToAcs ? 'pulse-on' : ''"/>
+              <circle cx="835" cy="360" r="10" class="pulse" :class="flowPufferToImpianto ? 'pulse-on' : ''"/>
+              <circle cx="380" cy="250" r="10" class="pulse" :class="flowPufferToLab ? 'pulse-on' : ''"/>
+              <circle cx="850" cy="520" r="10" class="pulse" :class="flowVolanoToPuffer ? 'pulse-on' : ''"/>
+              <circle cx="980" cy="520" r="10" class="pulse" :class="flowCaldaiaToPuffer ? 'pulse-on' : ''"/>
+              <circle cx="900" cy="600" r="10" class="pulse" :class="flowVolanoToAcs ? 'pulse-on' : ''"/>
+              <circle cx="300" cy="620" r="10" class="pulse" :class="flowPdcToVolano ? 'pulse-on' : ''"/>
+              <circle cx="260" cy="470" r="10" class="pulse" :class="flowPdcToVolano ? 'pulse-on' : ''"/>
+              <circle cx="250" cy="140" r="10" class="pulse" :class="flowVolanoToImpianto ? 'pulse-on' : ''"/>
 
               <!-- Linea animata: Volano -> ACS -->
-              <path d="M420 650 H820 V520 H1140" class="tube" :class="flowVolanoToAcs | 'tube-on' : ''"/>
+              <path d="M420 650 H820 V520 H1140" class="tube" :class="flowVolanoToAcs ? 'tube-on' : ''"/>
             </svg>
           </div>
           <div class="legend">
@@ -466,13 +465,13 @@
         <h2>Admin (v0.2)</h2>
         <p class="muted">Setpoint interni e mapping e-manager.</p>
         <div class="statusline">
-          <span class="muted">v{{ status|.version || '-' }}</span>
-          <span class="muted">mode: {{ status|.runtime_mode || '-' }}</span>
-          <span class="badge" :class="status|.ha_connected | 'ok' : 'off'">
-            {{ status|.ha_connected | 'Online' : 'Offline' }}
+          <span class="muted">v{{ status?.version || '-' }}</span>
+          <span class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
+          <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
+            {{ status?.ha_connected ? 'Online' : 'Offline' }}
           </span>
           <span class="muted">HA</span>
-          <span class="muted">Ultimo aggiornamento: {{ lastUpdate | lastUpdate.toLocaleTimeString() : '-' }}</span>
+          <span class="muted">Ultimo aggiornamento: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</span>
         </div>
 
         <div class="form">
@@ -651,29 +650,29 @@
         <div class="form">
           <h3 class="section">Moduli (Admin)</h3>
           <div class="row3">
-            <button class="ghost toggle" :class="modules.resistenze_volano | 'on' : 'off'" @click="toggleModule('resistenze_volano')">
-              Resistenze Volano: {{ modules.resistenze_volano | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.resistenze_volano ? 'on' : 'off'" @click="toggleModule('resistenze_volano')">
+              Resistenze Volano: {{ modules.resistenze_volano ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.volano_to_acs | 'on' : 'off'" @click="toggleModule('volano_to_acs')">
-              Volano → ACS: {{ modules.volano_to_acs | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.volano_to_acs ? 'on' : 'off'" @click="toggleModule('volano_to_acs')">
+              Volano → ACS: {{ modules.volano_to_acs ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.volano_to_puffer | 'on' : 'off'" @click="toggleModule('volano_to_puffer')">
-              Volano → Puffer: {{ modules.volano_to_puffer | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.volano_to_puffer ? 'on' : 'off'" @click="toggleModule('volano_to_puffer')">
+              Volano → Puffer: {{ modules.volano_to_puffer ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.puffer_to_acs | 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
-              Puffer → ACS: {{ modules.puffer_to_acs | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.puffer_to_acs ? 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
+              Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.impianto | 'on' : 'off'" @click="toggleModule('impianto')">
-              Impianto Riscaldamento: {{ modules.impianto | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
+              Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.solare | 'on' : 'off'" @click="toggleModule('solare')">
-              Solare: {{ modules.solare | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
+              Solare: {{ modules.solare ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.miscelatrice | 'on' : 'off'" @click="toggleModule('miscelatrice')">
-              Miscelatrice: {{ modules.miscelatrice | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.miscelatrice ? 'on' : 'off'" @click="toggleModule('miscelatrice')">
+              Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.pdc | 'on' : 'off'" @click="toggleModule('pdc')">
-              PDC: {{ modules.pdc | 'ON' : 'OFF' }}
+            <button class="ghost toggle" :class="modules.pdc ? 'on' : 'off'" @click="toggleModule('pdc')">
+              PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
             </button>
           </div>
         </div>
@@ -682,13 +681,13 @@
           <summary class="section">Sensori da e-manager</summary>
           <div class="field">
             <label>
-              <i v-if="mdiClass(ent|.t_acs|.attributes|.icon)" :class="mdiClass(ent|.t_acs|.attributes|.icon)"></i>
+              <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
               T_ACS
             </label>
             <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent|.t_acs|.entity_id) | 'logic-ok' : 'logic-no'">●</span>
+              <span class="logic-dot" :class="isFilled(ent?.t_acs?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent|.t_acs|.entity_id) | 'input-ok' : ''"
+                       :class="isFilled(ent?.t_acs?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.t_acs.entity_id"
                        placeholder="sensor.acs_temp"
                        @input="dirtyEnt.t_acs = true"
@@ -698,13 +697,13 @@
           </div>
           <div class="field">
             <label>
-              <i v-if="mdiClass(ent|.t_puffer|.attributes|.icon)" :class="mdiClass(ent|.t_puffer|.attributes|.icon)"></i>
+              <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
               T_Puffer
             </label>
             <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent|.t_puffer|.entity_id) | 'logic-ok' : 'logic-no'">●</span>
+              <span class="logic-dot" :class="isFilled(ent?.t_puffer?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent|.t_puffer|.entity_id) | 'input-ok' : ''"
+                       :class="isFilled(ent?.t_puffer?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.t_puffer.entity_id"
                        placeholder="sensor.puffer_temp"
                        @input="dirtyEnt.t_puffer = true"
@@ -714,13 +713,13 @@
           </div>
           <div class="field">
             <label>
-              <i v-if="mdiClass(ent|.t_volano|.attributes|.icon)" :class="mdiClass(ent|.t_volano|.attributes|.icon)"></i>
+              <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
               T_Volano
             </label>
             <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent|.t_volano|.entity_id) | 'logic-ok' : 'logic-no'">●</span>
+              <span class="logic-dot" :class="isFilled(ent?.t_volano?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent|.t_volano|.entity_id) | 'input-ok' : ''"
+                       :class="isFilled(ent?.t_volano?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.t_volano.entity_id"
                        placeholder="sensor.volano_temp"
                        @input="dirtyEnt.t_volano = true"
@@ -730,13 +729,13 @@
           </div>
           <div class="field">
             <label>
-              <i v-if="mdiClass(ent|.t_solare_mandata|.attributes|.icon)" :class="mdiClass(ent|.t_solare_mandata|.attributes|.icon)"></i>
+              <i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i>
               T_Solare mandata
             </label>
             <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent|.t_solare_mandata|.entity_id) | 'logic-ok' : 'logic-no'">●</span>
+              <span class="logic-dot" :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent|.t_solare_mandata|.entity_id) | 'input-ok' : ''"
+                       :class="isFilled(ent?.t_solare_mandata?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.t_solare_mandata.entity_id"
                        placeholder="sensor.solar_mandata"
                        @input="dirtyEnt.t_solare_mandata = true"
@@ -746,13 +745,13 @@
           </div>
             <div class="field">
               <label>
-                <i v-if="mdiClass(ent|.grid_export_w|.attributes|.icon)" :class="mdiClass(ent|.grid_export_w|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
                 Export rete (W)
               </label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent|.grid_export_w|.entity_id) | 'logic-ok' : 'logic-no'">●</span>
+                <span class="logic-dot" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent|.grid_export_w|.entity_id) | 'input-ok' : ''"
+                       :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.grid_export_w.entity_id"
                        placeholder="sensor.grid_export_w"
                        @input="dirtyEnt.grid_export_w = true"
@@ -761,13 +760,13 @@
             </div>
             <div class="field">
               <label>
-                <i v-if="mdiClass(ent|.resistenze_volano_power|.attributes|.icon)" :class="mdiClass(ent|.resistenze_volano_power|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)"></i>
                 Potenza Resistenze Volano (W)
               </label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent|.resistenze_volano_power|.entity_id) | 'logic-ok' : 'logic-no'">●</span>
+                <span class="logic-dot" :class="isFilled(ent?.resistenze_volano_power?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent|.resistenze_volano_power|.entity_id) | 'input-ok' : ''"
+                       :class="isFilled(ent?.resistenze_volano_power?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.resistenze_volano_power.entity_id"
                        placeholder="sensor.resistenze_volano_power"
                        @input="dirtyEnt.resistenze_volano_power = true"
@@ -776,13 +775,13 @@
             </div>
             <div class="field">
               <label>
-                <i v-if="mdiClass(ent|.resistenze_volano_energy|.attributes|.icon)" :class="mdiClass(ent|.resistenze_volano_energy|.attributes|.icon)"></i>
+                <i v-if="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)"></i>
                 Energia Resistenze Volano
               </label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent|.resistenze_volano_energy|.entity_id) | 'logic-ok' : 'logic-no'">●</span>
+                <span class="logic-dot" :class="isFilled(ent?.resistenze_volano_energy?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent|.resistenze_volano_energy|.entity_id) | 'input-ok' : ''"
+                       :class="isFilled(ent?.resistenze_volano_energy?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.resistenze_volano_energy.entity_id"
                        placeholder="sensor.resistenze_volano_energy"
                        @input="dirtyEnt.resistenze_volano_energy = true"
@@ -805,9 +804,9 @@
               {{ item.label }}
             </label>
             <div class="input-row">
-              <button class="logic-dot dot-toggle" :class="item.impl | 'logic-ok' : 'logic-no'" @click="toggleAct(item.key)" :title="`Toggle ${item.label}`">●</button>
+              <button class="logic-dot dot-toggle" :class="item.impl ? 'logic-ok' : 'logic-no'" @click="toggleAct(item.key)" :title="`Toggle ${item.label}`">●</button>
               <input type="text"
-                     :class="[isFilled(act|.[item.key]|.entity_id) | 'input-ok' : '', act|.[item.key]|.state === 'on' | 'input-on' : '']"
+                     :class="[isFilled(act?.[item.key]?.entity_id) ? 'input-ok' : '', act?.[item.key]?.state === 'on' ? 'input-on' : '']"
                      v-model="act[item.key].entity_id"
                      :placeholder="`switch.${item.key}`"
                      @input="dirtyAct[item.key] = true"
@@ -931,26 +930,26 @@ const actuatorDefs = [
   { key: 'r30_alimentazione_caldaia_legna', label: 'R30 Alimentazione Caldaia Legna', impl: false }
 ]
 
-const isFilled = (v) => (typeof v === 'string' | v.trim().length > 0 : false)
+const isFilled = (v) => (typeof v === 'string' ? v.trim().length > 0 : false)
 const filteredActuators = computed(() => {
   const q = filterAct.value.trim().toLowerCase()
   if (!q) return actuatorDefs
   return actuatorDefs.filter(a => (a.label.toLowerCase().includes(q) || a.key.toLowerCase().includes(q)))
 })
 
-const fmtTemp = (v) => (Number.isFinite(v) | `${v.toFixed(1)}C` : 'n/d')
+const fmtTemp = (v) => (Number.isFinite(v) ? `${v.toFixed(1)}?C` : 'n/d')
 const fmtDelta = (a, b) => {
   const da = Number(a)
   const db = Number(b)
   if (!Number.isFinite(da) || !Number.isFinite(db)) return 'n/d'
   return `${(da - db).toFixed(1)}C`
 }
-const fmtW = (v) => (Number.isFinite(v) | `${Math.round(v)} W` : 'n/d')
-const fmtNum = (v) => (Number.isFinite(Number(v)) | Number(v).toFixed(1) : '-')
+const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
+const fmtNum = (v) => (Number.isFinite(Number(v)) ? Number(v).toFixed(1) : '-')
 const fmtEntity = (e) => {
   if (!e) return 'n/d'
   const raw = e.state
-  const unit = e.attributes|.unit_of_measurement || ''
+  const unit = e.attributes?.unit_of_measurement || ''
   if (raw === null || raw === undefined) return 'n/d'
   const num = Number(raw)
   if (Number.isFinite(num)) return `${num} ${unit}`.trim()
@@ -979,24 +978,24 @@ const exportStats = computed(() => {
   return { label: `${Math.round(min)}–${Math.round(max)} W` }
 })
 function addZone(key){
-  if (!sp.value|.impianto) return
+  if (!sp.value?.impianto) return
   if (!Array.isArray(sp.value.impianto[key])) sp.value.impianto[key] = []
   sp.value.impianto[key].push('')
 }
 function removeZone(key, idx){
-  if (!sp.value|.impianto) return
+  if (!sp.value?.impianto) return
   if (!Array.isArray(sp.value.impianto[key])) return
   sp.value.impianto[key].splice(idx, 1)
 }
-const historyEnabled = (key) => !!sp.value|.history|.[key]
+const historyEnabled = (key) => !!sp.value?.history?.[key]
 async function openHistory(key, title){
   if (!historyEnabled(key)) return
-  const entId = ent.value|.[key]|.entity_id
+  const entId = ent.value?.[key]?.entity_id
   if (!entId) return
-  const r = await fetch(`/api/history|entity_id=${encodeURIComponent(entId)}&hours=24`)
+  const r = await fetch(`/api/history?entity_id=${encodeURIComponent(entId)}&hours=24`)
   if (!r.ok) return
   const data = await r.json()
-  const items = Array.isArray(data|.items) | data.items.flat() : []
+  const items = Array.isArray(data?.items) ? data.items.flat() : []
   const points = []
   for (const st of items){
     const v = Number(st.state)
@@ -1043,10 +1042,10 @@ async function openHistory(key, title){
 function closeHistory(){
   historyModal.value.open = false
 }
-const flowSolarToAcs = computed(() => d.value|.computed|.source_to_acs === 'SOLAR')
-const flowVolanoToAcs = computed(() => d.value|.computed|.source_to_acs === 'VOLANO')
-const flowPufferToAcs = computed(() => d.value|.computed|.source_to_acs === 'PUFFER')
-const flowVolanoToPuffer = computed(() => d.value|.computed|.flags|.volano_to_puffer)
+const flowSolarToAcs = computed(() => d.value?.computed?.source_to_acs === 'SOLAR')
+const flowVolanoToAcs = computed(() => d.value?.computed?.source_to_acs === 'VOLANO')
+const flowPufferToAcs = computed(() => d.value?.computed?.source_to_acs === 'PUFFER')
+const flowVolanoToPuffer = computed(() => d.value?.computed?.flags?.volano_to_puffer)
 const flowPufferToVolano = computed(() => false)
 const flowSolarToPuffer = computed(() => false)
 const flowPufferToImpianto = computed(() => false)
@@ -1055,9 +1054,9 @@ const flowPufferToLab = computed(() => false)
 const flowMiscelatrice = computed(() => false)
 const flowCaldaiaToPuffer = computed(() => false)
 const moduleReasonsList = computed(() => {
-  const mr = d.value|.computed|.module_reasons || {}
-  const flags = d.value|.computed|.flags || {}
-  const step = Number(d.value|.computed|.resistance_step || 0)
+  const mr = d.value?.computed?.module_reasons || {}
+  const flags = d.value?.computed?.flags || {}
+  const step = Number(d.value?.computed?.resistance_step || 0)
   const labels = [
     { key: 'solare', label: 'Solare', active: !!flags.solare_to_acs },
     { key: 'volano_to_acs', label: 'Volano -> ACS', active: !!flags.volano_to_acs },
@@ -1070,23 +1069,23 @@ const moduleReasonsList = computed(() => {
     .filter(item => mr[item.key])
     .map(item => ({
       ...item,
-      enabled: modules.value|.[item.key] !== false,
+      enabled: modules.value?.[item.key] !== false,
       reason: mr[item.key]
     }))
 })
 
 const solarModeClass = computed(() => {
-  const mode = sp.value|.solare|.mode || 'auto'
-  return mode === 'night' | 'mode-night' : 'mode-day'
+  const mode = sp.value?.solare?.mode || 'auto'
+  return mode === 'night' ? 'mode-night' : 'mode-day'
 })
-const flowChargeVolano = computed(() => (d.value|.computed|.resistance_step || 0) > 0)
+const flowChargeVolano = computed(() => (d.value?.computed?.resistance_step || 0) > 0)
 const flowPdcToVolano = computed(() => false)
 
   function mergeEntities(next){
     if (!ent.value) { ent.value = next; return }
     for (const key of Object.keys(next || {})) {
       const prev = ent.value[key] || { entity_id: null }
-      const keepId = (dirtyEnt.value|.[key] || editingCount.value > 0) | prev.entity_id : next[key]|.entity_id
+      const keepId = (dirtyEnt.value?.[key] || editingCount.value > 0) ? prev.entity_id : next[key]?.entity_id
       ent.value[key] = { ...next[key], entity_id: keepId }
     }
   }
@@ -1094,14 +1093,14 @@ const flowPdcToVolano = computed(() => false)
     if (!act.value) { act.value = next; return }
     for (const key of Object.keys(next || {})) {
       const prev = act.value[key] || { entity_id: null }
-      const keepId = (dirtyAct.value|.[key] || editingCount.value > 0) | prev.entity_id : next[key]|.entity_id
+      const keepId = (dirtyAct.value?.[key] || editingCount.value > 0) ? prev.entity_id : next[key]?.entity_id
       act.value[key] = { ...next[key], entity_id: keepId }
     }
   }
 async function refresh(){
   if (tab.value === 'admin' || editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
-  zones.value = d.value|.zones || []
+  zones.value = d.value?.zones || []
   updateHistoryFromDecision(d.value)
   const s = await fetch('/api/status'); status.value = await s.json()
   const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
@@ -1114,7 +1113,7 @@ async function loadModules(){
 }
 async function load(){
   const r = await fetch('/api/setpoints'); sp.value = await r.json()
-  if (!sp.value|.timers) {
+  if (!sp.value?.timers) {
     sp.value.timers = {
       volano_to_acs_start_s: 5,
       volano_to_acs_stop_s: 2,
@@ -1122,13 +1121,13 @@ async function load(){
       volano_to_puffer_stop_s: 2
     }
   }
-  if (!sp.value|.history) {
+  if (!sp.value?.history) {
     sp.value.history = { t_acs: false, t_puffer: false, t_volano: false, t_solare_mandata: false }
   }
-  if (!sp.value|.solare) {
+  if (!sp.value?.solare) {
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
   }
-  if (!sp.value|.impianto) {
+  if (!sp.value?.impianto) {
     sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, caldaia_ready: false, richiesta_heat: false, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
   }
   // normalize lists (allow CSV from older configs)
@@ -1142,7 +1141,7 @@ async function load(){
   sp.value.impianto.zones_mans = normalizeList(sp.value.impianto.zones_mans)
   sp.value.impianto.zones_lab = normalizeList(sp.value.impianto.zones_lab)
   sp.value.impianto.cooling_blocked = normalizeList(sp.value.impianto.cooling_blocked)
-  if (sp.value|.runtime|.ui_poll_ms) {
+  if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }
 }
@@ -1153,7 +1152,7 @@ async function loadActuators(){
 async function save(){
   await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
   await refresh()
-  if (sp.value|.runtime|.ui_poll_ms) {
+  if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
     startPolling()
   }
@@ -1164,7 +1163,7 @@ async function saveAll(){
   await saveActuators()
 }
 async function toggleModule(key){
-  const pin = sp.value|.security|.user_pin || ''
+  const pin = sp.value?.security?.user_pin || ''
   let provided = ''
   if (pin) {
     provided = window.prompt('PIN') || ''
@@ -1179,9 +1178,9 @@ async function toggleModule(key){
   await loadModules()
 }
 async function confirmMode(){
-  if (!sp.value|.runtime|.mode) return
+  if (!sp.value?.runtime?.mode) return
   if (sp.value.runtime.mode === 'live') {
-    const ok = window.confirm('Passare a LIVE| Questo abilita comandi reali agli attuatori.')
+    const ok = window.confirm('Passare a LIVE? Questo abilita comandi reali agli attuatori.')
     if (!ok) sp.value.runtime.mode = 'dry-run'
   }
   await save()
@@ -1204,7 +1203,7 @@ async function loadEntities(){
   async function saveEntities(){
     const payload = {}
     for (const key of Object.keys(ent.value || {})) {
-      payload[key] = ent.value|.[key]|.entity_id || null
+      payload[key] = ent.value?.[key]?.entity_id || null
     }
     await fetch('/api/entities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entities: payload})})
     dirtyEnt.value = {}
@@ -1213,7 +1212,7 @@ async function loadEntities(){
   async function saveActuators(){
     const payload = {}
     for (const item of actuatorDefs) {
-      payload[item.key] = act.value|.[item.key]|.entity_id || null
+      payload[item.key] = act.value?.[item.key]?.entity_id || null
     }
     await fetch('/api/actuators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actuators: payload})})
     dirtyAct.value = {}
@@ -1231,7 +1230,7 @@ async function exportConfig(){
   URL.revokeObjectURL(url)
 }
 async function importConfig(ev){
-  const file = ev.target.files|.[0]
+  const file = ev.target.files?.[0]
   if (!file) return
   const text = await file.text()
   let data = null
@@ -1250,17 +1249,17 @@ async function doAct(entity_id, action, opts = {}){
 }
 
 function userToggle(entityObj, moduleKey){
-  if (!entityObj|.entity_id) return
-  if (status.value|.runtime_mode !== 'live') return
-  if (moduleKey && !modules.value|.[moduleKey]) return
-  const action = entityObj.state === 'on' | 'off' : 'on'
+  if (!entityObj?.entity_id) return
+  if (status.value?.runtime_mode !== 'live') return
+  if (moduleKey && !modules.value?.[moduleKey]) return
+  const action = entityObj.state === 'on' ? 'off' : 'on'
   doAct(entityObj.entity_id, action)
 }
 
 function userToggleManual(entityObj){
-  if (!entityObj|.entity_id) return
-  const action = entityObj.state === 'on' | 'off' : 'on'
-  const ok = window.confirm(`Manuale solare: ${action.toUpperCase()} ${entityObj.entity_id}. Confermi|`)
+  if (!entityObj?.entity_id) return
+  const action = entityObj.state === 'on' ? 'off' : 'on'
+  const ok = window.confirm(`Manuale solare: ${action.toUpperCase()} ${entityObj.entity_id}. Confermi?`)
   if (!ok) return
   doAct(entityObj.entity_id, action, { manual: true })
 }
@@ -1270,11 +1269,11 @@ function stateLabel(state){
   return state || '-'
 }
 function toggleAct(key){
-  const ent = act.value|.[key]
-  if (!ent|.entity_id) return
-  const action = ent.state === 'on' | 'off' : 'on'
-  const label = actuatorDefs.find(a => a.key === key)|.label || ent.entity_id
-  const ok = window.confirm(`Comando manuale su ${label} (${action.toUpperCase()}). Confermi|`)
+  const ent = act.value?.[key]
+  if (!ent?.entity_id) return
+  const action = ent.state === 'on' ? 'off' : 'on'
+  const label = actuatorDefs.find(a => a.key === key)?.label || ent.entity_id
+  const ok = window.confirm(`Comando manuale su ${label} (${action.toUpperCase()}). Confermi?`)
   if (!ok) return
   doAct(ent.entity_id, action, { manual: true })
 }
@@ -1293,7 +1292,7 @@ function stateClass(state){
 }
 function connectWS(){
   if (ws) ws.close()
-  const proto = location.protocol === 'https:' | 'wss' : 'ws'
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws'
   ws = new WebSocket(`${proto}://${location.host}/ws`)
   ws.onmessage = (ev) => {
     let payload = null
@@ -1320,7 +1319,7 @@ function pushHistory(arr, value){
   if (arr.length > maxPoints) arr.splice(0, arr.length - maxPoints)
 }
 function updateHistoryFromDecision(decision){
-  if (!decision|.inputs) return
+  if (!decision?.inputs) return
   pushHistory(history.value.t_acs, decision.inputs.t_acs)
   pushHistory(history.value.t_puffer, decision.inputs.t_puffer)
   pushHistory(history.value.t_volano, decision.inputs.t_volano)
@@ -1371,11 +1370,11 @@ onMounted(async()=>{
   connectWS();
   solareModeInit.value = true
   focusInHandler = (e) => {
-    const tag = e.target|.tagName
+    const tag = e.target?.tagName
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') onFocus()
   }
   focusOutHandler = (e) => {
-    const tag = e.target|.tagName
+    const tag = e.target?.tagName
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') onBlur()
   }
   window.addEventListener('focusin', focusInHandler)
@@ -1396,7 +1395,7 @@ watch(tab, (val) => {
 })
 
 watch(
-  () => sp.value|.solare|.mode,
+  () => sp.value?.solare?.mode,
   async (val, old) => {
     if (!solareModeInit.value) return
     if (val === undefined || val === old) return
