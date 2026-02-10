@@ -642,7 +642,7 @@
               </div>
             </div>
             <div class="field">
-              <label>Zone Jolly</label>
+              <label>Zone Mansarda</label>
               <div class="list">
                 <div v-for="(z, i) in sp.impianto.zones_mans" :key="`mans-${i}`" class="list-row">
                   <input type="text" v-model="sp.impianto.zones_mans[i]" placeholder="climate.jolly"/>
