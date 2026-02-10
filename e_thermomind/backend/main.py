@@ -745,10 +745,13 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
             sp = 45.0
 
     hyst = float(cfg_misc.get("hyst_c", 0.5))
-    kp = float(cfg_misc.get("kp", 2.0))
+    kp_base = float(cfg_misc.get("kp", 2.0))
     min_imp = float(cfg_misc.get("min_imp_s", 1.0))
     max_imp = float(cfg_misc.get("max_imp_s", 8.0))
     pause_s = float(cfg_misc.get("pause_s", 5.0))
+    dt_ref = float(cfg_misc.get("dt_ref_c", 10.0))
+    dt_min_f = float(cfg_misc.get("dt_min_factor", 0.6))
+    dt_max_f = float(cfg_misc.get("dt_max_factor", 1.4))
     min_t = float(cfg_misc.get("min_temp_c", 20.0))
     max_t = float(cfg_misc.get("max_temp_c", 80.0))
 
@@ -760,6 +763,13 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         return
 
     err = sp - t_mandata
+    t_rit = _get_num(ent.get("t_ritorno_miscelato"))
+    dt = None
+    kp_eff = kp_base
+    if t_rit is not None and dt_ref > 0:
+        dt = max(0.0, t_mandata - t_rit)
+        factor = max(dt_min_f, min(dt_max_f, dt / dt_ref))
+        kp_eff = kp_base * factor
     if abs(err) <= hyst:
         await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
         await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
@@ -771,7 +781,7 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         return
 
     direction = "ALZA" if err > 0 else "ABBASSA"
-    duration = max(min_imp, min(max_imp, abs(err) * kp))
+    duration = max(min_imp, min(max_imp, abs(err) * kp_eff))
 
     # cancel previous pulse
     if miscelatrice_task and not miscelatrice_task.done():

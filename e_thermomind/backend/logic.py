@@ -252,6 +252,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "hyst": mix_h,
                 "t_mandata": t_mandata_mix,
                 "t_ritorno": t_ritorno_mix,
+                "delta_tr": mix_dt,
+                "kp_eff": mix_kp_eff,
                 "action": mix_action,
                 "reason": mix_reason
             },
@@ -283,6 +285,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     mix_h = float(misc_cfg.get("hyst_c", 0.5))
     mix_min = float(misc_cfg.get("min_temp_c", 20.0))
     mix_max = float(misc_cfg.get("max_temp_c", 80.0))
+    mix_dt_ref = float(misc_cfg.get("dt_ref_c", 10.0))
+    mix_dt_min_f = float(misc_cfg.get("dt_min_factor", 0.6))
+    mix_dt_max_f = float(misc_cfg.get("dt_max_factor", 1.4))
+    mix_dt = max(0.0, t_mandata_mix - t_ritorno_mix)
+    mix_kp_eff = float(misc_cfg.get("kp", 2.0))
+    if mix_dt_ref > 0:
+        mix_kp_eff = mix_kp_eff * max(mix_dt_min_f, min(mix_dt_max_f, mix_dt / mix_dt_ref))
     mix_enabled = cfg.get("modules_enabled", {}).get("miscelatrice", True)
     mix_enable_eid = ent_cfg.get("miscelatrice_enable")
     if mix_enable_eid:
@@ -298,9 +307,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 mix_reason = "Delta entro isteresi."
             elif err > 0:
                 mix_action = "ALZA"
-                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C < SP {mix_sp:.1f}°C"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C < SP {mix_sp:.1f}°C | ΔT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
             else:
                 mix_action = "ABBASSA"
-                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | ΔT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
     else:
         mix_reason = "Consenso miscelatrice OFF."

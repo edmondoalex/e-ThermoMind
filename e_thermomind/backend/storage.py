@@ -95,6 +95,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "min_imp_s": 1.0,
     "max_imp_s": 8.0,
     "pause_s": 5.0,
+    "dt_ref_c": 10.0,
+    "dt_min_factor": 0.6,
+    "dt_max_factor": 1.4,
     "min_temp_c": 20.0,
     "max_temp_c": 80.0,
     "force_impulse_s": 3.0
@@ -172,7 +175,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 _NUM_KEYS = {
   "acs": ["setpoint_c", "on_delta_c", "off_hyst_c", "max_c", "max_hyst_c"],
   "puffer": ["setpoint_c", "off_hyst_c", "max_c", "max_hyst_c", "min_to_acs_c", "hyst_to_acs_c", "delta_to_acs_start_c", "delta_to_acs_hold_c"],
-  "miscelatrice": ["setpoint_c", "hyst_c", "kp", "min_imp_s", "max_imp_s", "pause_s", "min_temp_c", "max_temp_c", "force_impulse_s"],
+  "miscelatrice": ["setpoint_c", "hyst_c", "kp", "min_imp_s", "max_imp_s", "pause_s", "dt_ref_c", "dt_min_factor", "dt_max_factor", "min_temp_c", "max_temp_c", "force_impulse_s"],
   "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
   "volano": [
     "margin_c",

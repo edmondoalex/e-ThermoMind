@@ -435,6 +435,10 @@
               <div class="v">{{ fmtDelta(d?.computed?.miscelatrice?.setpoint, d?.inputs?.t_mandata_miscelata) }}</div>
             </div>
             <div class="kpi kpi-center">
+              <div class="k">Δ Mandata/Ritorno</div>
+              <div class="v">{{ fmtDelta(d?.inputs?.t_mandata_miscelata, d?.inputs?.t_ritorno_miscelato) }}</div>
+            </div>
+            <div class="kpi kpi-center">
               <div class="k">Stato</div>
               <div class="v">{{ d?.computed?.miscelatrice?.action || 'STOP' }}</div>
             </div>
@@ -586,10 +590,13 @@
             <div class="section-title">Miscelatrice</div>
             <div class="field"><label>SP mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.setpoint_c"/></div>
             <div class="field"><label>Isteresi (C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.hyst_c"/></div>
-            <div class="field"><label>Kp (sec/°C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.kp"/></div>
+            <div class="field"><label>Kp base (sec/°C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.kp"/></div>
             <div class="field"><label>Impulso min (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.min_imp_s"/></div>
             <div class="field"><label>Impulso max (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.max_imp_s"/></div>
             <div class="field"><label>Pausa dopo impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.pause_s"/></div>
+            <div class="field"><label>ΔT ref (°C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.dt_ref_c"/></div>
+            <div class="field"><label>ΔT fattore min</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.dt_min_factor"/></div>
+            <div class="field"><label>ΔT fattore max</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.dt_max_factor"/></div>
             <div class="field"><label>Min mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.min_temp_c"/></div>
             <div class="field"><label>Max mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.max_temp_c"/></div>
             <div class="field"><label>Forza impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.force_impulse_s"/></div>
@@ -1238,7 +1245,7 @@ async function load(){
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
   }
   if (!sp.value?.miscelatrice) {
-    sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }
+    sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }
   }
   if (!sp.value?.impianto) {
   sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, puffer_ready: true, richiesta_heat: false, volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
