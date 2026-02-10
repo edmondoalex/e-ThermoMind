@@ -487,6 +487,11 @@ async def _apply_solar_live(decision_data: dict) -> None:
     r9 = act.get("r9_valve_solare_normal_funz")
     r10 = act.get("r10_valve_solare_precedenza_acs")
 
+    # R8/R9/R10 non devono restare in manuale: forza auto
+    for eid in (r8, r9, r10):
+        if eid:
+            manual_overrides.pop(eid, None)
+
     # Cutback: se ACS o solare troppo caldi
     ent = cfg.get("entities", {})
     t_acs = ha.states.get(ent.get("t_acs"), {}).get("state")
