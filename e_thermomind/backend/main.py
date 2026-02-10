@@ -722,6 +722,15 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
         return
 
+    # miscelatrice attiva solo con richiesta calore e sorgente disponibile
+    imp = (decision_data.get("computed", {}) or {}).get("impianto", {}) or {}
+    if (not cfg.get("modules_enabled", {}).get("impianto", True)) or (not imp.get("richiesta")) or (imp.get("blocked_cold")) or (imp.get("source") in (None, "OFF")):
+        act = cfg.get("actuators", {})
+        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        miscelatrice_last_action = "STOP"
+        return
+
     ent = cfg.get("entities", {})
     act = cfg.get("actuators", {})
     cfg_misc = cfg.get("miscelatrice", {})

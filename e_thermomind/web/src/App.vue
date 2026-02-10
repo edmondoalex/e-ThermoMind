@@ -401,6 +401,17 @@
           <div v-if="d?.computed?.impianto?.reason" class="muted">
             {{ d?.computed?.impianto?.reason }}
           </div>
+          <div class="row3">
+            <div class="kpi kpi-center" :class="stateClass(act?.r12_pump_mandata_piani?.state)">
+              <div class="k">R12 Pompa mandata piani</div>
+            </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.r4_valve_impianto_da_puffer?.state)">
+              <div class="k">R4 Valvola impianto da Puffer</div>
+            </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.r5_valve_impianto_da_pdc?.state)">
+              <div class="k">R5 Valvola impianto da PDC/Volano</div>
+            </div>
+          </div>
           <div class="zones-card">
             <div class="row"><strong>Zone attive</strong></div>
             <div class="zones-grid">
