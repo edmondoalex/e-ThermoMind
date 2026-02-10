@@ -659,6 +659,15 @@ async def actuate(payload: dict):
         raise HTTPException(status_code=400, detail="HA offline")
     recent_ui_actuations[entity_id] = time.time()
     if manual:
+        # R8/R9/R10 restano automatici: non mettere override manuale
+        act = cfg.get("actuators", {})
+        r8 = act.get("r8_valve_solare_notte_low_temp")
+        r9 = act.get("r9_valve_solare_normal_funz")
+        r10 = act.get("r10_valve_solare_precedenza_acs")
+        if entity_id in (r8, r9, r10):
+            manual = False
+
+    if manual:
         # Manuale puro in Admin: non va toccato dalla logica
         if action == "on":
             manual_overrides[entity_id] = True
