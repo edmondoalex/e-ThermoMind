@@ -245,6 +245,47 @@
         </div>
 
         <div v-if="act" class="card inner">
+          <div class="row"><strong>Solare</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i>
+                T_Solare mandata
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_solare_mandata) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Modalità</div>
+              <div class="v">{{ sp?.solare?.mode || 'auto' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Cutback</div>
+              <div class="v">{{ d?.computed?.safety?.acs_max_hit ? 'ACS_MAX' : (d?.inputs?.t_solare_mandata >= (sp?.solare?.max_c || 90) ? 'SOL_MAX' : 'OK') }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center" :class="stateClass(act?.r8_valve_solare_notte_low_temp?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r8_valve_solare_notte_low_temp?.attributes?.icon)" :class="[mdiClass(act?.r8_valve_solare_notte_low_temp?.attributes?.icon), stateClass(act?.r8_valve_solare_notte_low_temp?.state)]"></i>
+                R8 Solare Notte/Low
+              </div>
+            </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.r9_valve_solare_normal_funz?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r9_valve_solare_normal_funz?.attributes?.icon)" :class="[mdiClass(act?.r9_valve_solare_normal_funz?.attributes?.icon), stateClass(act?.r9_valve_solare_normal_funz?.state)]"></i>
+                R9 Solare Normal
+              </div>
+            </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.r10_valve_solare_precedenza_acs?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r10_valve_solare_precedenza_acs?.attributes?.icon)" :class="[mdiClass(act?.r10_valve_solare_precedenza_acs?.attributes?.icon), stateClass(act?.r10_valve_solare_precedenza_acs?.state)]"></i>
+                R10 Precedenza ACS
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="act" class="card inner">
           <div class="row"><strong>Puffer → ACS</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
@@ -744,6 +785,7 @@ async function refresh(){
   const s = await fetch('/api/status'); status.value = await s.json()
   const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
   await loadActuators()
+  await load()
   lastUpdate.value = new Date()
 }
 async function loadModules(){
