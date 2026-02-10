@@ -159,7 +159,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_acs": False,
     "t_puffer": False,
     "t_volano": False,
-    "t_solare_mandata": False
+    "t_solare_mandata": False,
+    "t_mandata_miscelata": False,
+    "t_ritorno_miscelato": False,
+    "miscelatrice_setpoint": False
   },
   "security": {
     "user_pin": ""
@@ -307,7 +310,7 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
 
     hist = raw.get("history", {})
     if isinstance(hist, dict):
-        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata"):
+        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata", "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint"):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
 
@@ -408,7 +411,7 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
 
     hist = payload.get("history", {})
     if isinstance(hist, dict):
-        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata"):
+        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata", "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint"):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
 

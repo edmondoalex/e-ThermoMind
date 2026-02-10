@@ -1055,7 +1055,15 @@ async def history(entity_id: str, hours: int = 24):
     # allow only configured temp sensors with history flag
     ent_cfg = cfg.get("entities", {})
     hist_cfg = cfg.get("history", {})
-    allowed = {"t_acs", "t_puffer", "t_volano", "t_solare_mandata"}
+    allowed = {
+        "t_acs",
+        "t_puffer",
+        "t_volano",
+        "t_solare_mandata",
+        "t_mandata_miscelata",
+        "t_ritorno_miscelato",
+        "miscelatrice_setpoint",
+    }
     key = None
     for k in allowed:
         if ent_cfg.get(k) == entity_id:

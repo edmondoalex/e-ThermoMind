@@ -416,15 +416,15 @@
         <div v-if="d" class="card inner">
           <div class="row"><strong>Miscelatrice</strong></div>
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_mandata_miscelata') ? 'clickable' : ''" @click="openHistory('t_mandata_miscelata','T mandata miscelata')">
               <div class="k">T mandata</div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_mandata_miscelata) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_ritorno_miscelato') ? 'clickable' : ''" @click="openHistory('t_ritorno_miscelato','T ritorno miscelato')">
               <div class="k">T ritorno</div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_ritorno_miscelato) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('miscelatrice_setpoint') ? 'clickable' : ''" @click="openHistory('miscelatrice_setpoint','SP miscelatrice')">
               <div class="k">SP mandata</div>
               <div class="v">{{ fmtTemp(d?.computed?.miscelatrice?.setpoint) }}</div>
             </div>
@@ -823,6 +823,7 @@
                        placeholder="sensor.mandata_miscelata"
                        @input="dirtyEnt.t_mandata_miscelata = true"
                        @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_mandata_miscelata"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
@@ -835,6 +836,7 @@
                        placeholder="sensor.ritorno_miscelato"
                        @input="dirtyEnt.t_ritorno_miscelato = true"
                        @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_ritorno_miscelato"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
@@ -847,6 +849,7 @@
                        placeholder="input_number.set_point_valvola_miscelatrice"
                        @input="dirtyEnt.miscelatrice_setpoint = true"
                        @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.miscelatrice_setpoint"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
@@ -976,6 +979,9 @@ const history = ref({
   t_acs: [],
   t_puffer: [],
   t_volano: [],
+  t_mandata_miscelata: [],
+  t_ritorno_miscelato: [],
+  miscelatrice_setpoint: [],
   export_w: []
 })
 const historyModal = ref({ open: false, title: '', points: '', minY: '-', maxY: '-', rangeLabel: '', xTicks: [], yTicks: [], w: 600, h: 220, padL: 40, padR: 10, padT: 10, padB: 20 })
@@ -1226,7 +1232,7 @@ async function load(){
     }
   }
   if (!sp.value?.history) {
-    sp.value.history = { t_acs: false, t_puffer: false, t_volano: false, t_solare_mandata: false }
+    sp.value.history = { t_acs: false, t_puffer: false, t_volano: false, t_solare_mandata: false, t_mandata_miscelata: false, t_ritorno_miscelato: false, miscelatrice_setpoint: false }
   }
   if (!sp.value?.solare) {
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
@@ -1430,6 +1436,9 @@ function updateHistoryFromDecision(decision){
   pushHistory(history.value.t_acs, decision.inputs.t_acs)
   pushHistory(history.value.t_puffer, decision.inputs.t_puffer)
   pushHistory(history.value.t_volano, decision.inputs.t_volano)
+  pushHistory(history.value.t_mandata_miscelata, decision.inputs.t_mandata_miscelata)
+  pushHistory(history.value.t_ritorno_miscelato, decision.inputs.t_ritorno_miscelato)
+  pushHistory(history.value.miscelatrice_setpoint, decision.computed?.miscelatrice?.setpoint)
   pushHistory(history.value.export_w, decision.inputs.grid_export_w)
 }
 function sparkPoints(values){
