@@ -152,7 +152,7 @@ async def _build_snapshot() -> dict:
             "version": APP_VERSION,
             "runtime_mode": cfg.get("runtime", {}).get("mode", "dry-run"),
         },
-        "actions": action_log[-20:],
+        "actions": action_log[-50:],
         "actuators": act,
         "entities": ent,
         "modules": cfg.get("modules_enabled", {}),
@@ -594,7 +594,7 @@ async def ws_endpoint(websocket: WebSocket):
 
 @app.get("/api/actions")
 async def actions():
-    return JSONResponse({"items": action_log[-20:]})
+    return JSONResponse({"items": action_log[-50:]})
 
 @app.get("/api/assets")
 async def list_assets():

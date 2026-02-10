@@ -374,9 +374,12 @@
           <button @click="refresh">Aggiorna</button>
         </div>
 
-        <div v-if="actions.length" class="card inner">
+        <div class="card inner">
           <div class="row"><strong>Ultime azioni</strong></div>
-          <div v-for="(line, idx) in actions.slice().reverse()" :key="`a-${idx}`" class="muted">{{ line }}</div>
+          <div v-if="actions.length === 0" class="muted">Nessuna azione registrata.</div>
+          <div v-else>
+            <div v-for="(line, idx) in actions.slice().reverse()" :key="`a-${idx}`" class="muted">{{ line }}</div>
+          </div>
         </div>
       </section>
 
