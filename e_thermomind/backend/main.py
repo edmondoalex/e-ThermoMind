@@ -36,6 +36,7 @@ recent_ui_actuations: dict[str, float] = {}
 pending_auto_off: dict[str, asyncio.Task] = {}
 transfer_tasks: dict[str, asyncio.Task] = {}
 transfer_desired: dict[str, bool] = {}
+manual_overrides: dict[str, bool] = {}
 ws_clients: set[WebSocket] = set()
 
 @app.on_event("startup")
@@ -181,6 +182,11 @@ def _is_recent_ui(entity_id: str, window_s: float = 4.0) -> bool:
         return False
     return True
 
+def _is_manual(entity_id: str | None) -> bool:
+    if not entity_id:
+        return False
+    return bool(manual_overrides.get(entity_id))
+
 async def _auto_off_after_delay(entity_id: str, module_key: str | None) -> None:
     try:
         await asyncio.sleep(2)
@@ -202,6 +208,8 @@ async def _on_state_changed(entity_id: str, new_state: dict) -> None:
     if new_state.get("state") != "on":
         return
     if _is_recent_ui(entity_id):
+        return
+    if _is_manual(entity_id):
         return
     key = _actuator_key_for_entity(entity_id)
     if not key:
@@ -292,6 +300,8 @@ def _log_dry_run(decision_data: dict) -> None:
 async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
     if not entity_id or not ha.enabled:
         return
+    if _is_manual(entity_id):
+        return
     current = _get_state(entity_id)
     if want_on and current != "on":
         await ha.call_service(entity_id, "on")
@@ -302,6 +312,8 @@ async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
 
 async def _set_actuator(entity_id: str | None, want_on: bool) -> None:
     if not entity_id or not ha.enabled:
+        return
+    if _is_manual(entity_id):
         return
     current = _get_state(entity_id)
     if want_on and current != "on":
@@ -586,6 +598,7 @@ async def actuate(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
     entity_id = payload.get("entity_id")
     action = payload.get("action")
+    manual = bool(payload.get("manual", False))
     if action not in ("on", "off"):
         raise HTTPException(status_code=400, detail="Invalid action")
     if not entity_id or not isinstance(entity_id, str):
@@ -593,5 +606,10 @@ async def actuate(payload: dict):
     if not ha.enabled:
         raise HTTPException(status_code=400, detail="HA offline")
     recent_ui_actuations[entity_id] = time.time()
+    if manual:
+        if action == "on":
+            manual_overrides[entity_id] = True
+        else:
+            manual_overrides.pop(entity_id, None)
     ok = await ha.call_service(entity_id, action)
     return JSONResponse({"ok": bool(ok)})

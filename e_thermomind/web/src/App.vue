@@ -119,25 +119,25 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Resistenze volano</strong></div>
           <div class="row3">
-            <div class="kpi kpi-center" :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)" @click="userToggle(act?.r22_resistenza_1_volano_pdc, 'resistenze_volano')">
               <div class="k">
                 <i v-if="mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon), stateClass(act?.r22_resistenza_1_volano_pdc?.state)]"></i>
                 R22 Resistenza 1 Volano PDC
               </div>
             </div>
-            <div class="kpi kpi-center" :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)" @click="userToggle(act?.r23_resistenza_2_volano_pdc, 'resistenze_volano')">
               <div class="k">
                 <i v-if="mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon), stateClass(act?.r23_resistenza_2_volano_pdc?.state)]"></i>
                 R23 Resistenza 2 Volano PDC
               </div>
             </div>
-            <div class="kpi kpi-center" :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)" @click="userToggle(act?.r24_resistenza_3_volano_pdc, 'resistenze_volano')">
               <div class="k">
                 <i v-if="mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon), stateClass(act?.r24_resistenza_3_volano_pdc?.state)]"></i>
                 R24 Resistenza 3 Volano PDC
               </div>
             </div>
-            <div class="kpi kpi-center" :class="stateClass(act?.generale_resistenze_volano_pdc?.state)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.generale_resistenze_volano_pdc?.state)" @click="userToggle(act?.generale_resistenze_volano_pdc, 'resistenze_volano')">
               <div class="k">
                 <i :class="[mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon) || 'mdi mdi-power', stateClass(act?.generale_resistenze_volano_pdc?.state)]"></i>
                 R0 Generale Resistenze Volano PDC
@@ -183,13 +183,13 @@
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center" :class="stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)" @click="userToggle(act?.r6_valve_pdc_to_integrazione_acs, 'volano_to_acs')">
               <div class="k">
                 <i v-if="mdiClass(act?.r6_valve_pdc_to_integrazione_acs?.attributes?.icon)" :class="[mdiClass(act?.r6_valve_pdc_to_integrazione_acs?.attributes?.icon), stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)]"></i>
                 Valvola PDC → ACS
               </div>
             </div>
-            <div class="kpi kpi-center" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)" @click="userToggle(act?.r13_pump_pdc_to_acs_puffer, 'volano_to_acs')">
               <div class="k">
                 <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
                 R13 Pompa PDC → ACS/Puffer
@@ -225,13 +225,13 @@
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center" :class="stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)" @click="userToggle(act?.r7_valve_pdc_to_integrazione_puffer, 'volano_to_puffer')">
               <div class="k">
                 <i v-if="mdiClass(act?.r7_valve_pdc_to_integrazione_puffer?.attributes?.icon)" :class="[mdiClass(act?.r7_valve_pdc_to_integrazione_puffer?.attributes?.icon), stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)]"></i>
                 R7 Valvola PDC → Puffer
               </div>
             </div>
-            <div class="kpi kpi-center" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)" @click="userToggle(act?.r13_pump_pdc_to_acs_puffer, 'volano_to_puffer')">
               <div class="k">
                 <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
                 R13 Pompa PDC → ACS/Puffer
@@ -803,10 +803,22 @@ async function importConfig(ev){
   await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
   await loadAll()
 }
-async function doAct(entity_id, action){
+async function doAct(entity_id, action, opts = {}){
   if (!entity_id) return
-  await fetch('/api/actuate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entity_id, action})})
+  await fetch('/api/actuate',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({entity_id, action, manual: !!opts.manual})
+  })
   await loadActuators()
+}
+
+function userToggle(entityObj, moduleKey){
+  if (!entityObj?.entity_id) return
+  if (status.value?.runtime_mode !== 'live') return
+  if (moduleKey && !modules.value?.[moduleKey]) return
+  const action = entityObj.state === 'on' ? 'off' : 'on'
+  doAct(entityObj.entity_id, action)
 }
 function stateLabel(state){
   if (state === 'on') return 'ON'
@@ -817,7 +829,7 @@ function toggleAct(key){
   const ent = act.value?.[key]
   if (!ent?.entity_id) return
   const action = ent.state === 'on' ? 'off' : 'on'
-  doAct(ent.entity_id, action)
+  doAct(ent.entity_id, action, { manual: true })
 }
 function mdiClass(icon){
   if (!icon || typeof icon !== 'string') return ''
@@ -953,6 +965,8 @@ watch(tab, (val) => {
 .kpi{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}
 .kpi.kpi-center{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:72px}
 .kpi.kpi-center .k{display:flex;align-items:center;gap:6px;justify-content:center}
+.kpi.clickable{cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
+.kpi.clickable:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .k{font-size:12px;color:var(--muted)} .v{font-size:18px;font-weight:700;margin-top:2px}
 .actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
 button{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
