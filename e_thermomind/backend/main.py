@@ -820,6 +820,8 @@ async def _apply_impianto_live() -> None:
         source = None
 
     if not source:
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
