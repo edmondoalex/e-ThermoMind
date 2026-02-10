@@ -308,9 +308,11 @@ async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
         return
     current = _get_state(entity_id)
     if want_on and current != "on":
+        recent_ui_actuations[entity_id] = time.time()
         await ha.call_service(entity_id, "on")
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id}")
     if (not want_on) and current != "off":
+        recent_ui_actuations[entity_id] = time.time()
         await ha.call_service(entity_id, "off")
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
 
@@ -321,9 +323,11 @@ async def _set_actuator(entity_id: str | None, want_on: bool) -> None:
         return
     current = _get_state(entity_id)
     if want_on and current != "on":
+        recent_ui_actuations[entity_id] = time.time()
         await ha.call_service(entity_id, "on")
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id}")
     if (not want_on) and current != "off":
+        recent_ui_actuations[entity_id] = time.time()
         await ha.call_service(entity_id, "off")
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
 
