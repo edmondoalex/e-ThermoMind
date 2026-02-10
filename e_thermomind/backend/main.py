@@ -225,7 +225,7 @@ def _build_zones_state() -> list[dict]:
             })
     add_group("PT", imp.get("zones_pt", []))
     add_group("1P", imp.get("zones_p1", []))
-    add_group("JOLLY", imp.get("zones_mans", []))
+    add_group("MANSARDA", imp.get("zones_mans", []))
     add_group("LAB", imp.get("zones_lab", []))
     scala = imp.get("zone_scala")
     if scala:
