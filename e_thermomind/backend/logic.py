@@ -194,14 +194,17 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     miscelatrice_on = req_on and cfg.get("modules_enabled", {}).get("miscelatrice", True)
     blocked_cold = req_on and (not pdc_ready) and (not vol_ok) and (not puf_ok)
 
-    impianto_reason = (
-        f"Richiesta={ 'ON' if req_on else 'OFF' } | Sel={sel_norm} | "
-        f"PDC={'ON' if pdc_ready else 'OFF'} "
-        f"VOL={'ON' if vol_ready else 'OFF'} "
-        f"PUF={'ON' if puf_ready else 'OFF'} "
-        f"Source={source} "
-        f"| Miscelatrice={'ON' if miscelatrice_on else 'OFF'}"
-    )
+    if blocked_cold:
+        impianto_reason = "Bloccato: nessuna fonte disponibile o troppo fredda."
+    else:
+        impianto_reason = (
+            f"Richiesta={ 'ON' if req_on else 'OFF' } | Sel={sel_norm} | "
+            f"PDC={'ON' if pdc_ready else 'OFF'} "
+            f"VOL={'ON' if vol_ready else 'OFF'} "
+            f"PUF={'ON' if puf_ready else 'OFF'} "
+            f"Source={source} "
+            f"| Miscelatrice={'ON' if miscelatrice_on else 'OFF'}"
+        )
 
     return {
         "inputs": {
@@ -238,6 +241,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "volano_temp_ok": vol_ok,
                 "puffer_temp_ok": puf_ok,
                 "blocked_cold": blocked_cold,
+                "reason": impianto_reason,
                 "selector": sel_norm
             },
             "module_reasons": {

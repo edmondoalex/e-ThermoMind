@@ -403,6 +403,9 @@
           <div v-if="d?.computed?.impianto?.blocked_cold" class="warn">
             Sorgenti troppo fredde: impianto bloccato.
           </div>
+          <div v-if="d?.computed?.impianto?.reason" class="muted">
+            {{ d?.computed?.impianto?.reason }}
+          </div>
           <div class="zones-card">
             <div class="row"><strong>Zone attive</strong></div>
             <div class="zones-grid">
