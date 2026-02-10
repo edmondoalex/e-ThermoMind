@@ -947,7 +947,7 @@ async def _apply_impianto_live() -> None:
     vol_active = _state_is_on(act.get("r5_valve_impianto_da_pdc"))
     puf_active = _state_is_on(act.get("r4_valve_impianto_da_puffer"))
     vol_temp_ok = (t_volano is None) or (t_volano >= vol_min + vol_h) or (vol_active and t_volano > vol_min)
-    puf_temp_ok = (t_puffer is None) or (t_puffer >= puf_min + puf_h) or (puf_active and t_puffer > puf_min)
+    puf_temp_ok = (t_puffer is None) or (t_puffer >= puf_min) or (puf_active and t_puffer > (puf_min - puf_h))
 
     # Se selector AUTO o sorgente non disponibile -> fallback con priorità
     if sel_state == "AUTO" or (
@@ -981,7 +981,11 @@ async def _apply_impianto_live() -> None:
     any_active = pt_active or p1_active or mans_active or lab_active or scala_active
 
     # Se non ci sono zone configurate, usa richiesta_on
-    demand_on = any_active if (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala) else richiesta_on
+    zones_configured = (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
+    if richiesta is not None:
+        demand_on = bool(richiesta_on)
+    else:
+        demand_on = (any_active if zones_configured else bool(richiesta_on))
     if season == "summer":
         demand_on = False
 
@@ -1019,16 +1023,10 @@ async def _apply_impianto_live() -> None:
 
     impianto_last_source = source
 
-    # in inverno abilita termostati solo se c'è una fonte valida
-    if season == "winter":
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "heat")
-    else:
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
-
     if not demand_on:
         impianto_last_source = None
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
         if r2:
             await _set_actuator(r2, False)
         if r3:
@@ -1042,6 +1040,14 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
         return
+
+    # in inverno abilita termostati solo se c'è richiesta
+    if season == "winter":
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "heat")
+    else:
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
 
     # Consenso/centralina
     await _set_actuator(off_centralina, False)

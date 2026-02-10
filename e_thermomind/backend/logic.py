@@ -177,7 +177,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     puf_min = float(imp_cfg.get("puffer_min_c", 35.0))
     puf_h = float(imp_cfg.get("puffer_hyst_c", 2.0))
     vol_ok = t_volano >= (vol_min + vol_h)
-    puf_ok = t_puffer >= (puf_min + puf_h)
+    puf_ok = t_puffer >= puf_min
 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
@@ -191,6 +191,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             source = "PUFFER" if (puf_ready and puf_ok) else "OFF"
     else:
         source = sel_norm if ((sel_norm == "PDC" and vol_ok) or (sel_norm == "PUFFER" and puf_ok)) else "OFF"
+    if not req_on:
+        source = "OFF"
 
     mix_sp = get_num(ent.get("miscelatrice_setpoint"), float(misc_cfg.get("setpoint_c", 45.0)))
     mix_h = float(misc_cfg.get("hyst_c", 0.5))

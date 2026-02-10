@@ -405,11 +405,27 @@
             <div class="kpi kpi-center" :class="stateClass(act?.r12_pump_mandata_piani?.state)">
               <div class="k">R12 Pompa mandata piani</div>
             </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.r11_pump_mandata_laboratorio?.state)">
+              <div class="k">R11 Pompa mandata laboratorio</div>
+            </div>
             <div class="kpi kpi-center" :class="stateClass(act?.r4_valve_impianto_da_puffer?.state)">
               <div class="k">R4 Valvola impianto da Puffer</div>
             </div>
+          </div>
+          <div class="row3">
             <div class="kpi kpi-center" :class="stateClass(act?.r5_valve_impianto_da_pdc?.state)">
               <div class="k">R5 Valvola impianto da PDC/Volano</div>
+            </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.r2_valve_comparto_mandata_imp_pt?.state)">
+              <div class="k">R2 Valvola comparto PT</div>
+            </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.r3_valve_comparto_mandata_imp_m1p?.state)">
+              <div class="k">R3 Valvola comparto M+1P</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center" :class="stateClass(act?.r1_valve_comparto_laboratorio?.state)">
+              <div class="k">R1 Valvola laboratorio</div>
             </div>
           </div>
           <div class="zones-card">
