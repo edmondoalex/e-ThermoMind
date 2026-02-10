@@ -554,17 +554,21 @@ async def _apply_solar_live(decision_data: dict) -> None:
     sol_max = float(sol_cfg.get("max_c", 90.0))
     cutback = (t_acs is not None and t_acs >= acs_max) or (t_sol is not None and t_sol >= sol_max)
 
-    # R8/R9: mai tutte chiuse
-    if night:
+    # R10: precedenza ACS quando solare attivo e non in cutback (vale anche di notte)
+    solar_active = decision_data.get("computed", {}).get("source_to_acs") == "SOLAR"
+    r10_on = bool(solar_active and (not cutback))
+    await _set_actuator(r10, r10_on)
+
+    # R8/R9: mai tutte chiuse. Se R10 ON, R8 e R9 devono essere OFF.
+    if r10_on:
+        await _set_actuator(r8, False)
+        await _set_actuator(r9, False)
+    elif night:
         await _set_actuator(r8, True)
         await _set_actuator(r9, False)
     else:
         await _set_actuator(r8, False)
         await _set_actuator(r9, True)
-
-    # R10: precedenza ACS solo se solare attivo e non in night/cutback
-    solar_active = decision_data.get("computed", {}).get("source_to_acs") == "SOLAR"
-    await _set_actuator(r10, bool(solar_active and (not night) and (not cutback)))
 
 @app.get("/api/status")
 async def status():
