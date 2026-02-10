@@ -613,9 +613,7 @@
                        placeholder="sensor.acs_temp"
                        @input="dirtyEnt.t_acs = true"
                        @focus="onFocus" @blur="onBlur"/>
-            </div>
-            <div class="mini-toggle">
-              <label><input type="checkbox" v-model="sp.history.t_acs"/> Storico</label>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_acs"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
@@ -631,9 +629,7 @@
                        placeholder="sensor.puffer_temp"
                        @input="dirtyEnt.t_puffer = true"
                        @focus="onFocus" @blur="onBlur"/>
-            </div>
-            <div class="mini-toggle">
-              <label><input type="checkbox" v-model="sp.history.t_puffer"/> Storico</label>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_puffer"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
@@ -649,9 +645,7 @@
                        placeholder="sensor.volano_temp"
                        @input="dirtyEnt.t_volano = true"
                        @focus="onFocus" @blur="onBlur"/>
-            </div>
-            <div class="mini-toggle">
-              <label><input type="checkbox" v-model="sp.history.t_volano"/> Storico</label>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_volano"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
@@ -667,9 +661,7 @@
                        placeholder="sensor.solar_mandata"
                        @input="dirtyEnt.t_solare_mandata = true"
                        @focus="onFocus" @blur="onBlur"/>
-            </div>
-            <div class="mini-toggle">
-              <label><input type="checkbox" v-model="sp.history.t_solare_mandata"/> Storico</label>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_solare_mandata"/> Storico</label></div>
             </div>
           </div>
             <div class="field">
@@ -1331,6 +1323,7 @@ details.form summary{cursor:pointer;list-style:none}
 .presence-no{color:#ef4444}
 .input-ok{border:2px solid #22c55e; box-shadow:0 0 0 2px rgba(34,197,94,0.15)}
 .input-row{display:flex;align-items:center;gap:8px}
+.history-inline{display:flex;align-items:center;gap:6px;margin-left:10px;font-size:11px;color:var(--muted)}
 .logic-dot{display:inline-block}
 .logic-ok{color:#22c55e}
 .logic-no{color:#ef4444}
@@ -1411,7 +1404,6 @@ details.form summary{cursor:pointer;list-style:none}
 .legend-item{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
 .legend-dot{width:10px;height:10px;border-radius:999px;background:#2b3447}
 .legend-dot.on{background:#4fd1c5}
-.mini-toggle{margin-top:6px;font-size:11px;color:var(--muted)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50}
 .modal{background:linear-gradient(180deg, rgba(11,16,26,.98), rgba(9,14,22,.98));border:1px solid var(--border);border-radius:16px;max-width:760px;width:90%;padding:14px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
 .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
