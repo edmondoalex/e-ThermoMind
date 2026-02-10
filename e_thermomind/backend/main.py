@@ -339,7 +339,28 @@ def _sun_is_night() -> bool | None:
 def _solar_night_debounced() -> bool:
     global solar_night_state, solar_night_last_change
     now = time.time()
-    desired = _sun_is_night()
+    sol_cfg = cfg.get("solare", {})
+    pv_entity = sol_cfg.get("pv_entity", "")
+    pv_day = float(sol_cfg.get("pv_day_w", 1000.0))
+    pv_night = float(sol_cfg.get("pv_night_w", 300.0))
+    debounce_s = float(sol_cfg.get("pv_debounce_s", 300))
+
+    desired = None
+    if pv_entity:
+        try:
+            pv_val = float(ha.states.get(pv_entity, {}).get("state"))
+        except Exception:
+            pv_val = None
+        if pv_val is not None:
+            if solar_night_state is None:
+                desired = pv_val < pv_night
+            else:
+                if solar_night_state:
+                    desired = pv_val < pv_day
+                else:
+                    desired = pv_val < pv_night
+    if desired is None:
+        desired = _sun_is_night()
     if desired is None:
         # keep last if unknown
         return bool(solar_night_state)
@@ -347,7 +368,7 @@ def _solar_night_debounced() -> bool:
         solar_night_state = desired
         solar_night_last_change = now
         return desired
-    if desired != solar_night_state and (now - solar_night_last_change) < 30:
+    if desired != solar_night_state and (now - solar_night_last_change) < debounce_s:
         return solar_night_state
     if desired != solar_night_state:
         solar_night_state = desired

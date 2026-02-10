@@ -473,6 +473,13 @@
                 <option value="night">notte fissa</option>
               </select>
             </div>
+            <div class="field">
+              <label>FV entity (W) per giorno/notte</label>
+              <input type="text" v-model="sp.solare.pv_entity" placeholder="sensor.zcs_easas_1_activepower_pv_ext"/>
+            </div>
+            <div class="field"><label>Soglia giorno FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_day_w"/></div>
+            <div class="field"><label>Soglia notte FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_night_w"/></div>
+            <div class="field"><label>Debounce FV (s)</label><input type="number" step="10" v-model.number="sp.solare.pv_debounce_s"/></div>
             <div class="field"><label>Δ Start Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_on_c"/></div>
             <div class="field"><label>Δ Hold Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_hold_c"/></div>
             <div class="field"><label>Solare MAX (C)</label><input type="number" step="0.5" v-model.number="sp.solare.max_c"/></div>
@@ -803,7 +810,7 @@ async function load(){
     }
   }
   if (!sp.value?.solare) {
-    sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90 }
+    sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
   }
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000

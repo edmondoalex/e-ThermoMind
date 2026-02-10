@@ -82,7 +82,11 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "mode": "auto",
     "delta_on_c": 5.0,
     "delta_hold_c": 2.5,
-    "max_c": 90.0
+    "max_c": 90.0,
+    "pv_entity": "",
+    "pv_day_w": 1000.0,
+    "pv_night_w": 300.0,
+    "pv_debounce_s": 300
   },
   "timers": {
     "volano_to_acs_start_s": 5,
@@ -111,7 +115,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 _NUM_KEYS = {
   "acs": ["setpoint_c", "on_delta_c", "off_hyst_c", "max_c", "max_hyst_c"],
   "puffer": ["setpoint_c", "off_hyst_c", "max_c", "max_hyst_c", "delta_to_acs_start_c", "delta_to_acs_hold_c"],
-  "solare": ["delta_on_c", "delta_hold_c", "max_c"],
+  "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
   "volano": [
     "margin_c",
     "max_c",
@@ -187,6 +191,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(sol, dict):
         if isinstance(sol.get("mode"), str):
             cfg["solare"]["mode"] = sol.get("mode", "auto")
+        if isinstance(sol.get("pv_entity"), str):
+            cfg["solare"]["pv_entity"] = sol.get("pv_entity", "").strip()
         for key in _NUM_KEYS["solare"]:
             if key in sol:
                 cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
@@ -256,6 +262,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(sol, dict):
         if isinstance(sol.get("mode"), str):
             cfg["solare"]["mode"] = sol.get("mode", "auto")
+        if isinstance(sol.get("pv_entity"), str):
+            cfg["solare"]["pv_entity"] = sol.get("pv_entity", "").strip()
         for key in _NUM_KEYS["solare"]:
             if key in sol:
                 cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
