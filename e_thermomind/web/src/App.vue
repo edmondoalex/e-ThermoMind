@@ -244,6 +244,42 @@
           </div>
         </div>
 
+        <div v-if="act" class="card inner">
+          <div class="row"><strong>Puffer → ACS</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
+                T_Puffer
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_puffer) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
+                T_ACS
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_acs) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Delta (Puffer - ACS)</div>
+              <div class="v">{{ fmtDelta(d?.inputs?.t_puffer, d?.inputs?.t_acs) }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center clickable" :class="stateClass(act?.r14_pump_puffer_to_acs?.state)" @click="userToggle(act?.r14_pump_puffer_to_acs, 'puffer_to_acs')">
+              <div class="k">
+                <i v-if="mdiClass(act?.r14_pump_puffer_to_acs?.attributes?.icon)" :class="[mdiClass(act?.r14_pump_puffer_to_acs?.attributes?.icon), stateClass(act?.r14_pump_puffer_to_acs?.state)]"></i>
+                R14 Pompa Puffer → ACS
+              </div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Stato logica</div>
+              <div class="v">{{ d?.computed?.flags?.puffer_to_acs ? 'ATTIVO' : 'STOP' }}</div>
+            </div>
+          </div>
+        </div>
+
         <div v-if="d" class="card inner">
           <div class="row"><strong>Schema impianto (live)</strong></div>
           <div class="muted">Flussi evidenziati in tempo reale.</div>
@@ -610,7 +646,7 @@ const actuatorDefs = [
   { key: 'r11_pump_mandata_laboratorio', label: 'R11 Pompa Mandata Laboratorio', impl: false },
   { key: 'r12_pump_mandata_piani', label: 'R12 Pompa Mandata Piani', impl: false },
   { key: 'r13_pump_pdc_to_acs_puffer', label: 'R13 Pompa PDC -> ACS/Puffer', impl: true },
-  { key: 'r14_pump_puffer_to_acs', label: 'R14 Pompa Puffer -> ACS', impl: false },
+  { key: 'r14_pump_puffer_to_acs', label: 'R14 Pompa Puffer -> ACS', impl: true },
   { key: 'r15_pump_caldaia_legna', label: 'R15 Pompa Caldaia Legna -> Puffer', impl: false },
   { key: 'r16_cmd_miscelatrice_alza', label: 'R16 CMD Miscelatrice ALZA', impl: false },
   { key: 'r17_cmd_miscelatrice_abbassa', label: 'R17 CMD Miscelatrice ABBASSA', impl: false },

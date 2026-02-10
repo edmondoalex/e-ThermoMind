@@ -84,6 +84,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     delta_hold = float(vol_cfg.get("delta_to_acs_hold_c", 2.5))
     puf_delta_start = float(vol_cfg.get("delta_to_puffer_start_c", 5.0))
     puf_delta_hold = float(vol_cfg.get("delta_to_puffer_hold_c", 2.5))
+    puf_to_acs_start = float(puf_cfg.get("delta_to_acs_start_c", 3.0))
+    puf_to_acs_hold = float(puf_cfg.get("delta_to_acs_hold_c", 1.5))
     last_vol_to_puf = bool(_LAST.get("volano_to_puffer"))
 
     if dest == "ACS" and (t_sol >= t_acs + solar_delta_on) and (not acs_max_hit):
@@ -95,9 +97,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     elif dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (not vol_max_hit):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}?C >= T_ACS+delta_hold"
-    elif dest == "ACS" and (t_puffer >= t_acs + 3.0):
+    elif dest == "ACS" and (t_puffer >= t_acs + puf_to_acs_start):
         source_to_acs = "PUFFER"
-        source_reason = f"T_PUF {t_puffer:.1f}?C >= T_ACS+delta {t_acs + 3.0:.1f}?C"
+        source_reason = f"T_PUF {t_puffer:.1f}?C >= T_ACS+delta {t_acs + puf_to_acs_start:.1f}?C"
+    elif dest == "ACS" and last_source == "PUFFER" and (t_puffer >= t_acs + puf_to_acs_hold):
+        source_to_acs = "PUFFER"
+        source_reason = f"T_PUF {t_puffer:.1f}?C >= T_ACS+delta_hold {t_acs + puf_to_acs_hold:.1f}?C"
     else:
         source_to_acs = "OFF"
         source_reason = "Nessuna sorgente selezionata (v0.1)."
