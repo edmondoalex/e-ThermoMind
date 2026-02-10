@@ -406,6 +406,8 @@
           <div class="set-section">
             <div class="section-title">Puffer</div>
             <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/></div>
+            <div class="field"><label>Δ Start Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_start_c"/></div>
+            <div class="field"><label>Δ Hold Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_hold_c"/></div>
           </div>
 
           <div class="set-section">
