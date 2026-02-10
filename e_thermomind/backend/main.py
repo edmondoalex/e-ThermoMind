@@ -137,6 +137,22 @@ def _get_num(entity_id: str | None) -> float | None:
     except Exception:
         return None
 
+def _collect_zones(imp: dict) -> list[str]:
+    zones: list[str] = []
+    for key in ("zones_pt", "zones_p1", "zones_mans", "zones_lab"):
+        zones.extend([z for z in (imp.get(key) or []) if z])
+    zone_scala = imp.get("zone_scala") or ""
+    if zone_scala:
+        zones.append(zone_scala)
+    # unique preserve order
+    seen = set()
+    out = []
+    for z in zones:
+        if z not in seen:
+            seen.add(z)
+            out.append(z)
+    return out
+
 async def _build_snapshot() -> dict:
     data = compute_decision(cfg, ha.states)
     await _apply_resistance_live(data)
@@ -776,6 +792,8 @@ async def _apply_impianto_live() -> None:
     await _set_pump_delayed("impianto:pump", r12, demand_on, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
     if not demand_on:
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_actuator(r31, False)
@@ -795,6 +813,8 @@ async def _apply_impianto_live() -> None:
         source = None
 
     if not source:
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off")
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
@@ -804,6 +824,9 @@ async def _apply_impianto_live() -> None:
         if cfg.get("modules_enabled", {}).get("miscelatrice", True):
             await _set_actuator(misc_enable, False)
         return
+
+    for z in _collect_zones(imp):
+        await _set_climate_hvac_mode(z, "heat")
 
     if source == "PDC":
         await _set_actuator(r5, True)

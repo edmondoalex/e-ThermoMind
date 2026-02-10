@@ -396,6 +396,9 @@
             </div>
           </div>
           <div class="help">I checkbox sono manuali nel solo add-on. Richiesta calore e consenso miscelatrice sono in sola lettura.</div>
+          <div v-if="d?.computed?.impianto?.blocked_cold" class="warn">
+            Sorgenti troppo fredde: impianto bloccato.
+          </div>
           <div class="zones-card">
             <div class="row"><strong>Zone attive</strong></div>
             <div class="zones-grid">
@@ -1453,6 +1456,7 @@ details.form summary{cursor:pointer;list-style:none}
 @media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .set-section{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(10,15,22,.45)}
 .set-section .section-title{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.warn{margin-top:8px;color:#ffb15e;background:rgba(255,177,94,.08);border:1px solid rgba(255,177,94,.25);padding:8px 10px;border-radius:10px;font-size:12px}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row3 input::placeholder{color:rgba(159,176,199,.6)}
 .row2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}

@@ -190,6 +190,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         source = sel_norm
 
     miscelatrice_on = req_on and cfg.get("modules_enabled", {}).get("miscelatrice", True)
+    blocked_cold = req_on and (not pdc_ready) and (not vol_ok) and (not puf_ok)
 
     impianto_reason = (
         f"Richiesta={ 'ON' if req_on else 'OFF' } | Sel={sel_norm} | "
@@ -232,6 +233,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "volano_ready": vol_ready,
                 "volano_temp_ok": vol_ok,
                 "puffer_temp_ok": puf_ok,
+                "blocked_cold": blocked_cold,
                 "selector": sel_norm
             },
             "module_reasons": {
