@@ -693,24 +693,20 @@ async def _apply_impianto_live() -> None:
 
     pdc_ready = _state_is_on(ent.get("source_pdc_ready")) if ent.get("source_pdc_ready") else bool(imp_cfg.get("pdc_ready"))
     volano_ready = _state_is_on(ent.get("source_volano_ready")) if ent.get("source_volano_ready") else bool(imp_cfg.get("volano_ready"))
-    caldaia_ready = _state_is_on(ent.get("source_caldaia_ready")) if ent.get("source_caldaia_ready") else bool(imp_cfg.get("caldaia_ready"))
     misc_enable = ent.get("miscelatrice_enable")
 
-    if sel_state not in ("AUTO", "PDC", "VOLANO", "CALDAIA", "PUFFER"):
+    if sel_state not in ("AUTO", "PDC", "VOLANO", "PUFFER"):
         sel_state = "AUTO"
 
     # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
     if sel_state == "AUTO" or (
         (sel_state == "PDC" and not pdc_ready) or
-        (sel_state == "VOLANO" and not volano_ready) or
-        (sel_state == "CALDAIA" and not caldaia_ready)
+        (sel_state == "VOLANO" and not volano_ready)
     ):
         if pdc_ready:
             source = "PDC"
         elif volano_ready:
             source = "VOLANO"
-        elif caldaia_ready:
-            source = "CALDAIA"
         else:
             source = "PUFFER"
     else:
@@ -718,7 +714,6 @@ async def _apply_impianto_live() -> None:
 
     r5 = act.get("r5_valve_impianto_da_pdc")
     r31 = act.get("r31_valve_impianto_da_volano")
-    r15 = act.get("r15_pump_caldaia_legna")
 
     imp = cfg.get("impianto", {})
     cooling_blocked = set(imp.get("cooling_blocked", []))
@@ -761,7 +756,6 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_actuator(r31, False)
-        await _set_actuator(r15, False)
         await _set_climate_hvac_mode(clima, "off")
         await _set_actuator(off_centralina, True)
         if cfg.get("modules_enabled", {}).get("miscelatrice", True):
@@ -775,25 +769,16 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r5, True)
         await _set_actuator(r31, False)
         await _set_actuator(r4, False)
-        await _set_actuator(r15, False)
         await _set_climate_hvac_mode(clima, "off")
     elif source == "VOLANO":
         await _set_actuator(r31, True)
         await _set_actuator(r5, False)
         await _set_actuator(r4, False)
-        await _set_actuator(r15, False)
         await _set_climate_hvac_mode(clima, "off")
-    elif source == "CALDAIA":
-        await _set_actuator(r15, True)
-        await _set_actuator(r4, True)
-        await _set_actuator(r5, False)
-        await _set_actuator(r31, False)
-        await _set_climate_hvac_mode(clima, "cool")
     else:  # PUFFER
         await _set_actuator(r4, True)
         await _set_actuator(r5, False)
         await _set_actuator(r31, False)
-        await _set_actuator(r15, False)
         await _set_climate_hvac_mode(clima, "cool")
 
 @app.get("/api/status")

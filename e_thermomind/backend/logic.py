@@ -156,29 +156,24 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     req_eid = ent_cfg.get("richiesta_heat_piani")
     pdc_eid = ent_cfg.get("source_pdc_ready")
     vol_eid = ent_cfg.get("source_volano_ready")
-    cal_eid = ent_cfg.get("source_caldaia_ready")
 
     sel_state = ha_states.get(sel_eid, {}).get("state") if sel_eid else imp_cfg.get("source_mode", "AUTO")
     req_state = ha_states.get(req_eid, {}).get("state") if req_eid else ("on" if imp_cfg.get("richiesta_heat") else "off")
     pdc_ready = _is_on_state(ha_states.get(pdc_eid, {}).get("state") if pdc_eid else ("on" if imp_cfg.get("pdc_ready") else "off"))
     vol_ready = _is_on_state(ha_states.get(vol_eid, {}).get("state") if vol_eid else ("on" if imp_cfg.get("volano_ready") else "off"))
-    cal_ready = _is_on_state(ha_states.get(cal_eid, {}).get("state") if cal_eid else ("on" if imp_cfg.get("caldaia_ready") else "off"))
     req_on = _is_on_state(req_state)
     sel_norm = str(sel_state or "AUTO").strip().upper()
 
-    if sel_norm not in ("AUTO", "PDC", "VOLANO", "CALDAIA", "PUFFER"):
+    if sel_norm not in ("AUTO", "PDC", "VOLANO", "PUFFER"):
         sel_norm = "AUTO"
     if sel_norm == "AUTO" or (
         (sel_norm == "PDC" and not pdc_ready) or
-        (sel_norm == "VOLANO" and not vol_ready) or
-        (sel_norm == "CALDAIA" and not cal_ready)
+        (sel_norm == "VOLANO" and not vol_ready)
     ):
         if pdc_ready:
             source = "PDC"
         elif vol_ready:
             source = "VOLANO"
-        elif cal_ready:
-            source = "CALDAIA"
         else:
             source = "PUFFER"
     else:
@@ -190,7 +185,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         f"Richiesta={ 'ON' if req_on else 'OFF' } | Sel={sel_norm} | "
         f"PDC={'ON' if pdc_ready else 'OFF'} "
         f"VOL={'ON' if vol_ready else 'OFF'} "
-        f"CAL={'ON' if cal_ready else 'OFF'} | Source={source} "
+        f"Source={source} "
         f"| Miscelatrice={'ON' if miscelatrice_on else 'OFF'}"
     )
 
@@ -225,7 +220,6 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "miscelatrice": miscelatrice_on,
                 "pdc_ready": pdc_ready,
                 "volano_ready": vol_ready,
-                "caldaia_ready": cal_ready,
                 "selector": sel_norm
             },
             "module_reasons": {
