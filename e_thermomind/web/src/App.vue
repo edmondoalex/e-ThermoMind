@@ -863,18 +863,6 @@
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.miscelatrice_setpoint"/> Storico</label></div>
             </div>
           </div>
-          <div class="field">
-            <label>Consenso miscelatrice (enable)</label>
-            <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent?.miscelatrice_enable?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-                <input type="text"
-                       :class="isFilled(ent?.miscelatrice_enable?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.miscelatrice_enable.entity_id"
-                       placeholder="input_boolean.miscelatrice_enable"
-                       @input="dirtyEnt.miscelatrice_enable = true"
-                       @focus="onFocus" @blur="onBlur"/>
-            </div>
-          </div>
             <div class="field">
               <label>
                 <i v-if="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)"></i>

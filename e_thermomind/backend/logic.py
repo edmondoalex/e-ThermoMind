@@ -293,9 +293,6 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if mix_dt_ref > 0:
         mix_kp_eff = mix_kp_eff * max(mix_dt_min_f, min(mix_dt_max_f, mix_dt / mix_dt_ref))
     mix_enabled = cfg.get("modules_enabled", {}).get("miscelatrice", True)
-    mix_enable_eid = ent_cfg.get("miscelatrice_enable")
-    if mix_enable_eid:
-        mix_enabled = mix_enabled and _is_on_state(ha_states.get(mix_enable_eid, {}).get("state"))
     mix_action = "STOP"
     mix_reason = "Miscelatrice non attiva."
     if mix_enabled:
@@ -311,5 +308,3 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             else:
                 mix_action = "ABBASSA"
                 mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | ΔT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
-    else:
-        mix_reason = "Consenso miscelatrice OFF."

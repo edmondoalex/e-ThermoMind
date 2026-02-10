@@ -724,12 +724,6 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     act = cfg.get("actuators", {})
     cfg_misc = cfg.get("miscelatrice", {})
 
-    enable_eid = ent.get("miscelatrice_enable")
-    if enable_eid and not _state_is_on(enable_eid):
-        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
-        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
-        return
-
     t_mandata = _get_num(ent.get("t_mandata_miscelata"))
     if t_mandata is None:
         return
@@ -862,7 +856,6 @@ async def _apply_impianto_live() -> None:
     volano_ready = _state_is_on(ent.get("source_volano_ready")) if ent.get("source_volano_ready") else bool(imp_cfg.get("volano_ready"))
     pdc_volano_ready = pdc_ready or volano_ready
     puffer_ready = _state_is_on(ent.get("source_puffer_ready")) if ent.get("source_puffer_ready") else bool(imp_cfg.get("puffer_ready", True))
-    misc_enable = ent.get("miscelatrice_enable")
 
     if sel_state not in ("AUTO", "PDC", "PUFFER"):
         sel_state = "AUTO"
@@ -943,8 +936,7 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r5, False)
         await _set_climate_hvac_mode(clima, "off")
         await _set_actuator(off_centralina, True)
-        if cfg.get("modules_enabled", {}).get("miscelatrice", True):
-            await _set_actuator(misc_enable, False)
+        # miscelatrice gestita solo dal suo modulo
         return
 
     # Consenso/centralina
@@ -964,8 +956,7 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r5, False)
         await _set_climate_hvac_mode(clima, "off")
         await _set_actuator(off_centralina, True)
-        if cfg.get("modules_enabled", {}).get("miscelatrice", True):
-            await _set_actuator(misc_enable, False)
+        # miscelatrice gestita solo dal suo modulo
         return
 
     if source == "PDC":
