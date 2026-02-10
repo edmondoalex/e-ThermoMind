@@ -542,6 +542,13 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         _log_dry_run(decision_data)
         return
     if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
+        act = cfg.get("actuators", {})
+        r22 = act.get("r22_resistenza_1_volano_pdc")
+        r23 = act.get("r23_resistenza_2_volano_pdc")
+        r24 = act.get("r24_resistenza_3_volano_pdc")
+        rg = act.get("generale_resistenze_volano_pdc")
+        for ent in (r22, r23, r24, rg):
+            await _set_resistance(ent, False)
         return
     act = cfg.get("actuators", {})
     r22 = act.get("r22_resistenza_1_volano_pdc")
@@ -590,6 +597,19 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     modules = cfg.get("modules_enabled", {})
     act = cfg.get("actuators", {})
 
+    r6 = act.get("r6_valve_pdc_to_integrazione_acs")
+    r7 = act.get("r7_valve_pdc_to_integrazione_puffer")
+    r13 = act.get("r13_pump_pdc_to_acs_puffer")
+    r14 = act.get("r14_pump_puffer_to_acs")
+
+    if not (modules.get("volano_to_acs", True) or modules.get("volano_to_puffer", True) or modules.get("puffer_to_acs", True)):
+        await _set_valve_only(r6, False)
+        await _set_valve_only(r7, False)
+        await _set_pump_only("volano_to_acs", r13, False)
+        await _set_pump_only("volano_to_puffer", r13, False)
+        await _set_pump_only("puffer_to_acs", r14, False)
+        return
+
     want_vol_acs = bool(flags.get("volano_to_acs")) and modules.get("volano_to_acs", True)
     want_vol_puf = bool(flags.get("volano_to_puffer")) and modules.get("volano_to_puffer", True)
     want_puf_acs = bool(flags.get("puffer_to_acs")) and modules.get("puffer_to_acs", True)
@@ -597,10 +617,6 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     if want_vol_acs:
         want_vol_puf = False
         want_puf_acs = False
-
-    r6 = act.get("r6_valve_pdc_to_integrazione_acs")
-    r7 = act.get("r7_valve_pdc_to_integrazione_puffer")
-    r13 = act.get("r13_pump_pdc_to_acs_puffer")
 
     timers = cfg.get("timers", {})
     vta_start = float(timers.get("volano_to_acs_start_s", 5))
@@ -618,11 +634,7 @@ async def _apply_transfer_live(decision_data: dict) -> None:
         await _set_transfer_pair("volano_to_acs", r6, r13, False, vta_start, vta_stop)
         await _set_transfer_pair("volano_to_puffer", r7, r13, False, vtp_start, vtp_stop)
 
-    await _set_pump_only(
-        "puffer_to_acs",
-        act.get("r14_pump_puffer_to_acs"),
-        want_puf_acs,
-    )
+    await _set_pump_only("puffer_to_acs", r14, want_puf_acs)
 
 async def _apply_solar_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
@@ -630,6 +642,13 @@ async def _apply_solar_live(decision_data: dict) -> None:
     if not ha.enabled:
         return
     if not cfg.get("modules_enabled", {}).get("solare", True):
+        act = cfg.get("actuators", {})
+        r8 = act.get("r8_valve_solare_notte_low_temp")
+        r9 = act.get("r9_valve_solare_normal_funz")
+        r10 = act.get("r10_valve_solare_precedenza_acs")
+        await _set_actuator(r8, False)
+        await _set_actuator(r9, False)
+        await _set_actuator(r10, False)
         return
 
     sol_cfg = cfg.get("solare", {})
