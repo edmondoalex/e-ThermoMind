@@ -119,38 +119,38 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Resistenze volano</strong></div>
           <div class="row3">
-            <div class="kpi" :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r22_resistenza_1_volano_pdc?.attributes?.icon), stateClass(act?.r22_resistenza_1_volano_pdc?.state)]"></i>
                 R22 Resistenza 1 Volano PDC
               </div>
             </div>
-            <div class="kpi" :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r23_resistenza_2_volano_pdc?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r23_resistenza_2_volano_pdc?.attributes?.icon), stateClass(act?.r23_resistenza_2_volano_pdc?.state)]"></i>
                 R23 Resistenza 2 Volano PDC
               </div>
             </div>
-            <div class="kpi" :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r24_resistenza_3_volano_pdc?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.r24_resistenza_3_volano_pdc?.attributes?.icon), stateClass(act?.r24_resistenza_3_volano_pdc?.state)]"></i>
                 R24 Resistenza 3 Volano PDC
               </div>
             </div>
-            <div class="kpi" :class="stateClass(act?.generale_resistenze_volano_pdc?.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.generale_resistenze_volano_pdc?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon), stateClass(act?.generale_resistenze_volano_pdc?.state)]"></i>
                 R0 Generale Resistenze Volano PDC
               </div>
             </div>
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">
                 <i v-if="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)"></i>
                 Potenza Resistenze
               </div>
               <div class="v">{{ fmtEntity(ent?.resistenze_volano_power) }}</div>
             </div>
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">
                 <i v-if="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_energy?.attributes?.icon)"></i>
                 Energia Resistenze
@@ -163,39 +163,39 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Volano → ACS</strong></div>
           <div class="row3">
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
                 T_Volano
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_volano) }}</div>
             </div>
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
                 T_ACS
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_acs) }}</div>
             </div>
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">Delta (Volano - ACS)</div>
               <div class="v">{{ fmtDelta(d?.inputs?.t_volano, d?.inputs?.t_acs) }}</div>
             </div>
           </div>
           <div class="row3">
-            <div class="kpi" :class="stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r6_valve_pdc_to_integrazione_acs?.attributes?.icon)" :class="[mdiClass(act?.r6_valve_pdc_to_integrazione_acs?.attributes?.icon), stateClass(act?.r6_valve_pdc_to_integrazione_acs?.state)]"></i>
                 Valvola PDC → ACS
               </div>
             </div>
-            <div class="kpi" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
                 R13 Pompa PDC → ACS/Puffer
               </div>
             </div>
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">Stato logica</div>
               <div class="v">{{ d?.computed?.flags?.volano_to_acs ? 'ATTIVO' : 'STOP' }}</div>
             </div>
@@ -205,39 +205,39 @@
         <div v-if="act" class="card inner">
           <div class="row"><strong>Volano → Puffer</strong></div>
           <div class="row3">
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
                 T_Volano
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_volano) }}</div>
             </div>
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
                 T_Puffer
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_puffer) }}</div>
             </div>
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">Delta (Volano - Puffer)</div>
               <div class="v">{{ fmtDelta(d?.inputs?.t_volano, d?.inputs?.t_puffer) }}</div>
             </div>
           </div>
           <div class="row3">
-            <div class="kpi" :class="stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r7_valve_pdc_to_integrazione_puffer?.attributes?.icon)" :class="[mdiClass(act?.r7_valve_pdc_to_integrazione_puffer?.attributes?.icon), stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)]"></i>
                 R7 Valvola PDC → Puffer
               </div>
             </div>
-            <div class="kpi" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
+            <div class="kpi kpi-center" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
                 R13 Pompa PDC → ACS/Puffer
               </div>
             </div>
-            <div class="kpi">
+            <div class="kpi kpi-center">
               <div class="k">Stato logica</div>
               <div class="v">{{ d?.computed?.flags?.volano_to_puffer ? 'ATTIVO' : 'STOP' }}</div>
             </div>
@@ -951,6 +951,8 @@ watch(tab, (val) => {
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 @media(min-width:760px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .kpi{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}
+.kpi.kpi-center{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:72px}
+.kpi.kpi-center .k{display:flex;align-items:center;gap:6px;justify-content:center}
 .k{font-size:12px;color:var(--muted)} .v{font-size:18px;font-weight:700;margin-top:2px}
 .actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
 button{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
