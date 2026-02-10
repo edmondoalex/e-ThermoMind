@@ -418,15 +418,15 @@
           <div class="row3">
             <div class="kpi kpi-center" :class="historyEnabled('t_mandata_miscelata') ? 'clickable' : ''" @click="openHistory('t_mandata_miscelata','T mandata miscelata')">
               <div class="k">T mandata</div>
-              <div class="v">{{ fmtTemp(d?.inputs?.t_mandata_miscelata) }}</div>
+              <div class="v">{{ fmtNum(d?.inputs?.t_mandata_miscelata) }}&deg;C</div>
             </div>
             <div class="kpi kpi-center" :class="historyEnabled('t_ritorno_miscelato') ? 'clickable' : ''" @click="openHistory('t_ritorno_miscelato','T ritorno miscelato')">
               <div class="k">T ritorno</div>
-              <div class="v">{{ fmtTemp(d?.inputs?.t_ritorno_miscelato) }}</div>
+              <div class="v">{{ fmtNum(d?.inputs?.t_ritorno_miscelato) }}&deg;C</div>
             </div>
             <div class="kpi kpi-center" :class="historyEnabled('miscelatrice_setpoint') ? 'clickable' : ''" @click="openHistory('miscelatrice_setpoint','SP miscelatrice')">
               <div class="k">SP mandata</div>
-              <div class="v">{{ fmtTemp(d?.computed?.miscelatrice?.setpoint) }}</div>
+              <div class="v">{{ fmtNum(d?.computed?.miscelatrice?.setpoint) }}&deg;C</div>
             </div>
           </div>
           <div class="row3">
