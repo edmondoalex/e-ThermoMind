@@ -202,6 +202,48 @@
           </div>
         </div>
 
+        <div v-if="act" class="card inner">
+          <div class="row"><strong>Volano → Puffer</strong></div>
+          <div class="row3">
+            <div class="kpi">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
+                T_Volano
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_volano) }}</div>
+            </div>
+            <div class="kpi">
+              <div class="k">
+                <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
+                T_Puffer
+              </div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_puffer) }}</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Delta (Volano - Puffer)</div>
+              <div class="v">{{ fmtDelta(d?.inputs?.t_volano, d?.inputs?.t_puffer) }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi" :class="stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r7_valve_pdc_to_integrazione_puffer?.attributes?.icon)" :class="[mdiClass(act?.r7_valve_pdc_to_integrazione_puffer?.attributes?.icon), stateClass(act?.r7_valve_pdc_to_integrazione_puffer?.state)]"></i>
+                R7 Valvola PDC → Puffer
+              </div>
+            </div>
+            <div class="kpi" :class="stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon)" :class="[mdiClass(act?.r13_pump_pdc_to_acs_puffer?.attributes?.icon), stateClass(act?.r13_pump_pdc_to_acs_puffer?.state)]"></i>
+                R13 Pompa PDC → ACS/Puffer
+              </div>
+            </div>
+            <div class="kpi">
+              <div class="k">Stato logica</div>
+              <div class="v">{{ d?.computed?.flags?.volano_to_puffer ? 'ATTIVO' : 'STOP' }}</div>
+            </div>
+          </div>
+        </div>
+
         <div v-if="d" class="card inner">
           <div class="row"><strong>Schema impianto (live)</strong></div>
           <div class="muted">Flussi evidenziati in tempo reale.</div>
@@ -293,6 +335,8 @@
             <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/></div>
             <div class="field"><label>Δ Start Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_start_c"/></div>
             <div class="field"><label>Δ Hold Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_hold_c"/></div>
+            <div class="field"><label>Δ Start Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_start_c"/></div>
+            <div class="field"><label>Δ Hold Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_hold_c"/></div>
             <div class="field">
               <label>Sequenza Volano → ACS (valvola + pompa)</label>
               <div class="row2">
@@ -559,7 +603,7 @@ const actuatorDefs = [
   { key: 'r4_valve_impianto_da_puffer', label: 'R4 Valvola Impianto da Puffer', impl: false },
   { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC', impl: false },
   { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS', impl: true },
-  { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer', impl: false },
+  { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer', impl: true },
   { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp', impl: false },
   { key: 'r9_valve_solare_normal_funz', label: 'R9 Valvola Solare Normal Funz', impl: false },
   { key: 'r10_valve_solare_precedenza_acs', label: 'R10 Valvola Solare Precedenza ACS', impl: false },
