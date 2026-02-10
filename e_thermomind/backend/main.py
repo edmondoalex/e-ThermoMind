@@ -40,6 +40,9 @@ manual_overrides: dict[str, bool] = {}
 solar_night_state: bool | None = None
 solar_night_last_change: float = 0.0
 ws_clients: set[WebSocket] = set()
+miscelatrice_task: asyncio.Task | None = None
+miscelatrice_pause_until: float = 0.0
+miscelatrice_last_action: str = "STOP"
 
 @app.on_event("startup")
 async def on_startup():
@@ -109,6 +112,7 @@ async def decision():
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
     await _apply_impianto_live()
+    await _apply_miscelatrice_live(data)
     data["zones"] = _build_zones_state()
     return JSONResponse(data)
 
@@ -537,6 +541,13 @@ async def _set_pump_only(name: str, pump_eid: str | None, want_on: bool) -> None
 async def _set_valve_only(valve_eid: str | None, want_on: bool) -> None:
     await _set_actuator(valve_eid, want_on)
 
+async def _pulse_actuator(task_name: str, eid: str | None, duration_s: float) -> None:
+    if not eid:
+        return
+    await _set_actuator(eid, True)
+    await asyncio.sleep(max(0.1, duration_s))
+    await _set_actuator(eid, False)
+
 async def _apply_resistance_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
         _log_dry_run(decision_data)
@@ -696,6 +707,90 @@ async def _apply_solar_live(decision_data: dict) -> None:
     else:
         await _set_actuator(r8, False)
         await _set_actuator(r9, True)
+
+async def _apply_miscelatrice_live(decision_data: dict) -> None:
+    global miscelatrice_task, miscelatrice_pause_until, miscelatrice_last_action
+    if cfg.get("runtime", {}).get("mode") != "live":
+        return
+    if not ha.enabled:
+        return
+    if not cfg.get("modules_enabled", {}).get("miscelatrice", True):
+        act = cfg.get("actuators", {})
+        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        return
+
+    ent = cfg.get("entities", {})
+    act = cfg.get("actuators", {})
+    cfg_misc = cfg.get("miscelatrice", {})
+
+    enable_eid = ent.get("miscelatrice_enable")
+    if enable_eid and not _state_is_on(enable_eid):
+        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        return
+
+    t_mandata = _get_num(ent.get("t_mandata_miscelata"))
+    if t_mandata is None:
+        return
+
+    sp = None
+    sp_eid = ent.get("miscelatrice_setpoint")
+    if sp_eid:
+        sp = _get_num(sp_eid)
+    if sp is None:
+        try:
+            sp = float(cfg_misc.get("setpoint_c", 45.0))
+        except Exception:
+            sp = 45.0
+
+    hyst = float(cfg_misc.get("hyst_c", 0.5))
+    kp = float(cfg_misc.get("kp", 2.0))
+    min_imp = float(cfg_misc.get("min_imp_s", 1.0))
+    max_imp = float(cfg_misc.get("max_imp_s", 8.0))
+    pause_s = float(cfg_misc.get("pause_s", 5.0))
+    min_t = float(cfg_misc.get("min_temp_c", 20.0))
+    max_t = float(cfg_misc.get("max_temp_c", 80.0))
+
+    # safety
+    if t_mandata < min_t or t_mandata > max_t:
+        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        miscelatrice_last_action = "STOP"
+        return
+
+    err = sp - t_mandata
+    if abs(err) <= hyst:
+        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        miscelatrice_last_action = "STOP"
+        return
+
+    now = time.time()
+    if now < miscelatrice_pause_until:
+        return
+
+    direction = "ALZA" if err > 0 else "ABBASSA"
+    duration = max(min_imp, min(max_imp, abs(err) * kp))
+
+    # cancel previous pulse
+    if miscelatrice_task and not miscelatrice_task.done():
+        miscelatrice_task.cancel()
+        miscelatrice_task = None
+
+    if direction == "ALZA":
+        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
+        miscelatrice_task = asyncio.create_task(
+            _pulse_actuator("miscelatrice_alza", act.get("r16_cmd_miscelatrice_alza"), duration)
+        )
+    else:
+        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
+        miscelatrice_task = asyncio.create_task(
+            _pulse_actuator("miscelatrice_abbassa", act.get("r17_cmd_miscelatrice_abbassa"), duration)
+        )
+
+    miscelatrice_last_action = direction
+    miscelatrice_pause_until = now + pause_s
 
 async def _set_climate_hvac_mode(entity_id: str | None, mode: str) -> None:
     if not entity_id or not ha.enabled:
@@ -912,6 +1007,7 @@ async def get_setpoints():
         "acs": cfg.get("acs", {}),
         "puffer": cfg.get("puffer", {}),
         "volano": cfg.get("volano", {}),
+        "miscelatrice": cfg.get("miscelatrice", {}),
         "resistance": cfg.get("resistance", {}),
         "solare": cfg.get("solare", {}),
         "timers": cfg.get("timers", {}),

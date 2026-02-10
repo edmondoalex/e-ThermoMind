@@ -48,6 +48,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     t_puffer = get_num(ent.get("t_puffer"), 0.0)
     t_volano = get_num(ent.get("t_volano"), 0.0)
     t_sol = get_num(ent.get("t_solare_mandata"), 0.0)
+    t_mandata_mix = get_num(ent.get("t_mandata_miscelata"), 0.0)
+    t_ritorno_mix = get_num(ent.get("t_ritorno_miscelato"), 0.0)
     export_w = get_num(ent.get("grid_export_w"), 0.0)
 
     if res_cfg.get("invert_export_sign"):
@@ -86,6 +88,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         dest_reason = "Nessuna destinazione utile."
 
     solar_cfg = cfg.get("solare", {})
+    misc_cfg = cfg.get("miscelatrice", {})
     solar_delta_on = float(solar_cfg.get("delta_on_c", 5.0))
     solar_delta_hold = float(solar_cfg.get("delta_hold_c", 2.5))
     last_source = _LAST.get("source_to_acs")
@@ -209,6 +212,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "t_puffer": t_puffer,
             "t_volano": t_volano,
             "t_solare_mandata": t_sol,
+            "t_mandata_miscelata": t_mandata_mix,
+            "t_ritorno_miscelato": t_ritorno_mix,
             "grid_export_w": export_w
         },
         "computed": {
@@ -241,6 +246,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "reason": impianto_reason,
                 "selector": sel_norm
             },
+            "miscelatrice": {
+                "enabled": mix_enabled,
+                "setpoint": mix_sp,
+                "hyst": mix_h,
+                "t_mandata": t_mandata_mix,
+                "t_ritorno": t_ritorno_mix,
+                "action": mix_action,
+                "reason": mix_reason
+            },
             "module_reasons": {
                 "solare": source_reason if source_to_acs == "SOLAR" else "Solare non attivo per ACS.",
                 "volano_to_acs": source_reason if source_to_acs == "VOLANO" else "Volano → ACS non attivo.",
@@ -251,7 +265,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     else f"T_VOL {t_volano:.1f}?C < T_PUF+{puf_delta_hold:.1f}?C ({t_puffer + puf_delta_hold:.1f}?C)"
                 ),
                 "resistenze_volano": charge_reason,
-                "impianto": impianto_reason
+                "impianto": impianto_reason,
+                "miscelatrice": mix_reason
             },
             "state": {
                 "last_dest": _LAST.get("dest"),
@@ -264,3 +279,28 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             }
         }
     }
+    mix_sp = get_num(ent.get("miscelatrice_setpoint"), float(misc_cfg.get("setpoint_c", 45.0)))
+    mix_h = float(misc_cfg.get("hyst_c", 0.5))
+    mix_min = float(misc_cfg.get("min_temp_c", 20.0))
+    mix_max = float(misc_cfg.get("max_temp_c", 80.0))
+    mix_enabled = cfg.get("modules_enabled", {}).get("miscelatrice", True)
+    mix_enable_eid = ent_cfg.get("miscelatrice_enable")
+    if mix_enable_eid:
+        mix_enabled = mix_enabled and _is_on_state(ha_states.get(mix_enable_eid, {}).get("state"))
+    mix_action = "STOP"
+    mix_reason = "Miscelatrice non attiva."
+    if mix_enabled:
+        if t_mandata_mix < mix_min or t_mandata_mix > mix_max:
+            mix_reason = "Safety temperatura mandata."
+        else:
+            err = mix_sp - t_mandata_mix
+            if abs(err) <= mix_h:
+                mix_reason = "Delta entro isteresi."
+            elif err > 0:
+                mix_action = "ALZA"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C < SP {mix_sp:.1f}°C"
+            else:
+                mix_action = "ABBASSA"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C"
+    else:
+        mix_reason = "Consenso miscelatrice OFF."

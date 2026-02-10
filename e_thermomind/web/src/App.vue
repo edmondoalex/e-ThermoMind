@@ -414,6 +414,38 @@
         </div>
 
         <div v-if="d" class="card inner">
+          <div class="row"><strong>Miscelatrice</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">T mandata</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_mandata_miscelata) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">T ritorno</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_ritorno_miscelato) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">SP mandata</div>
+              <div class="v">{{ fmtTemp(d?.computed?.miscelatrice?.setpoint) }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Delta</div>
+              <div class="v">{{ fmtDelta(d?.computed?.miscelatrice?.setpoint, d?.inputs?.t_mandata_miscelata) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Stato</div>
+              <div class="v">{{ d?.computed?.miscelatrice?.action || 'STOP' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Motivo</div>
+              <div class="v">{{ d?.computed?.miscelatrice?.reason || '-' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="d" class="card inner">
           <div class="row"><strong>Schema impianto (live)</strong></div>
           <div class="muted">Flussi evidenziati in tempo reale.</div>
           <div class="diagram diagram-photo" :style="{ backgroundImage: `url(${schemaImg})` }">
@@ -548,6 +580,19 @@
             <div class="field"><label>Puffer isteresi → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.hyst_to_acs_c"/></div>
             <div class="field"><label>Δ Start Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_start_c"/></div>
             <div class="field"><label>Δ Hold Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_hold_c"/></div>
+          </div>
+
+          <div class="set-section">
+            <div class="section-title">Miscelatrice</div>
+            <div class="field"><label>SP mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.setpoint_c"/></div>
+            <div class="field"><label>Isteresi (C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.hyst_c"/></div>
+            <div class="field"><label>Kp (sec/°C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.kp"/></div>
+            <div class="field"><label>Impulso min (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.min_imp_s"/></div>
+            <div class="field"><label>Impulso max (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.max_imp_s"/></div>
+            <div class="field"><label>Pausa dopo impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.pause_s"/></div>
+            <div class="field"><label>Min mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.min_temp_c"/></div>
+            <div class="field"><label>Max mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.max_temp_c"/></div>
+            <div class="field"><label>Forza impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.force_impulse_s"/></div>
           </div>
 
           <div class="set-section">
@@ -751,21 +796,71 @@
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_solare_mandata"/> Storico</label></div>
             </div>
           </div>
-            <div class="field">
-              <label>
-                <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
-                Export rete (W)
-              </label>
-              <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+          <div class="field">
+            <label>
+              <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
+              Export rete (W)
+            </label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
                        :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
                        v-model="ent.grid_export_w.entity_id"
                        placeholder="sensor.grid_export_w"
                        @input="dirtyEnt.grid_export_w = true"
                        @focus="onFocus" @blur="onBlur"/>
-              </div>
             </div>
+          </div>
+
+          <div class="subsection">Miscelatrice</div>
+          <div class="field">
+            <label>T mandata miscelata</label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_mandata_miscelata?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.t_mandata_miscelata?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_mandata_miscelata.entity_id"
+                       placeholder="sensor.mandata_miscelata"
+                       @input="dirtyEnt.t_mandata_miscelata = true"
+                       @focus="onFocus" @blur="onBlur"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>T ritorno miscelato</label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_ritorno_miscelato?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.t_ritorno_miscelato?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_ritorno_miscelato.entity_id"
+                       placeholder="sensor.ritorno_miscelato"
+                       @input="dirtyEnt.t_ritorno_miscelato = true"
+                       @focus="onFocus" @blur="onBlur"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Setpoint miscelatrice</label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.miscelatrice_setpoint?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.miscelatrice_setpoint?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.miscelatrice_setpoint.entity_id"
+                       placeholder="input_number.set_point_valvola_miscelatrice"
+                       @input="dirtyEnt.miscelatrice_setpoint = true"
+                       @focus="onFocus" @blur="onBlur"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Consenso miscelatrice (enable)</label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.miscelatrice_enable?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.miscelatrice_enable?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.miscelatrice_enable.entity_id"
+                       placeholder="input_boolean.miscelatrice_enable"
+                       @input="dirtyEnt.miscelatrice_enable = true"
+                       @focus="onFocus" @blur="onBlur"/>
+            </div>
+          </div>
             <div class="field">
               <label>
                 <i v-if="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)" :class="mdiClass(ent?.resistenze_volano_power?.attributes?.icon)"></i>
@@ -1064,11 +1159,13 @@ const moduleReasonsList = computed(() => {
   const mr = d.value?.computed?.module_reasons || {}
   const flags = d.value?.computed?.flags || {}
   const step = Number(d.value?.computed?.resistance_step || 0)
+  const mixActive = (d.value?.computed?.miscelatrice?.action || 'STOP') !== 'STOP'
   const labels = [
     { key: 'solare', label: 'Solare', active: !!flags.solare_to_acs },
     { key: 'volano_to_acs', label: 'Volano -> ACS', active: !!flags.volano_to_acs },
     { key: 'volano_to_puffer', label: 'Volano -> Puffer', active: !!flags.volano_to_puffer },
     { key: 'puffer_to_acs', label: 'Puffer -> ACS', active: !!flags.puffer_to_acs },
+    { key: 'miscelatrice', label: 'Miscelatrice', active: mixActive },
     { key: 'impianto', label: 'Impianto Riscaldamento', active: false },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
@@ -1133,6 +1230,9 @@ async function load(){
   }
   if (!sp.value?.solare) {
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
+  }
+  if (!sp.value?.miscelatrice) {
+    sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }
   }
   if (!sp.value?.impianto) {
   sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, puffer_ready: true, richiesta_heat: false, volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
@@ -1457,6 +1557,7 @@ details.form summary{cursor:pointer;list-style:none}
 @media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .set-section{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(10,15,22,.45)}
 .set-section .section-title{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.subsection{margin-top:10px;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
 .warn{margin-top:8px;color:#ffb15e;background:rgba(255,177,94,.08);border:1px solid rgba(255,177,94,.25);padding:8px 10px;border-radius:10px;font-size:12px}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row3 input::placeholder{color:rgba(159,176,199,.6)}

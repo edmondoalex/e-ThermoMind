@@ -11,6 +11,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_puffer": None,
     "t_volano": None,
     "t_solare_mandata": None,
+    "t_mandata_miscelata": None,
+    "t_ritorno_miscelato": None,
     "grid_export_w": None,
     "resistenze_volano_power": None,
     "resistenze_volano_energy": None,
@@ -21,7 +23,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "source_pdc_ready": None,
     "source_volano_ready": None,
     "source_caldaia_ready": None,
-    "miscelatrice_enable": None
+    "miscelatrice_enable": None,
+    "miscelatrice_setpoint": None
   },
   "actuators": {
     "r1_valve_comparto_laboratorio": None,
@@ -84,6 +87,17 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "delta_to_acs_hold_c": 2.5,
     "delta_to_puffer_start_c": 5.0,
     "delta_to_puffer_hold_c": 2.5
+  },
+  "miscelatrice": {
+    "setpoint_c": 45.0,
+    "hyst_c": 0.5,
+    "kp": 2.0,
+    "min_imp_s": 1.0,
+    "max_imp_s": 8.0,
+    "pause_s": 5.0,
+    "min_temp_c": 20.0,
+    "max_temp_c": 80.0,
+    "force_impulse_s": 3.0
   },
   "resistance": {
     "enabled": True,
@@ -155,6 +169,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 _NUM_KEYS = {
   "acs": ["setpoint_c", "on_delta_c", "off_hyst_c", "max_c", "max_hyst_c"],
   "puffer": ["setpoint_c", "off_hyst_c", "max_c", "max_hyst_c", "min_to_acs_c", "hyst_to_acs_c", "delta_to_acs_start_c", "delta_to_acs_hold_c"],
+  "miscelatrice": ["setpoint_c", "hyst_c", "kp", "min_imp_s", "max_imp_s", "pause_s", "min_temp_c", "max_temp_c", "force_impulse_s"],
   "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
   "volano": [
     "margin_c",

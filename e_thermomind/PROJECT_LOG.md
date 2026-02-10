@@ -80,3 +80,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Persistenza configurazione per `runtime.mode` e future azioni live.
 - Motori logici modulari (ACS/Puffer/Volano/Solare/PDC) con state machine separata.
 - Ingress UI: sezione stato attuatori + wiring per comandi live (v0.2+).
+## UI Mapping Indicators (Do Not Change)
+- Dot (green/red): mapped in logic (entity_id present)
+- Input border green: entity present
+- Input fill red: entity state ON
