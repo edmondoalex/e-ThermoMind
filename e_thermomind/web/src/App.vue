@@ -1237,7 +1237,7 @@ const moduleReasonsList = computed(() => {
   const mr = d.value?.computed?.module_reasons || {}
   const flags = d.value?.computed?.flags || {}
   const step = Number(d.value?.computed?.resistance_step || 0)
-  const mixActive = (d.value?.computed?.miscelatrice?.action || 'STOP') !== 'STOP'
+  const mixActive = !!d.value?.computed?.impianto?.miscelatrice
   const labels = [
     { key: 'solare', label: 'Solare', active: !!flags.solare_to_acs },
     { key: 'volano_to_acs', label: 'Volano -> ACS', active: !!flags.volano_to_acs },

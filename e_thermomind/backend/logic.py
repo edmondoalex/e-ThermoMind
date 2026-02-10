@@ -220,8 +220,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 mix_action = "ABBASSA"
                 mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | ΔT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
 
-    miscelatrice_on = req_on and (source != "OFF") and cfg.get("modules_enabled", {}).get("miscelatrice", True)
     blocked_cold = req_on and (source == "OFF")
+    imp_active = req_on and (source != "OFF") and (not blocked_cold)
+    miscelatrice_on = imp_active and cfg.get("modules_enabled", {}).get("miscelatrice", True)
+    if not miscelatrice_on:
+        mix_action = "STOP"
+        mix_reason = "Impianto inattivo."
 
     if blocked_cold:
         impianto_reason = "Bloccato: nessuna fonte disponibile o troppo fredda."

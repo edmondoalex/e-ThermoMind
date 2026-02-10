@@ -37,6 +37,7 @@ pending_auto_off: dict[str, asyncio.Task] = {}
 transfer_tasks: dict[str, asyncio.Task] = {}
 transfer_desired: dict[str, bool] = {}
 manual_overrides: dict[str, bool] = {}
+last_hvac_cmd: dict[str, tuple[str, float]] = {}
 solar_night_state: bool | None = None
 solar_night_last_change: float = 0.0
 ws_clients: set[WebSocket] = set()
@@ -44,6 +45,7 @@ miscelatrice_task: asyncio.Task | None = None
 miscelatrice_pause_until: float = 0.0
 miscelatrice_last_action: str = "STOP"
 miscelatrice_shutdown_until: float = 0.0
+impianto_last_source: str | None = None
 
 @app.on_event("startup")
 async def on_startup():
@@ -866,11 +868,16 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
 async def _set_climate_hvac_mode(entity_id: str | None, mode: str) -> None:
     if not entity_id or not ha.enabled:
         return
+    prev = last_hvac_cmd.get(entity_id)
+    now = time.time()
+    if prev and prev[0] == mode and (now - prev[1]) < 30:
+        return
     current = _get_state(entity_id)
     if current == mode:
         return
     await ha.call_service_named("climate", "set_hvac_mode", {"entity_id": entity_id, "hvac_mode": mode})
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode}")
+    last_hvac_cmd[entity_id] = (mode, now)
 
 async def _set_input_select(entity_id: str | None, option: str) -> None:
     if not entity_id or not ha.enabled:
@@ -882,6 +889,7 @@ async def _set_input_select(entity_id: str | None, option: str) -> None:
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SELECT {entity_id} -> {option}")
 
 async def _apply_impianto_live() -> None:
+    global impianto_last_source
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
@@ -983,6 +991,15 @@ async def _apply_impianto_live() -> None:
     r1 = act.get("r1_valve_comparto_laboratorio")
 
     # blocco se nessuna fonte valida o troppo fredda
+    # latch: se era attiva una sorgente, mantienila finché non scende sotto min
+    if demand_on and source is None and impianto_last_source:
+        if impianto_last_source == "PDC" and pdc_volano_ready:
+            if t_volano is None or t_volano > vol_min:
+                source = "PDC"
+        if impianto_last_source == "PUFFER" and puffer_ready:
+            if t_puffer is None or t_puffer > puf_min:
+                source = "PUFFER"
+
     if not source:
         for z in _collect_zones(imp):
             await _set_climate_hvac_mode(z, "off")
@@ -1000,6 +1017,8 @@ async def _apply_impianto_live() -> None:
         # miscelatrice gestita solo dal suo modulo
         return
 
+    impianto_last_source = source
+
     # in inverno abilita termostati solo se c'è una fonte valida
     if season == "winter":
         for z in _collect_zones(imp):
@@ -1009,6 +1028,7 @@ async def _apply_impianto_live() -> None:
             await _set_climate_hvac_mode(z, "off")
 
     if not demand_on:
+        impianto_last_source = None
         if r2:
             await _set_actuator(r2, False)
         if r3:
@@ -1025,14 +1045,6 @@ async def _apply_impianto_live() -> None:
 
     # Consenso/centralina
     await _set_actuator(off_centralina, False)
-
-    # in inverno abilita termostati solo se c'è una fonte valida
-    if season == "winter":
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "heat")
-    else:
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
 
     # Valvole zone (mansarda e 1P condividono R3)
     if r2:
