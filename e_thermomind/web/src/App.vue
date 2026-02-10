@@ -812,7 +812,7 @@
               {{ item.label }}
             </label>
             <div class="input-row">
-              <button class="logic-dot dot-toggle" :class="item.impl ? 'logic-ok' : 'logic-no'" @click="toggleAct(item.key)" :title="`Toggle ${item.label}`">●</button>
+              <span class="logic-dot" :class="isFilled(act?.[item.key]?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
               <input type="text"
                      :class="[isFilled(act?.[item.key]?.entity_id) ? 'input-ok' : '', act?.[item.key]?.state === 'on' ? 'input-on' : '']"
                      v-model="act[item.key].entity_id"
