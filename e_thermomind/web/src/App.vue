@@ -50,6 +50,8 @@
                 <polyline :points="sparkPoints(history.t_puffer)" class="spark puffer"/>
                 <polyline :points="sparkPoints(history.t_volano)" class="spark volano"/>
               </svg>
+              <div class="axis-note">Y: {{ tempStats.label }}</div>
+              <div class="axis-note">X: ultimi ~2–3 min</div>
               <div class="legend small">
                 <span class="legend-item"><span class="legend-dot acs"></span> ACS</span>
                 <span class="legend-item"><span class="legend-dot puffer"></span> Puffer</span>
@@ -61,6 +63,8 @@
               <svg viewBox="0 0 300 90" role="img" aria-label="Grafico export rete">
                 <polyline :points="sparkPoints(history.export_w)" class="spark export"/>
               </svg>
+              <div class="axis-note">Y: {{ exportStats.label }}</div>
+              <div class="axis-note">X: ultimi ~2–3 min</div>
               <div class="legend small">
                 <span class="legend-item"><span class="legend-dot export"></span> Export rete</span>
               </div>
@@ -874,6 +878,28 @@ const fmtEntity = (e) => {
   if (Number.isFinite(num)) return `${num} ${unit}`.trim()
   return `${raw} ${unit}`.trim()
 }
+function statsLabel(values, unit){
+  if (!values || values.length === 0) return 'n/d'
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return 'n/d'
+  return `${min.toFixed(1)}–${max.toFixed(1)} ${unit}`.trim()
+}
+const tempStats = computed(() => {
+  const vals = []
+  vals.push(...(history.value.t_acs || []))
+  vals.push(...(history.value.t_puffer || []))
+  vals.push(...(history.value.t_volano || []))
+  return { label: statsLabel(vals, '°C') }
+})
+const exportStats = computed(() => {
+  const vals = history.value.export_w || []
+  if (!vals.length) return { label: 'n/d' }
+  const min = Math.min(...vals)
+  const max = Math.max(...vals)
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return { label: 'n/d' }
+  return { label: `${Math.round(min)}–${Math.round(max)} W` }
+})
 const historyEnabled = (key) => !!sp.value?.history?.[key]
 async function openHistory(key, title){
   if (!historyEnabled(key)) return
@@ -1334,6 +1360,7 @@ details.form summary{cursor:pointer;list-style:none}
 @media(min-width:900px){.chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chart{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}
 .chart-title{font-size:12px;color:var(--muted);margin-bottom:6px}
+.axis-note{font-size:10px;color:var(--muted);margin-top:4px}
 .spark{fill:none;stroke-width:2}
 .spark.acs{stroke:#57e3d6}
 .spark.puffer{stroke:#7aa7ff}
