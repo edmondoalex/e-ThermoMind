@@ -135,7 +135,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "zone_scala": "",
     "cooling_blocked": [],
     "pump_start_delay_s": 9,
-    "pump_stop_delay_s": 2
+    "pump_stop_delay_s": 0,
+    "season_mode": "winter"
   },
   "history": {
     "t_acs": False,

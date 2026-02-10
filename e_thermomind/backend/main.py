@@ -707,6 +707,8 @@ async def _apply_impianto_live() -> None:
 
     # Se non ci sono zone configurate, usa richiesta_on
     demand_on = any_active if (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala) else richiesta_on
+    if str(imp.get("season_mode", "winter")).lower() == "summer":
+        demand_on = False
 
     r32 = act.get("r32_pump_impianto")
     r33 = act.get("r33_valve_pt")
@@ -725,7 +727,7 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r36, lab_active)
 
     # Pompa con ritardi
-    await _set_pump_delayed("impianto:pump", r32, demand_on, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 2))
+    await _set_pump_delayed("impianto:pump", r32, demand_on, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
     if not demand_on:
         await _set_actuator(r4, False)
