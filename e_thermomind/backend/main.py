@@ -191,6 +191,36 @@ def _module_for_actuator_key(key: str) -> str | None:
         return "pdc"
     return None
 
+
+
+def _zone_active(entity_id: str | None, cooling_blocked: set[str]) -> bool:
+    if not entity_id:
+        return False
+    st = ha.states.get(entity_id, {})
+    state = str(st.get("state") or "").lower()
+    dom = entity_id.split(".", 1)[0] if "." in entity_id else ""
+    hvac_action = str(st.get("attributes", {}).get("hvac_action") or "").lower()
+    is_cool = state in ("cool", "cooling") or hvac_action == "cooling"
+    if is_cool and entity_id in cooling_blocked:
+        return False
+    if dom in ("switch", "binary_sensor", "input_boolean"):
+        return state in ("on", "true", "1", "yes")
+    if dom == "climate":
+        return state in ("heat", "cool", "auto", "heat_cool") or hvac_action in ("heating", "cooling")
+    # default: treat truthy text as active
+    return state in ("on", "true", "1", "yes", "heat", "heating")
+
+async def _set_pump_delayed(name: str, pump_eid: str | None, want_on: bool, delay_on: float, delay_off: float) -> None:
+    prev = transfer_desired.get(name)
+    transfer_desired[name] = want_on
+    if want_on:
+        _cancel_transfer_task(f"{name}:off")
+        if f"{name}:on" not in transfer_tasks:
+            transfer_tasks[f"{name}:on"] = asyncio.create_task(_delayed_actuate(f"{name}:on", pump_eid, True, delay_on))
+    else:
+        _cancel_transfer_task(f"{name}:on")
+        if f"{name}:off" not in transfer_tasks:
+            transfer_tasks[f"{name}:off"] = asyncio.create_task(_delayed_actuate(f"{name}:off", pump_eid, False, delay_off))
 def _is_recent_ui(entity_id: str, window_s: float = 4.0) -> bool:
     ts = recent_ui_actuations.get(entity_id)
     if not ts:
@@ -659,7 +689,45 @@ async def _apply_impianto_live() -> None:
     r31 = act.get("r31_valve_impianto_da_volano")
     r15 = act.get("r15_pump_caldaia_legna")
 
-    if not richiesta_on:
+    imp = cfg.get("impianto", {})
+    cooling_blocked = set(imp.get("cooling_blocked", []))
+    zones_pt = imp.get("zones_pt", [])
+    zones_p1 = imp.get("zones_p1", [])
+    zones_mans = imp.get("zones_mans", [])
+    zones_lab = imp.get("zones_lab", [])
+    zone_scala = imp.get("zone_scala") or ""
+
+    pt_active = any(_zone_active(z, cooling_blocked) for z in zones_pt)
+    p1_active = any(_zone_active(z, cooling_blocked) for z in zones_p1)
+    mans_active = any(_zone_active(z, cooling_blocked) for z in zones_mans)
+    lab_active = any(_zone_active(z, cooling_blocked) for z in zones_lab)
+    scala_active = _zone_active(zone_scala, cooling_blocked) if zone_scala else False
+
+    any_active = pt_active or p1_active or mans_active or lab_active or scala_active
+
+    # Se non ci sono zone configurate, usa richiesta_on
+    demand_on = any_active if (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala) else richiesta_on
+
+    r32 = act.get("r32_pump_impianto")
+    r33 = act.get("r33_valve_pt")
+    r34 = act.get("r34_valve_p1")
+    r35 = act.get("r35_valve_mans")
+    r36 = act.get("r36_valve_lab")
+
+    # Valvole zone
+    if r33:
+        await _set_actuator(r33, pt_active or scala_active)
+    if r34:
+        await _set_actuator(r34, p1_active or scala_active)
+    if r35:
+        await _set_actuator(r35, mans_active)
+    if r36:
+        await _set_actuator(r36, lab_active)
+
+    # Pompa con ritardi
+    await _set_pump_delayed("impianto:pump", r32, demand_on, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 2))
+
+    if not demand_on:
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_actuator(r31, False)

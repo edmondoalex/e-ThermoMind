@@ -549,6 +549,19 @@
           </div>
 
           <div class="set-section">
+            <div class="section-title">Impianto (Zone)</div>
+            <div class="field"><label>Zone PT (CSV)</label><input type="text" v-model="sp.impianto.zones_pt" placeholder="climate.pt_1, climate.pt_2"/></div>
+            <div class="field"><label>Zone 1P (CSV)</label><input type="text" v-model="sp.impianto.zones_p1" placeholder="climate.p1_1, climate.p1_2"/></div>
+            <div class="field"><label>Zone Jolly (CSV)</label><input type="text" v-model="sp.impianto.zones_mans" placeholder="climate.jolly"/></div>
+            <div class="field"><label>Zone Lab (CSV)</label><input type="text" v-model="sp.impianto.zones_lab" placeholder="climate.lab"/></div>
+            <div class="field"><label>Zona Scala (singolo)</label><input type="text" v-model="sp.impianto.zone_scala" placeholder="climate.scala"/></div>
+            <div class="field"><label>Cooling bloccato (CSV)</label><input type="text" v-model="sp.impianto.cooling_blocked" placeholder="climate.radiatori_1"/></div>
+            <div class="field"><label>Ritardo avvio pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_start_delay_s"/></div>
+            <div class="field"><label>Ritardo stop pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_stop_delay_s"/></div>
+            <div class="help">Le liste sono CSV. Puoi usare climate/switch/binary_sensor.</div>
+          </div>
+
+          <div class="set-section">
             <div class="section-title">Solare</div>
             <div class="field">
               <label>Modalità</label>
@@ -826,6 +839,11 @@ const actuatorDefs = [
   { key: 'r4_valve_impianto_da_puffer', label: 'R4 Valvola Impianto da Puffer', impl: false },
   { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC', impl: false },
   { key: 'r31_valve_impianto_da_volano', label: 'R31 Valvola Impianto da Volano', impl: false },
+  { key: 'r36_valve_lab', label: 'R36 Valvola Laboratorio', impl: false },
+  { key: 'r35_valve_mans', label: 'R35 Valvola Zona Jolly', impl: false },
+  { key: 'r34_valve_p1', label: 'R34 Valvola Primo Piano', impl: false },
+  { key: 'r33_valve_pt', label: 'R33 Valvola Piano Terra', impl: false },
+  { key: 'r32_pump_impianto', label: 'R32 Pompa Impianto', impl: false },
   { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS', impl: true },
   { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer', impl: true },
   { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp', impl: true },
@@ -1040,7 +1058,7 @@ async function load(){
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
   }
   if (!sp.value?.impianto) {
-    sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, caldaia_ready: false, richiesta_heat: false }
+    sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, caldaia_ready: false, richiesta_heat: false, zones_pt: '', zones_p1: '', zones_mans: '', zones_lab: '', zone_scala: '', cooling_blocked: '', pump_start_delay_s: 9, pump_stop_delay_s: 2 }
   }
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000

@@ -30,6 +30,11 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "r4_valve_impianto_da_puffer": None,
     "r5_valve_impianto_da_pdc": None,
     "r31_valve_impianto_da_volano": None,
+    "r32_pump_impianto": None,
+    "r33_valve_pt": None,
+    "r34_valve_p1": None,
+    "r35_valve_mans": None,
+    "r36_valve_lab": None,
     "r6_valve_pdc_to_integrazione_acs": None,
     "r7_valve_pdc_to_integrazione_puffer": None,
     "r8_valve_solare_notte_low_temp": None,
@@ -122,7 +127,15 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "pdc_ready": False,
     "volano_ready": False,
     "caldaia_ready": False,
-    "richiesta_heat": False
+    "richiesta_heat": False,
+    "zones_pt": [],
+    "zones_p1": [],
+    "zones_mans": [],
+    "zones_lab": [],
+    "zone_scala": "",
+    "cooling_blocked": [],
+    "pump_start_delay_s": 9,
+    "pump_stop_delay_s": 2
   },
   "history": {
     "t_acs": False,
@@ -150,6 +163,16 @@ _NUM_KEYS = {
   ],
 }
 
+
+
+def _parse_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [str(x).strip() for x in value if str(x).strip()]
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(',') if v.strip()]
+    return []
 def _float(value: Any, default: float) -> float:
     try:
         return float(value)
@@ -267,6 +290,30 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
 
+    imp = raw.get("impianto", {})
+    if isinstance(imp, dict):
+        if isinstance(imp.get("source_mode"), str):
+            cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
+        for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
+            if key in imp:
+                cfg["impianto"][key] = bool(imp[key])
+        if "zones_pt" in imp:
+            cfg["impianto"]["zones_pt"] = _parse_list(imp.get("zones_pt"))
+        if "zones_p1" in imp:
+            cfg["impianto"]["zones_p1"] = _parse_list(imp.get("zones_p1"))
+        if "zones_mans" in imp:
+            cfg["impianto"]["zones_mans"] = _parse_list(imp.get("zones_mans"))
+        if "zones_lab" in imp:
+            cfg["impianto"]["zones_lab"] = _parse_list(imp.get("zones_lab"))
+        if "zone_scala" in imp:
+            cfg["impianto"]["zone_scala"] = str(imp.get("zone_scala") or "").strip()
+        if "cooling_blocked" in imp:
+            cfg["impianto"]["cooling_blocked"] = _parse_list(imp.get("cooling_blocked"))
+        if "pump_start_delay_s" in imp:
+            cfg["impianto"]["pump_start_delay_s"] = int(_float(imp.get("pump_start_delay_s"), cfg["impianto"]["pump_start_delay_s"]))
+        if "pump_stop_delay_s" in imp:
+            cfg["impianto"]["pump_stop_delay_s"] = int(_float(imp.get("pump_stop_delay_s"), cfg["impianto"]["pump_stop_delay_s"]))
+
     security = raw.get("security", {})
     if isinstance(security, dict) and isinstance(security.get("user_pin"), str):
         cfg["security"]["user_pin"] = security.get("user_pin", "")
@@ -340,6 +387,30 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
         for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata"):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
+
+    imp = payload.get("impianto", {})
+    if isinstance(imp, dict):
+        if isinstance(imp.get("source_mode"), str):
+            cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
+        for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
+            if key in imp:
+                cfg["impianto"][key] = bool(imp[key])
+        if "zones_pt" in imp:
+            cfg["impianto"]["zones_pt"] = _parse_list(imp.get("zones_pt"))
+        if "zones_p1" in imp:
+            cfg["impianto"]["zones_p1"] = _parse_list(imp.get("zones_p1"))
+        if "zones_mans" in imp:
+            cfg["impianto"]["zones_mans"] = _parse_list(imp.get("zones_mans"))
+        if "zones_lab" in imp:
+            cfg["impianto"]["zones_lab"] = _parse_list(imp.get("zones_lab"))
+        if "zone_scala" in imp:
+            cfg["impianto"]["zone_scala"] = str(imp.get("zone_scala") or "").strip()
+        if "cooling_blocked" in imp:
+            cfg["impianto"]["cooling_blocked"] = _parse_list(imp.get("cooling_blocked"))
+        if "pump_start_delay_s" in imp:
+            cfg["impianto"]["pump_start_delay_s"] = int(_float(imp.get("pump_start_delay_s"), cfg["impianto"]["pump_start_delay_s"]))
+        if "pump_stop_delay_s" in imp:
+            cfg["impianto"]["pump_stop_delay_s"] = int(_float(imp.get("pump_stop_delay_s"), cfg["impianto"]["pump_stop_delay_s"]))
 
     security = payload.get("security", {})
     if isinstance(security, dict) and isinstance(security.get("user_pin"), str):
