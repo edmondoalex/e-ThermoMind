@@ -629,6 +629,7 @@ async def _apply_impianto_live() -> None:
     pdc_ready = _state_is_on(ent.get("source_pdc_ready"))
     volano_ready = _state_is_on(ent.get("source_volano_ready"))
     caldaia_ready = _state_is_on(ent.get("source_caldaia_ready"))
+    misc_enable = ent.get("miscelatrice_enable")
 
     if sel_state not in ("AUTO", "PDC", "VOLANO", "CALDAIA", "PUFFER"):
         sel_state = "AUTO"
@@ -661,6 +662,8 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r15, False)
         await _set_climate_hvac_mode(clima, "off")
         await _set_actuator(off_centralina, True)
+        if cfg.get("modules_enabled", {}).get("miscelatrice", True):
+            await _set_actuator(misc_enable, False)
         return
 
     # Consenso/centralina

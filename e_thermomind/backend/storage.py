@@ -20,7 +20,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "off_centralina_termoregolazione": None,
     "source_pdc_ready": None,
     "source_volano_ready": None,
-    "source_caldaia_ready": None
+    "source_caldaia_ready": None,
+    "miscelatrice_enable": None
   },
   "actuators": {
     "r1_valve_comparto_laboratorio": None,

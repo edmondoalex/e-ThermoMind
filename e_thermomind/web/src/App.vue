@@ -749,6 +749,18 @@
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
+            <div class="field">
+              <label>Consenso Miscelatrice (abilita regolazione)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.miscelatrice_enable?.entity_id) ? 'logic-ok' : 'logic-no'">&#x25CF;</span>
+                <input type="text"
+                       :class="isFilled(ent?.miscelatrice_enable?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.miscelatrice_enable.entity_id"
+                       placeholder="input_boolean.miscelatrice_enable"
+                       @input="dirtyEnt.miscelatrice_enable = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
           <div class="actions">
             <button class="ghost" @click="saveEntities">Salva sensori</button>
           </div>
