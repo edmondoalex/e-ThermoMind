@@ -710,24 +710,21 @@ async def _apply_impianto_live() -> None:
     if str(imp.get("season_mode", "winter")).lower() == "summer":
         demand_on = False
 
-    r32 = act.get("r32_pump_impianto")
-    r33 = act.get("r33_valve_pt")
-    r34 = act.get("r34_valve_p1")
-    r35 = act.get("r35_valve_mans")
-    r36 = act.get("r36_valve_lab")
+    r12 = act.get("r12_pump_mandata_piani")
+    r2 = act.get("r2_valve_comparto_mandata_imp_pt")
+    r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
+    r1 = act.get("r1_valve_comparto_laboratorio")
 
-    # Valvole zone
-    if r33:
-        await _set_actuator(r33, pt_active or scala_active)
-    if r34:
-        await _set_actuator(r34, p1_active or scala_active)
-    if r35:
-        await _set_actuator(r35, mans_active)
-    if r36:
-        await _set_actuator(r36, lab_active)
+    # Valvole zone (mansarda e 1P condividono R3)
+    if r2:
+        await _set_actuator(r2, pt_active or scala_active)
+    if r3:
+        await _set_actuator(r3, p1_active or mans_active or scala_active)
+    if r1:
+        await _set_actuator(r1, lab_active)
 
     # Pompa con ritardi
-    await _set_pump_delayed("impianto:pump", r32, demand_on, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+    await _set_pump_delayed("impianto:pump", r12, demand_on, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
     if not demand_on:
         await _set_actuator(r4, False)

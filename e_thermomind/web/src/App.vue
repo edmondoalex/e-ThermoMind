@@ -564,7 +564,7 @@
                 <option value="summer">Estate</option>
               </select>
             </div>
-            <div class="help">Le liste sono CSV. Puoi usare climate/switch/binary_sensor.</div>
+            <div class="help">Le liste sono CSV. Mansarda e 1P condividono la stessa valvola (R3).</div>
           </div>
 
           <div class="set-section">
@@ -845,11 +845,6 @@ const actuatorDefs = [
   { key: 'r4_valve_impianto_da_puffer', label: 'R4 Valvola Impianto da Puffer', impl: false },
   { key: 'r5_valve_impianto_da_pdc', label: 'R5 Valvola Impianto da PDC', impl: false },
   { key: 'r31_valve_impianto_da_volano', label: 'R31 Valvola Impianto da Volano', impl: false },
-  { key: 'r36_valve_lab', label: 'R36 Valvola Laboratorio', impl: false },
-  { key: 'r35_valve_mans', label: 'R35 Valvola Zona Jolly', impl: false },
-  { key: 'r34_valve_p1', label: 'R34 Valvola Primo Piano', impl: false },
-  { key: 'r33_valve_pt', label: 'R33 Valvola Piano Terra', impl: false },
-  { key: 'r32_pump_impianto', label: 'R32 Pompa Impianto', impl: false },
   { key: 'r6_valve_pdc_to_integrazione_acs', label: 'R6 Valvola PDC -> Integrazione ACS', impl: true },
   { key: 'r7_valve_pdc_to_integrazione_puffer', label: 'R7 Valvola PDC -> Integrazione Puffer', impl: true },
   { key: 'r8_valve_solare_notte_low_temp', label: 'R8 Valvola Solare Notte/Low Temp', impl: true },
