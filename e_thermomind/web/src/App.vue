@@ -110,42 +110,6 @@
           </div>
         </div>
 
-<div class="card inner">
-          <div class="row"><strong>Impianto riscaldamento (interno)</strong></div>
-          <div class="row3">
-            <div class="kpi kpi-center">
-              <div class="k">Sorgente</div>
-              <select v-model="sp.impianto.source_mode">
-                <option value="AUTO">AUTO</option>
-                <option value="PDC">PDC</option>
-                <option value="VOLANO">VOLANO</option>
-                <option value="CALDAIA">CALDAIA</option>
-                <option value="PUFFER">PUFFER</option>
-              </select>
-            </div>
-            <label class="kpi kpi-center checkbox">
-              <input type="checkbox" v-model="sp.impianto.pdc_ready"/>
-              <span>PDC ready</span>
-            </label>
-            <label class="kpi kpi-center checkbox">
-              <input type="checkbox" v-model="sp.impianto.volano_ready"/>
-              <span>Volano ready</span>
-            </label>
-            <label class="kpi kpi-center checkbox">
-              <input type="checkbox" v-model="sp.impianto.caldaia_ready"/>
-              <span>Caldaia ready</span>
-            </label>
-            <div class="kpi kpi-center">
-              <div class="k">Richiesta calore</div>
-              <div class="v">{{ d?.computed?.impianto?.richiesta ? 'ON' : 'OFF' }}</div>
-            </div>
-            <div class="kpi kpi-center">
-              <div class="k">Consenso miscelatrice</div>
-              <div class="v">{{ d?.computed?.impianto?.miscelatrice ? 'ON' : 'OFF' }}</div>
-            </div>
-          </div>
-          <div class="help">I checkbox sono manuali nel solo add-on. Richiesta calore e consenso miscelatrice sono in sola lettura.</div>
-        </div>
 
         <div v-if="d" class="card inner">
           <div class="row"><strong>Destinazione surplus:</strong> {{ d.computed.dest }}</div>
@@ -363,6 +327,43 @@
 
         <div v-if="act" class="card inner">
           <div class="row"><strong>Puffer → ACS</strong></div>
+
+<div class="card inner">
+          <div class="row"><strong>Impianto riscaldamento (interno)</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Sorgente</div>
+              <select v-model="sp.impianto.source_mode">
+                <option value="AUTO">AUTO</option>
+                <option value="PDC">PDC</option>
+                <option value="VOLANO">VOLANO</option>
+                <option value="CALDAIA">CALDAIA</option>
+                <option value="PUFFER">PUFFER</option>
+              </select>
+            </div>
+            <label class="kpi kpi-center checkbox">
+              <input type="checkbox" v-model="sp.impianto.pdc_ready"/>
+              <span>PDC ready</span>
+            </label>
+            <label class="kpi kpi-center checkbox">
+              <input type="checkbox" v-model="sp.impianto.volano_ready"/>
+              <span>Volano ready</span>
+            </label>
+            <label class="kpi kpi-center checkbox">
+              <input type="checkbox" v-model="sp.impianto.caldaia_ready"/>
+              <span>Caldaia ready</span>
+            </label>
+            <div class="kpi kpi-center">
+              <div class="k">Richiesta calore</div>
+              <div class="v">{{ d?.computed?.impianto?.richiesta ? 'ON' : 'OFF' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Consenso miscelatrice</div>
+              <div class="v">{{ d?.computed?.impianto?.miscelatrice ? 'ON' : 'OFF' }}</div>
+            </div>
+          </div>
+          <div class="help">I checkbox sono manuali nel solo add-on. Richiesta calore e consenso miscelatrice sono in sola lettura.</div>
+        </div>
           <div class="row3">
             <div class="kpi kpi-center">
               <div class="k">
