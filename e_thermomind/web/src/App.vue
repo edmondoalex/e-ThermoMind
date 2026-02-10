@@ -550,12 +550,57 @@
 
           <div class="set-section">
             <div class="section-title">Impianto (Zone)</div>
-            <div class="field"><label>Zone PT (CSV)</label><input type="text" v-model="sp.impianto.zones_pt" placeholder="climate.pt_1, climate.pt_2"/></div>
-            <div class="field"><label>Zone 1P (CSV)</label><input type="text" v-model="sp.impianto.zones_p1" placeholder="climate.p1_1, climate.p1_2"/></div>
-            <div class="field"><label>Zone Jolly (CSV)</label><input type="text" v-model="sp.impianto.zones_mans" placeholder="climate.jolly"/></div>
-            <div class="field"><label>Zone Lab (CSV)</label><input type="text" v-model="sp.impianto.zones_lab" placeholder="climate.lab"/></div>
+            <div class="field">
+              <label>Zone PT</label>
+              <div class="list">
+                <div v-for="(z, i) in sp.impianto.zones_pt" :key="`pt-${i}`" class="list-row">
+                  <input type="text" v-model="sp.impianto.zones_pt[i]" placeholder="climate.pt_1"/>
+                  <button class="ghost" @click="removeZone('zones_pt', i)">Rimuovi</button>
+                </div>
+                <button class="ghost" @click="addZone('zones_pt')">+ Aggiungi</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Zone 1P</label>
+              <div class="list">
+                <div v-for="(z, i) in sp.impianto.zones_p1" :key="`p1-${i}`" class="list-row">
+                  <input type="text" v-model="sp.impianto.zones_p1[i]" placeholder="climate.p1_1"/>
+                  <button class="ghost" @click="removeZone('zones_p1', i)">Rimuovi</button>
+                </div>
+                <button class="ghost" @click="addZone('zones_p1')">+ Aggiungi</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Zone Jolly</label>
+              <div class="list">
+                <div v-for="(z, i) in sp.impianto.zones_mans" :key="`mans-${i}`" class="list-row">
+                  <input type="text" v-model="sp.impianto.zones_mans[i]" placeholder="climate.jolly"/>
+                  <button class="ghost" @click="removeZone('zones_mans', i)">Rimuovi</button>
+                </div>
+                <button class="ghost" @click="addZone('zones_mans')">+ Aggiungi</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Zone Lab</label>
+              <div class="list">
+                <div v-for="(z, i) in sp.impianto.zones_lab" :key="`lab-${i}`" class="list-row">
+                  <input type="text" v-model="sp.impianto.zones_lab[i]" placeholder="climate.lab"/>
+                  <button class="ghost" @click="removeZone('zones_lab', i)">Rimuovi</button>
+                </div>
+                <button class="ghost" @click="addZone('zones_lab')">+ Aggiungi</button>
+              </div>
+            </div>
             <div class="field"><label>Zona Scala (singolo)</label><input type="text" v-model="sp.impianto.zone_scala" placeholder="climate.scala"/></div>
-            <div class="field"><label>Cooling bloccato (CSV)</label><input type="text" v-model="sp.impianto.cooling_blocked" placeholder="climate.radiatori_1"/></div>
+            <div class="field">
+              <label>Cooling bloccato</label>
+              <div class="list">
+                <div v-for="(z, i) in sp.impianto.cooling_blocked" :key="`cool-${i}`" class="list-row">
+                  <input type="text" v-model="sp.impianto.cooling_blocked[i]" placeholder="climate.radiatori_1"/>
+                  <button class="ghost" @click="removeZone('cooling_blocked', i)">Rimuovi</button>
+                </div>
+                <button class="ghost" @click="addZone('cooling_blocked')">+ Aggiungi</button>
+              </div>
+            </div>
             <div class="field"><label>Ritardo avvio pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_start_delay_s"/></div>
             <div class="field"><label>Ritardo stop pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_stop_delay_s"/></div>
             <div class="field"><label>Stagione</label>
@@ -564,7 +609,7 @@
                 <option value="summer">Estate</option>
               </select>
             </div>
-            <div class="help">Le liste sono CSV. Mansarda e 1P condividono la stessa valvola (R3).</div>
+            <div class="help">Mansarda e 1P condividono la stessa valvola (R3).</div>
           </div>
 
           <div class="set-section">
@@ -919,6 +964,16 @@ const exportStats = computed(() => {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return { label: 'n/d' }
   return { label: `${Math.round(min)}–${Math.round(max)} W` }
 })
+function addZone(key){
+  if (!sp.value?.impianto) return
+  if (!Array.isArray(sp.value.impianto[key])) sp.value.impianto[key] = []
+  sp.value.impianto[key].push('')
+}
+function removeZone(key, idx){
+  if (!sp.value?.impianto) return
+  if (!Array.isArray(sp.value.impianto[key])) return
+  sp.value.impianto[key].splice(idx, 1)
+}
 const historyEnabled = (key) => !!sp.value?.history?.[key]
 async function openHistory(key, title){
   if (!historyEnabled(key)) return
@@ -1059,8 +1114,19 @@ async function load(){
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
   }
   if (!sp.value?.impianto) {
-    sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, caldaia_ready: false, richiesta_heat: false, zones_pt: '', zones_p1: '', zones_mans: '', zones_lab: '', zone_scala: '', cooling_blocked: '', pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
+    sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, caldaia_ready: false, richiesta_heat: false, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
   }
+  // normalize lists (allow CSV from older configs)
+  const normalizeList = (v) => {
+    if (Array.isArray(v)) return v.filter(x => String(x).trim().length > 0)
+    if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean)
+    return []
+  }
+  sp.value.impianto.zones_pt = normalizeList(sp.value.impianto.zones_pt)
+  sp.value.impianto.zones_p1 = normalizeList(sp.value.impianto.zones_p1)
+  sp.value.impianto.zones_mans = normalizeList(sp.value.impianto.zones_mans)
+  sp.value.impianto.zones_lab = normalizeList(sp.value.impianto.zones_lab)
+  sp.value.impianto.cooling_blocked = normalizeList(sp.value.impianto.cooling_blocked)
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }
@@ -1487,6 +1553,9 @@ details.form summary{cursor:pointer;list-style:none}
 .axis{stroke:#2b3447;stroke-width:1}
 .axis-label{fill:#9fb0c7;font-size:10px}
 .history-chart{width:100%;height:auto}
+.list{display:flex;flex-direction:column;gap:6px}
+.list-row{display:flex;gap:8px;align-items:center}
+.list-row input{flex:1}
 .module-reasons{display:grid;gap:8px;margin-top:6px}
 .module-row{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.45)}
 .module-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
