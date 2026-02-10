@@ -31,6 +31,13 @@ _LAST: Dict[str, Any] = {
     "volano_to_puffer": False
 }
 
+def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool) -> bool:
+    if cooling_blocked:
+        return False
+    sval = str(state or "").strip().lower()
+    action = str(hvac_action or "").strip().lower()
+    return action in ("heating", "cooling") or sval in ("on", "true", "1", "yes")
+
 def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float | None = None) -> Dict[str, Any]:
     ent = cfg.get("entities", {})
     acs_cfg = cfg.get("acs", {})
@@ -170,7 +177,25 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     vol_ready = _is_on_state(ha_states.get(vol_eid, {}).get("state") if vol_eid else ("on" if imp_cfg.get("volano_ready") else "off"))
     pdc_vol_ready = pdc_ready or vol_ready
     puf_ready = _is_on_state(ha_states.get(ent_cfg.get("source_puffer_ready"), {}).get("state")) if ent_cfg.get("source_puffer_ready") else bool(imp_cfg.get("puffer_ready", True))
-    req_on = _is_on_state(req_state)
+    # richiesta: se esiste un'entità, usa quella; altrimenti deriva dai termostati
+    zones_pt = imp_cfg.get("zones_pt", []) or []
+    zones_p1 = imp_cfg.get("zones_p1", []) or []
+    zones_mans = imp_cfg.get("zones_mans", []) or []
+    zones_lab = imp_cfg.get("zones_lab", []) or []
+    zone_scala = imp_cfg.get("zone_scala") or ""
+    zones_configured = bool(zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
+    cooling_blocked = set(imp_cfg.get("cooling_blocked", []))
+    if req_eid:
+        req_on = _is_on_state(req_state)
+    else:
+        def _is_zone_on(eid: str) -> bool:
+            st = ha_states.get(eid, {})
+            return _zone_active(st.get("state"), st.get("attributes", {}).get("hvac_action"), eid in cooling_blocked)
+        any_active = any(_is_zone_on(z) for z in (zones_pt + zones_p1 + zones_mans + zones_lab + ([zone_scala] if zone_scala else [])))
+        req_on = any_active if zones_configured else bool(imp_cfg.get("richiesta_heat"))
+    season_mode = str(imp_cfg.get("season_mode", "winter")).lower()
+    if season_mode == "summer":
+        req_on = False
     sel_norm = str(sel_state or "AUTO").strip().upper()
     vol_min = float(imp_cfg.get("volano_min_c", 35.0))
     vol_h = float(imp_cfg.get("volano_hyst_c", 2.0))
