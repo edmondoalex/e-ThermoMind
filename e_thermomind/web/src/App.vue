@@ -114,6 +114,16 @@
           <hr />
           <div class="row"><strong>Carica riserva:</strong> {{ d.computed.charge_buffer }} (step {{ d.computed.resistance_step }}/3)</div>
           <div class="muted">{{ d.computed.charge_reason }}</div>
+          <div v-if="moduleReasonsList.length">
+            <hr />
+            <div class="row"><strong>Moduli</strong></div>
+            <div class="module-reasons">
+              <div v-for="item in moduleReasonsList" :key="item.key" class="module-row">
+                <div class="module-label">{{ item.label }}</div>
+                <div class="muted">{{ item.reason }}</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="act" class="card inner">
@@ -784,6 +794,19 @@ const flowVolanoToImpianto = computed(() => false)
 const flowPufferToLab = computed(() => false)
 const flowMiscelatrice = computed(() => false)
 const flowCaldaiaToPuffer = computed(() => false)
+const moduleReasonsList = computed(() => {
+  const mr = d.value?.computed?.module_reasons || {}
+  const labels = [
+    { key: 'solare', label: 'Solare' },
+    { key: 'volano_to_acs', label: 'Volano -> ACS' },
+    { key: 'volano_to_puffer', label: 'Volano -> Puffer' },
+    { key: 'puffer_to_acs', label: 'Puffer -> ACS' },
+    { key: 'resistenze_volano', label: 'Resistenze Volano' }
+  ]
+  return labels
+    .filter(item => mr[item.key])
+    .map(item => ({ ...item, reason: mr[item.key] }))
+})
 
 const solarModeClass = computed(() => {
   const mode = sp.value?.solare?.mode || 'auto'
@@ -1249,5 +1272,8 @@ details.form summary{cursor:pointer;list-style:none}
 .legend-item{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
 .legend-dot{width:10px;height:10px;border-radius:999px;background:#2b3447}
 .legend-dot.on{background:#4fd1c5}
+.module-reasons{display:grid;gap:8px;margin-top:6px}
+.module-row{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.45)}
+.module-label{font-size:12px;font-weight:700;letter-spacing:.3px}
 @keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-36}}
 </style>

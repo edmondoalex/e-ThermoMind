@@ -168,6 +168,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "solare_to_acs": source_to_acs == "SOLAR",
                 "volano_to_puffer": volano_to_puffer
             },
+            "module_reasons": {
+                "solare": source_reason if source_to_acs == "SOLAR" else "Solare non attivo per ACS.",
+                "volano_to_acs": source_reason if source_to_acs == "VOLANO" else "Volano → ACS non attivo.",
+                "puffer_to_acs": source_reason if source_to_acs == "PUFFER" else "Puffer → ACS non attivo.",
+                "volano_to_puffer": "Volano → Puffer attivo." if volano_to_puffer else "Volano → Puffer non attivo.",
+                "resistenze_volano": charge_reason
+            },
             "state": {
                 "last_dest": _LAST.get("dest"),
                 "last_source_to_acs": _LAST.get("source_to_acs")
