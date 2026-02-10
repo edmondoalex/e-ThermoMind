@@ -126,6 +126,16 @@ def _get_state(entity_id: str | None) -> str | None:
     if not entity_id:
         return None
     return ha.states.get(entity_id, {}).get("state")
+def _get_num(entity_id: str | None) -> float | None:
+    if not entity_id:
+        return None
+    raw = ha.states.get(entity_id, {}).get("state")
+    if raw is None:
+        return None
+    try:
+        return float(raw)
+    except Exception:
+        return None
 
 async def _build_snapshot() -> dict:
     data = compute_decision(cfg, ha.states)
@@ -698,6 +708,14 @@ async def _apply_impianto_live() -> None:
     if sel_state not in ("AUTO", "PDC", "VOLANO", "PUFFER"):
         sel_state = "AUTO"
 
+    t_volano = _get_num(ent.get("t_volano"))
+    t_puffer = _get_num(ent.get("t_puffer"))
+    vol_min = float(imp_cfg.get("volano_min_c", 35.0))
+    vol_h = float(imp_cfg.get("volano_hyst_c", 2.0))
+    puf_min = float(imp_cfg.get("puffer_min_c", 35.0))
+    puf_h = float(imp_cfg.get("puffer_hyst_c", 2.0))
+
+    forced_source = sel_state != "AUTO"
     # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
     if sel_state == "AUTO" or (
         (sel_state == "PDC" and not pdc_ready) or
@@ -705,10 +723,10 @@ async def _apply_impianto_live() -> None:
     ):
         if pdc_ready:
             source = "PDC"
-        elif volano_ready:
+        elif volano_ready and vol_temp_ok:
             source = "VOLANO"
         else:
-            source = "PUFFER"
+            source = "PUFFER" if puf_temp_ok else None
     else:
         source = sel_state
 
@@ -741,6 +759,11 @@ async def _apply_impianto_live() -> None:
     r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
     r1 = act.get("r1_valve_comparto_laboratorio")
 
+    vol_active = _state_is_on(r31)
+    puf_active = _state_is_on(r4)
+    vol_temp_ok = (t_volano is None) or (t_volano >= vol_min + vol_h) or (vol_active and t_volano > vol_min)
+    puf_temp_ok = (t_puffer is None) or (t_puffer >= puf_min + puf_h) or (puf_active and t_puffer > puf_min)
+
     # Valvole zone (mansarda e 1P condividono R3)
     if r2:
         await _set_actuator(r2, pt_active or scala_active)
@@ -764,6 +787,23 @@ async def _apply_impianto_live() -> None:
 
     # Consenso/centralina
     await _set_actuator(off_centralina, False)
+
+    # blocco termostati sorgenti
+    if source == "VOLANO" and t_volano is not None and t_volano <= vol_min:
+        source = None if forced_source else ("PUFFER" if puf_temp_ok else None)
+    if source == "PUFFER" and not puf_temp_ok:
+        source = None
+
+    if not source:
+        await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        await _set_actuator(r4, False)
+        await _set_actuator(r5, False)
+        await _set_actuator(r31, False)
+        await _set_climate_hvac_mode(clima, "off")
+        await _set_actuator(off_centralina, True)
+        if cfg.get("modules_enabled", {}).get("miscelatrice", True):
+            await _set_actuator(misc_enable, False)
+        return
 
     if source == "PDC":
         await _set_actuator(r5, True)

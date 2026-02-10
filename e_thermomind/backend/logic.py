@@ -163,6 +163,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     vol_ready = _is_on_state(ha_states.get(vol_eid, {}).get("state") if vol_eid else ("on" if imp_cfg.get("volano_ready") else "off"))
     req_on = _is_on_state(req_state)
     sel_norm = str(sel_state or "AUTO").strip().upper()
+    vol_min = float(imp_cfg.get("volano_min_c", 35.0))
+    vol_h = float(imp_cfg.get("volano_hyst_c", 2.0))
+    puf_min = float(imp_cfg.get("puffer_min_c", 35.0))
+    puf_h = float(imp_cfg.get("puffer_hyst_c", 2.0))
+    vol_ok = t_volano >= (vol_min + vol_h)
+    puf_ok = t_puffer >= (puf_min + puf_h)
 
     if sel_norm not in ("AUTO", "PDC", "VOLANO", "PUFFER"):
         sel_norm = "AUTO"
@@ -220,6 +226,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "miscelatrice": miscelatrice_on,
                 "pdc_ready": pdc_ready,
                 "volano_ready": vol_ready,
+                "volano_temp_ok": vol_ok,
+                "puffer_temp_ok": puf_ok,
                 "selector": sel_norm
             },
             "module_reasons": {

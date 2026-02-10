@@ -607,6 +607,10 @@
                 <button class="ghost" @click="addZone('cooling_blocked')">+ Aggiungi</button>
               </div>
             </div>
+            <div class="field"><label>Volano min (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_min_c"/></div>
+            <div class="field"><label>Volano isteresi (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_hyst_c"/></div>
+            <div class="field"><label>Puffer min (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_min_c"/></div>
+            <div class="field"><label>Puffer isteresi (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_hyst_c"/></div>
             <div class="field"><label>Ritardo avvio pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_start_delay_s"/></div>
             <div class="field"><label>Ritardo stop pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_stop_delay_s"/></div>
             <div class="field"><label>Stagione</label>
@@ -1123,7 +1127,7 @@ async function load(){
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
   }
   if (!sp.value?.impianto) {
-  sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, richiesta_heat: false, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
+  sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, richiesta_heat: false, volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
   }
   // normalize lists (allow CSV from older configs)
   const normalizeList = (v) => {

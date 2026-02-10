@@ -121,8 +121,11 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "source_mode": "AUTO",
     "pdc_ready": False,
     "volano_ready": False,
-    "caldaia_ready": False,
     "richiesta_heat": False,
+    "volano_min_c": 35.0,
+    "volano_hyst_c": 2.0,
+    "puffer_min_c": 35.0,
+    "puffer_hyst_c": 2.0,
     "zones_pt": [],
     "zones_p1": [],
     "zones_mans": [],
@@ -276,7 +279,7 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
             cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
-        for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
+        for key in ("pdc_ready", "volano_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
 
@@ -290,9 +293,12 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
             cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
-        for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
+        for key in ("pdc_ready", "volano_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
+        for key in ("volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c"):
+            if key in imp:
+                cfg["impianto"][key] = _float(imp.get(key), cfg["impianto"].get(key, 0.0))
         if "zones_pt" in imp:
             cfg["impianto"]["zones_pt"] = _parse_list(imp.get("zones_pt"))
         if "zones_p1" in imp:
@@ -374,7 +380,7 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
             cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
-        for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
+        for key in ("pdc_ready", "volano_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
 
@@ -388,9 +394,12 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
             cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
-        for key in ("pdc_ready", "volano_ready", "caldaia_ready", "richiesta_heat"):
+        for key in ("pdc_ready", "volano_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
+        for key in ("volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c"):
+            if key in imp:
+                cfg["impianto"][key] = _float(imp.get(key), cfg["impianto"].get(key, 0.0))
         if "zones_pt" in imp:
             cfg["impianto"]["zones_pt"] = _parse_list(imp.get("zones_pt"))
         if "zones_p1" in imp:
