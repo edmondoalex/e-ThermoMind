@@ -37,6 +37,8 @@ pending_auto_off: dict[str, asyncio.Task] = {}
 transfer_tasks: dict[str, asyncio.Task] = {}
 transfer_desired: dict[str, bool] = {}
 manual_overrides: dict[str, bool] = {}
+solar_night_state: bool | None = None
+solar_night_last_change: float = 0.0
 ws_clients: set[WebSocket] = set()
 
 @app.on_event("startup")
@@ -325,9 +327,32 @@ async def _set_actuator(entity_id: str | None, want_on: bool) -> None:
         await ha.call_service(entity_id, "off")
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
 
-def _sun_is_night() -> bool:
+def _sun_is_night() -> bool | None:
     st = ha.states.get("sun.sun", {})
-    return st.get("state") == "below_horizon"
+    state = st.get("state")
+    if state == "below_horizon":
+        return True
+    if state == "above_horizon":
+        return False
+    return None
+
+def _solar_night_debounced() -> bool:
+    global solar_night_state, solar_night_last_change
+    now = time.time()
+    desired = _sun_is_night()
+    if desired is None:
+        # keep last if unknown
+        return bool(solar_night_state)
+    if solar_night_state is None:
+        solar_night_state = desired
+        solar_night_last_change = now
+        return desired
+    if desired != solar_night_state and (now - solar_night_last_change) < 30:
+        return solar_night_state
+    if desired != solar_night_state:
+        solar_night_state = desired
+        solar_night_last_change = now
+    return solar_night_state
 
 def _cancel_transfer_task(key: str) -> None:
     task = transfer_tasks.pop(key, None)
@@ -480,7 +505,7 @@ async def _apply_solar_live(decision_data: dict) -> None:
 
     sol_cfg = cfg.get("solare", {})
     mode = sol_cfg.get("mode", "auto")
-    night = (mode == "night") or (mode == "auto" and _sun_is_night())
+    night = (mode == "night") or (mode == "auto" and _solar_night_debounced())
 
     act = cfg.get("actuators", {})
     r8 = act.get("r8_valve_solare_notte_low_temp")
