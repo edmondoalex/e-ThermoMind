@@ -139,7 +139,7 @@
             </div>
             <div class="kpi kpi-center" :class="stateClass(act?.generale_resistenze_volano_pdc?.state)">
               <div class="k">
-                <i v-if="mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon)" :class="[mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon), stateClass(act?.generale_resistenze_volano_pdc?.state)]"></i>
+                <i :class="[mdiClass(act?.generale_resistenze_volano_pdc?.attributes?.icon) || 'mdi mdi-power', stateClass(act?.generale_resistenze_volano_pdc?.state)]"></i>
                 R0 Generale Resistenze Volano PDC
               </div>
             </div>
