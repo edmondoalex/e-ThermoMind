@@ -108,6 +108,7 @@ async def decision():
     await _apply_resistance_live(data)
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
+    await _apply_impianto_live()
     return JSONResponse(data)
 
 def _get_state(entity_id: str | None) -> str | None:
@@ -120,6 +121,7 @@ async def _build_snapshot() -> dict:
     await _apply_resistance_live(data)
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
+    await _apply_impianto_live()
     act = {}
     for k, eid in (cfg.get("actuators", {}) or {}).items():
         if eid:
@@ -575,6 +577,59 @@ async def _apply_solar_live(decision_data: dict) -> None:
     else:
         await _set_actuator(r8, False)
         await _set_actuator(r9, True)
+
+async def _set_climate_hvac_mode(entity_id: str | None, mode: str) -> None:
+    if not entity_id or not ha.enabled:
+        return
+    current = _get_state(entity_id)
+    if current == mode:
+        return
+    await ha.call_service_named("climate", "set_hvac_mode", {"entity_id": entity_id, "hvac_mode": mode})
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode}")
+
+async def _set_input_select(entity_id: str | None, option: str) -> None:
+    if not entity_id or not ha.enabled:
+        return
+    current = _get_state(entity_id)
+    if current == option:
+        return
+    await ha.call_service_named("input_select", "select_option", {"entity_id": entity_id, "option": option})
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SELECT {entity_id} -> {option}")
+
+async def _apply_impianto_live() -> None:
+    if cfg.get("runtime", {}).get("mode") != "live":
+        return
+    if not ha.enabled:
+        return
+    if not cfg.get("modules_enabled", {}).get("impianto", True):
+        return
+
+    ent = cfg.get("entities", {})
+    act = cfg.get("actuators", {})
+
+    sel = ent.get("hvac_riscaldamento_select")
+    richiesta = ent.get("richiesta_heat_piani")
+    clima = ent.get("puffer_consenso_riscaldamento_piani")
+    off_centralina = ent.get("off_centralina_termoregolazione")
+    r4 = act.get("r4_valve_impianto_da_puffer")
+
+    sel_state = _get_state(sel)
+    richiesta_on = (_get_state(richiesta) == "on")
+    use_puffer = (str(sel_state).upper() == "PUFFER")
+
+    # Consenso puffer (climate): PUFFER -> cool, else off
+    if use_puffer:
+        await _set_climate_hvac_mode(clima, "cool")
+    else:
+        await _set_climate_hvac_mode(clima, "off")
+
+    # Valvola impianto da puffer e centralina termoregolazione
+    if richiesta_on and use_puffer:
+        await _set_actuator(r4, True)
+        await _set_actuator(off_centralina, False)
+    else:
+        await _set_actuator(r4, False)
+        await _set_actuator(off_centralina, True)
 
 @app.get("/api/status")
 async def status():

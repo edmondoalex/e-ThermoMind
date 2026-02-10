@@ -121,6 +121,16 @@ class HAClient:
         async with self._session.post(url, json=payload) as r:
             return r.status == 200
 
+    async def call_service_named(self, domain: str, service: str, data: Dict[str, Any]) -> bool:
+        if not self._session:
+            return False
+        if not domain or not service:
+            return False
+        payload = data or {}
+        url = f"{self._http_url}/services/{domain}/{service}"
+        async with self._session.post(url, json=payload) as r:
+            return r.status == 200
+
     async def loop(self):
         if self._ws is None:
             return

@@ -665,6 +665,54 @@
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
+            <div class="field">
+              <label>Selettore sorgente riscaldamento</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.hvac_riscaldamento_select?.entity_id) ? 'logic-ok' : 'logic-no'">???</span>
+                <input type="text"
+                       :class="isFilled(ent?.hvac_riscaldamento_select?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.hvac_riscaldamento_select.entity_id"
+                       placeholder="input_select.hvac_riscaldamento"
+                       @input="dirtyEnt.hvac_riscaldamento_select = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Richiesta calore piani</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.richiesta_heat_piani?.entity_id) ? 'logic-ok' : 'logic-no'">???</span>
+                <input type="text"
+                       :class="isFilled(ent?.richiesta_heat_piani?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.richiesta_heat_piani.entity_id"
+                       placeholder="input_boolean.richiesta_heat_piani"
+                       @input="dirtyEnt.richiesta_heat_piani = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Consenso puffer riscaldamento (climate)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.puffer_consenso_riscaldamento_piani?.entity_id) ? 'logic-ok' : 'logic-no'">???</span>
+                <input type="text"
+                       :class="isFilled(ent?.puffer_consenso_riscaldamento_piani?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.puffer_consenso_riscaldamento_piani.entity_id"
+                       placeholder="climate.puffer_consenso_riscaldamento_piani"
+                       @input="dirtyEnt.puffer_consenso_riscaldamento_piani = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Off centralina termoregolazione</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.off_centralina_termoregolazione?.entity_id) ? 'logic-ok' : 'logic-no'">???</span>
+                <input type="text"
+                       :class="isFilled(ent?.off_centralina_termoregolazione?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.off_centralina_termoregolazione.entity_id"
+                       placeholder="input_boolean.off_centralina_termoregolazione"
+                       @input="dirtyEnt.off_centralina_termoregolazione = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
           <div class="actions">
             <button class="ghost" @click="saveEntities">Salva sensori</button>
           </div>

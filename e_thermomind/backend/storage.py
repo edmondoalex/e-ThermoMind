@@ -13,7 +13,11 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_solare_mandata": None,
     "grid_export_w": None,
     "resistenze_volano_power": None,
-    "resistenze_volano_energy": None
+    "resistenze_volano_energy": None,
+    "hvac_riscaldamento_select": None,
+    "richiesta_heat_piani": None,
+    "puffer_consenso_riscaldamento_piani": None,
+    "off_centralina_termoregolazione": None
   },
   "actuators": {
     "r1_valve_comparto_laboratorio": None,
