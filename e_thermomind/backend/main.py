@@ -109,6 +109,7 @@ async def decision():
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
     await _apply_impianto_live()
+    data["zones"] = _build_zones_state()
     return JSONResponse(data)
 
 
@@ -170,6 +171,36 @@ async def _build_snapshot() -> dict:
         "modules": cfg.get("modules_enabled", {}),
     }
 
+
+
+def _build_zones_state() -> list[dict]:
+    imp = cfg.get("impianto", {})
+    cooling_blocked = set(imp.get("cooling_blocked", []))
+    zones = []
+    def add_group(group_name: str, lst: list):
+        for eid in lst:
+            if not eid:
+                continue
+            st = ha.states.get(eid, {})
+            state = st.get("state")
+            attr = st.get("attributes", {})
+            zones.append({
+                "group": group_name,
+                "entity_id": eid,
+                "state": state,
+                "hvac_action": attr.get("hvac_action"),
+                "temperature": attr.get("current_temperature"),
+                "setpoint": attr.get("temperature"),
+                "active": _zone_active(eid, cooling_blocked)
+            })
+    add_group("PT", imp.get("zones_pt", []))
+    add_group("1P", imp.get("zones_p1", []))
+    add_group("JOLLY", imp.get("zones_mans", []))
+    add_group("LAB", imp.get("zones_lab", []))
+    scala = imp.get("zone_scala")
+    if scala:
+        add_group("SCALA", [scala])
+    return zones
 def _actuator_key_for_entity(entity_id: str) -> str | None:
     for key, eid in (cfg.get("actuators", {}) or {}).items():
         if eid == entity_id:

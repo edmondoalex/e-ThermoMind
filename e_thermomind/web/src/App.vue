@@ -367,7 +367,19 @@
             </div>
           </div>
           <div class="help">I checkbox sono manuali nel solo add-on. Richiesta calore e consenso miscelatrice sono in sola lettura.</div>
+          <div class="zones-card">
+            <div class="row"><strong>Zone attive</strong></div>
+            <div class="zones-grid">
+              <div v-for="z in zones" :key="z.entity_id" class="zone-chip" :class="z.active ? 'zone-on' : 'zone-off'">
+                <div class="zone-title">{{ z.group }} ? {{ z.entity_id }}</div>
+                <div class="zone-sub">{{ z.state || '-' }} | {{ z.hvac_action || '-' }}</div>
+                <div class="zone-sub">T: {{ fmtNum(z.temperature) }}?C | SP: {{ fmtNum(z.setpoint) }}?C</div>
+              </div>
+            </div>
+          </div>
+
         </div>
+
           <div class="row3">
             <div class="kpi kpi-center">
               <div class="k">
@@ -857,6 +869,7 @@ const status = ref(null)
 const lastUpdate = ref(null)
 const pollMs = ref(3000)
 const actions = ref([])
+const zones = ref([])
 const history = ref({
   t_acs: [],
   t_puffer: [],
@@ -933,6 +946,7 @@ const fmtDelta = (a, b) => {
   return `${(da - db).toFixed(1)}C`
 }
 const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
+const fmtNum = (v) => (Number.isFinite(Number(v)) ? Number(v).toFixed(1) : '-')
 const fmtEntity = (e) => {
   if (!e) return 'n/d'
   const raw = e.state
@@ -1087,6 +1101,7 @@ const flowPdcToVolano = computed(() => false)
 async function refresh(){
   if (tab.value === 'admin' || editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
+  zones.value = d.value?.zones || []
   updateHistoryFromDecision(d.value)
   const s = await fetch('/api/status'); status.value = await s.json()
   const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
@@ -1553,6 +1568,14 @@ details.form summary{cursor:pointer;list-style:none}
 .axis{stroke:#2b3447;stroke-width:1}
 .axis-label{fill:#9fb0c7;font-size:10px}
 .history-chart{width:100%;height:auto}
+.zones-card{margin-top:10px}
+.zones-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(min-width:900px){.zones-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.zone-chip{border:1px solid var(--border);border-radius:12px;padding:8px;background:rgba(10,15,22,.5)}
+.zone-on{border-color:rgba(245,158,11,.6);box-shadow:0 0 0 1px rgba(245,158,11,.3) inset;background:rgba(245,158,11,.08)}
+.zone-off{opacity:.75}
+.zone-title{font-size:12px;font-weight:700}
+.zone-sub{font-size:11px;color:var(--muted)}
 .list{display:flex;flex-direction:column;gap:6px}
 .list-row{display:flex;gap:8px;align-items:center}
 .list-row input{flex:1}
