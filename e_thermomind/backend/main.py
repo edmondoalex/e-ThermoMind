@@ -335,6 +335,17 @@ def _zone_active(entity_id: str | None, cooling_blocked: set[str]) -> bool:
     # default: treat truthy text as active
     return state in ("on", "true", "1", "yes", "heat", "heating")
 
+def _gas_zone_demand(eid: str | None, cooling_blocked: set[str]) -> bool:
+    if not eid:
+        return False
+    st = ha.states.get(eid, {})
+    dom = eid.split(".", 1)[0] if "." in eid else ""
+    action = str(st.get("attributes", {}).get("hvac_action") or "").lower()
+    if dom == "climate":
+        # in gas: richiesta solo se realmente in heating
+        return action == "heating"
+    return _zone_active(eid, cooling_blocked)
+
 async def _set_pump_delayed(name: str, pump_eid: str | None, want_on: bool, delay_on: float, delay_off: float) -> None:
     prev = transfer_desired.get(name)
     transfer_desired[name] = want_on
@@ -789,7 +800,33 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     ent = cfg.get("entities", {})
     act = cfg.get("actuators", {})
     cfg_misc = cfg.get("miscelatrice", {})
+    imp_cfg = cfg.get("impianto", {})
     imp = (decision_data.get("computed", {}) or {}).get("impianto", {}) or {}
+
+    # Gas emergenza: se PT o LAB chiedono, apri miscelatrice a tutta
+    if _gas_emergenza_active():
+        cooling_blocked = set(imp_cfg.get("cooling_blocked", []))
+        zones = cfg.get("gas_emergenza", {}).get("zones", [])
+        if not isinstance(zones, list):
+            zones = []
+        zones = [str(z).strip() for z in zones if str(z).strip()]
+        zones_pt = set(imp_cfg.get("zones_pt", []))
+        zones_lab = set(imp_cfg.get("zones_lab", []))
+        pt_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_pt)
+        lab_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_lab)
+        if pt_active or lab_active:
+            r16 = act.get("r16_cmd_miscelatrice_alza")
+            r17 = act.get("r17_cmd_miscelatrice_abbassa")
+            # stop any shutdown/pulse and force open
+            if miscelatrice_task and not miscelatrice_task.done():
+                miscelatrice_task.cancel()
+                miscelatrice_task = None
+            miscelatrice_shutdown_until = 0.0
+            miscelatrice_pause_until = 0.0
+            await _set_actuator(r17, False)
+            await _set_actuator(r16, True)
+            miscelatrice_last_action = "ALZA"
+            return
     imp_active = (
         cfg.get("modules_enabled", {}).get("impianto", True)
         and imp.get("richiesta")
@@ -1198,11 +1235,11 @@ async def _apply_gas_emergenza_live() -> None:
             return action == "heating"
         return _zone_active(eid, cooling_blocked)
 
-    pt_active = any(_gas_zone_demand(z) for z in zones if z in zones_pt)
-    p1_active = any(_gas_zone_demand(z) for z in zones if z in zones_p1)
-    mans_active = any(_gas_zone_demand(z) for z in zones if z in zones_mans)
-    lab_active = any(_gas_zone_demand(z) for z in zones if z in zones_lab)
-    scala_active = _gas_zone_demand(zone_scala) if zone_scala and (zone_scala in zones) else False
+    pt_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_pt)
+    p1_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_p1)
+    mans_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_mans)
+    lab_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_lab)
+    scala_active = _gas_zone_demand(zone_scala, cooling_blocked) if zone_scala and (zone_scala in zones) else False
     demand_any = pt_active or p1_active or mans_active or lab_active or scala_active
 
     # In gas emergenza metti sempre i termostati in heat
