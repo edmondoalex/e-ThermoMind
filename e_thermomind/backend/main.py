@@ -49,6 +49,8 @@ miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
 impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
+last_modules_payload: dict[str, bool] | None = None
+last_modules_save_ts: float = 0.0
 
 @app.on_event("startup")
 async def on_startup():
@@ -1409,9 +1411,20 @@ async def set_modules(payload: dict, request: Request):
     modules = payload.get("modules", {})
     if not isinstance(modules, dict):
         raise HTTPException(status_code=400, detail="Invalid modules")
+    global last_modules_payload, last_modules_save_ts
+    client = getattr(getattr(request, 'client', None), 'host', None)
+    # skip if unchanged or too frequent
+    if modules == cfg.get('modules_enabled', {}):
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES skip (unchanged) client={client}")
+        return JSONResponse({"ok": True})
+    now = time.time()
+    if last_modules_payload == modules and (now - last_modules_save_ts) < 2.0:
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES skip (debounce) client={client}")
+        return JSONResponse({"ok": True})
     cfg = apply_setpoints(cfg, {"modules_enabled": modules})
     save_config(cfg)
-    client = getattr(getattr(request, 'client', None), 'host', None)
+    last_modules_payload = modules
+    last_modules_save_ts = now
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE modules")
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES client={client} payload={modules}")
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
