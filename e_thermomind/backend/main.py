@@ -1134,6 +1134,10 @@ async def _apply_impianto_live() -> None:
             heat_available = bool((pdc_volano_ready and vol_temp_ok) or (puffer_ready and puf_temp_ok))
     auto_heat = _impianto_auto_heat(heat_available, imp)
 
+    # Termostati: seguono solo disponibilit? calore (anti-flap)
+    for z in _collect_zones(imp):
+        await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
+
     r12 = act.get("r12_pump_mandata_piani")
     r11 = act.get("r11_pump_mandata_laboratorio")
     r2 = act.get("r2_valve_comparto_mandata_imp_pt")
@@ -1151,8 +1155,6 @@ async def _apply_impianto_live() -> None:
                 source = "PUFFER"
 
     if not source:
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
         if r2:
             await _set_actuator(r2, False)
         if r3:
@@ -1172,8 +1174,6 @@ async def _apply_impianto_live() -> None:
 
     if not demand_on:
         impianto_last_source = None
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
         if r2:
             await _set_actuator(r2, False)
         if r3:
@@ -1188,10 +1188,6 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
         return
-
-    # in inverno abilita termostati se c'? calore disponibile
-    for z in _collect_zones(imp):
-        await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
 
     # Consenso/centralina
     await _set_actuator(off_centralina, False)
