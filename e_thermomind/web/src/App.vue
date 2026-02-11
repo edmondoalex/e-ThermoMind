@@ -1688,11 +1688,16 @@ details.form summary{cursor:pointer;list-style:none}
 .top-actions{display:flex;gap:8px;align-items:center}
 .action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
 .action-btn.upload{display:inline-flex;align-items:center;gap:6px}
-.setpoint-grid{display:grid;gap:10px}
+.setpoint-grid{display:grid;gap:8px}
 .setpoint-grid .section{grid-column:1/-1}
 @media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.set-section{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(10,15,22,.45)}
-.set-section .section-title{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.set-section{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(12,18,30,.55)}
+.setpoint-grid .set-section:nth-of-type(odd){background:rgba(14,20,34,.6)}
+.setpoint-grid .set-section:nth-of-type(even){background:rgba(10,16,26,.65)}
+.set-section .section-title{font-size:14px;letter-spacing:.7px;text-transform:uppercase;color:#c8d7ee;margin-bottom:6px;font-weight:700}
+.set-section .field label{margin-bottom:4px}
+.set-section .field input,.set-section .field select{padding:8px;border-radius:10px}
+.set-section .help{margin-top:4px}
 .subsection{margin-top:10px;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
 .zone-chip{cursor:pointer}
 .thermo-modal{max-width:520px}
