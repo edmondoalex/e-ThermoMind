@@ -1086,20 +1086,21 @@ async def _apply_impianto_live() -> None:
 
     forced_source = sel_state != "AUTO"
 
-    vol_active = _state_is_on(act.get("r5_valve_impianto_da_pdc"))
-    puf_active = _state_is_on(act.get("r4_valve_impianto_da_puffer"))
-    vol_temp_ok = (t_volano is None) or (t_volano >= vol_min + vol_h) or (vol_active and t_volano > vol_min)
-    puf_temp_ok = (t_puffer is None) or (t_puffer >= puf_min) or (puf_active and t_puffer > (puf_min - puf_h))
+    # soglie temperatura con isteresi (start e hold)
+    vol_ok_start = (t_volano is None) or (t_volano >= vol_min + vol_h)
+    vol_ok_hold = (t_volano is None) or (t_volano > (vol_min - vol_h))
+    puf_ok_start = (t_puffer is None) or (t_puffer >= puf_min + puf_h)
+    puf_ok_hold = (t_puffer is None) or (t_puffer > (puf_min - puf_h))
 
     # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
     if sel_state == "AUTO" or (
-        (sel_state == "PDC" and (not pdc_volano_ready or not vol_temp_ok)) or
-        (sel_state == "PUFFER" and (not puffer_ready or not puf_temp_ok))
+        (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (impianto_last_source == "PDC" and vol_ok_hold)))) or
+        (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (impianto_last_source == "PUFFER" and puf_ok_hold))))
     ):
-        if pdc_volano_ready and vol_temp_ok:
+        if pdc_volano_ready and (vol_ok_start or (impianto_last_source == "PDC" and vol_ok_hold)):
             source = "PDC"
         else:
-            source = "PUFFER" if (puffer_ready and puf_temp_ok) else None
+            source = "PUFFER" if (puffer_ready and (puf_ok_start or (impianto_last_source == "PUFFER" and puf_ok_hold))) else None
     else:
         source = sel_state
 
@@ -1140,13 +1141,13 @@ async def _apply_impianto_live() -> None:
     r1 = act.get("r1_valve_comparto_laboratorio")
 
     # blocco se nessuna fonte valida o troppo fredda
-    # latch: se era attiva una sorgente, mantienila finch? non scende sotto min
+    # latch: se era attiva una sorgente, mantienila finch? non scende sotto min (con isteresi)
     if demand_on and source is None and impianto_last_source:
         if impianto_last_source == "PDC" and pdc_volano_ready:
-            if t_volano is None or t_volano > vol_min:
+            if vol_ok_hold:
                 source = "PDC"
         if impianto_last_source == "PUFFER" and puffer_ready:
-            if t_puffer is None or t_puffer > puf_min:
+            if puf_ok_hold:
                 source = "PUFFER"
 
     # Auto-heat: termostati in HEAT quando impianto ? OK (fonte valida)
