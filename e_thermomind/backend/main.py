@@ -1006,6 +1006,16 @@ async def _set_climate_hvac_mode(entity_id: str | None, mode: str) -> None:
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode}")
     last_hvac_cmd[entity_id] = (mode, now)
 
+
+async def _set_climate_hvac_mode_guard(entity_id: str | None, mode: str, min_switch_s: float) -> None:
+    if not entity_id or not ha.enabled:
+        return
+    prev = last_hvac_cmd.get(entity_id)
+    now = time.time()
+    if prev and prev[0] != mode and (now - prev[1]) < min_switch_s:
+        return
+    await _set_climate_hvac_mode(entity_id, mode)
+
 async def _set_input_select(entity_id: str | None, option: str) -> None:
     if not entity_id or not ha.enabled:
         return
@@ -1081,7 +1091,7 @@ async def _apply_impianto_live() -> None:
     vol_temp_ok = (t_volano is None) or (t_volano >= vol_min + vol_h) or (vol_active and t_volano > vol_min)
     puf_temp_ok = (t_puffer is None) or (t_puffer >= puf_min) or (puf_active and t_puffer > (puf_min - puf_h))
 
-    # Se selector AUTO o sorgente non disponibile -> fallback con priorità
+    # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
     if sel_state == "AUTO" or (
         (sel_state == "PDC" and (not pdc_volano_ready or not vol_temp_ok)) or
         (sel_state == "PUFFER" and (not puffer_ready or not puf_temp_ok))
@@ -1123,21 +1133,6 @@ async def _apply_impianto_live() -> None:
         impianto_heat_state["active"] = False
         impianto_heat_state["last_change"] = time.time()
 
-    # Auto-heat: se c'è una fonte disponibile, forza i termostati in heat
-    heat_available = False
-    if season == "winter":
-        if sel_state == "PDC":
-            heat_available = bool(pdc_volano_ready and vol_temp_ok)
-        elif sel_state == "PUFFER":
-            heat_available = bool(puffer_ready and puf_temp_ok)
-        else:
-            heat_available = bool((pdc_volano_ready and vol_temp_ok) or (puffer_ready and puf_temp_ok))
-    auto_heat = heat_available
-
-    # Termostati: seguono solo disponibilit? calore (anti-flap)
-    for z in _collect_zones(imp):
-        await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
-
     r12 = act.get("r12_pump_mandata_piani")
     r11 = act.get("r11_pump_mandata_laboratorio")
     r2 = act.get("r2_valve_comparto_mandata_imp_pt")
@@ -1145,7 +1140,7 @@ async def _apply_impianto_live() -> None:
     r1 = act.get("r1_valve_comparto_laboratorio")
 
     # blocco se nessuna fonte valida o troppo fredda
-    # latch: se era attiva una sorgente, mantienila finché non scende sotto min
+    # latch: se era attiva una sorgente, mantienila finch? non scende sotto min
     if demand_on and source is None and impianto_last_source:
         if impianto_last_source == "PDC" and pdc_volano_ready:
             if t_volano is None or t_volano > vol_min:
@@ -1153,6 +1148,14 @@ async def _apply_impianto_live() -> None:
         if impianto_last_source == "PUFFER" and puffer_ready:
             if t_puffer is None or t_puffer > puf_min:
                 source = "PUFFER"
+
+    # Auto-heat: termostati in HEAT quando impianto ? OK (fonte valida)
+    auto_heat = False
+    if season == "winter":
+        auto_heat = bool(source)
+
+    for z in _collect_zones(imp):
+        await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
 
     if not source:
         if r2:
