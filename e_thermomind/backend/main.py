@@ -1097,6 +1097,17 @@ async def _apply_impianto_live() -> None:
     if season == "summer":
         demand_on = False
 
+    # Auto-heat: se c'è una fonte disponibile, forza i termostati in heat
+    heat_available = False
+    if season == "winter":
+        if sel_state == "PDC":
+            heat_available = bool(pdc_volano_ready and vol_temp_ok)
+        elif sel_state == "PUFFER":
+            heat_available = bool(puffer_ready and puf_temp_ok)
+        else:
+            heat_available = bool((pdc_volano_ready and vol_temp_ok) or (puffer_ready and puf_temp_ok))
+    auto_heat = heat_available
+
     r12 = act.get("r12_pump_mandata_piani")
     r11 = act.get("r11_pump_mandata_laboratorio")
     r2 = act.get("r2_valve_comparto_mandata_imp_pt")
@@ -1115,7 +1126,7 @@ async def _apply_impianto_live() -> None:
 
     if not source:
         for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
+            await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
         if r2:
             await _set_actuator(r2, False)
         if r3:
@@ -1136,7 +1147,7 @@ async def _apply_impianto_live() -> None:
     if not demand_on:
         impianto_last_source = None
         for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
+            await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
         if r2:
             await _set_actuator(r2, False)
         if r3:
@@ -1152,13 +1163,9 @@ async def _apply_impianto_live() -> None:
         # miscelatrice gestita solo dal suo modulo
         return
 
-    # in inverno abilita termostati solo se c'è richiesta
-    if season == "winter":
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "heat")
-    else:
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
+    # in inverno abilita termostati se c'? calore disponibile
+    for z in _collect_zones(imp):
+        await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
 
     # Consenso/centralina
     await _set_actuator(off_centralina, False)
