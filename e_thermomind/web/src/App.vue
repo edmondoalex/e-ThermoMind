@@ -536,15 +536,13 @@
               <polyline :points="curvePoints" class="curve-line"/>
               <line v-if="curveExtX !== null" :x1="curveExtX" y1="0" :x2="curveExtX" y2="100" class="curve-marker"/>
               <circle v-if="curveExtX !== null && curveExtY !== null" :cx="curveExtX" :cy="curveExtY" r="2.6" class="curve-dot"/>
-              <text v-if="curveBounds.xMin !== null" x="2" y="96" class="curve-axis">{{ curveBounds.xMin.toFixed(1) }}
-              </text>
-              <text v-if="curveBounds.xMax !== null" x="98" y="96" text-anchor="end" class="curve-axis">{{ curveBounds.xMax.toFixed(1) }}
-              </text>
-              <text v-if="curveBounds.yMax !== null" x="2" y="10" class="curve-axis">{{ curveBounds.yMax.toFixed(1) }}
-              </text>
-              <text v-if="curveBounds.yMin !== null" x="2" y="90" class="curve-axis">{{ curveBounds.yMin.toFixed(1) }}
+              <text v-for="(y, i) in curveYTicks" :key="`y-${i}`" x="2" :y="4 + (i * 24)" class="curve-axis">
+                {{ y.toFixed(1) }}°C
               </text>
             </svg>
+            <div class="curve-x-axis">
+              <div v-for="(x, i) in curveXTicks" :key="`x-${i}`" class="curve-x-label">{{ x.toFixed(1) }}°C</div>
+            </div>
           </div>
           <div class="row2">
             <div class="mini-field">
@@ -1424,7 +1422,7 @@ const curvePoints = computed(() => {
   const spanX = xMax - xMin || 1
   const spanY = yMax - yMin || 1
   return xs.map((x, i) => {
-    const nx = ((x - xMin) / spanX) * 100
+    const nx = 100 - (((x - xMin) / spanX) * 100)
     const ny = 100 - ((adj[i] - yMin) / spanY) * 100
     return `${nx.toFixed(2)},${ny.toFixed(2)}`
   }).join(' ')
@@ -1437,7 +1435,7 @@ const curveExtX = computed(() => {
   const spanX = xMax - xMin || 1
   const ext = d.value?.computed?.curva_climatica?.t_ext
   if (ext === null || ext === undefined) return null
-  return ((Number(ext) - xMin) / spanX) * 100
+  return 100 - (((Number(ext) - xMin) / spanX) * 100)
 })
 const curveExtY = computed(() => {
   const ys = (sp.value?.curva_climatica?.y || []).map(Number).filter(v => !Number.isNaN(v))
@@ -1468,6 +1466,17 @@ const curveBounds = computed(() => {
     yMin: Math.min(...adj),
     yMax: Math.max(...adj)
   }
+})
+const curveXTicks = computed(() => {
+  const xs = (sp.value?.curva_climatica?.x || []).map(Number).filter(v => !Number.isNaN(v))
+  return xs.slice().sort((a, b) => b - a)
+})
+const curveYTicks = computed(() => {
+  const { yMin, yMax } = curveBounds.value
+  if (yMin === null || yMax === null) return []
+  const span = yMax - yMin || 1
+  const steps = 4
+  return Array.from({ length: steps + 1 }, (_, i) => yMax - (span * i / steps))
 })
 
   function mergeEntities(next){
@@ -1896,6 +1905,8 @@ details.form summary{cursor:pointer;list-style:none}
 .curve-marker{stroke:#7aa7ff;stroke-width:0.8;opacity:0.8}
 .curve-dot{fill:#7aa7ff}
 .curve-axis{fill:#9fb0c7;font-size:5px}
+.curve-x-axis{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:2px;margin-top:6px}
+.curve-x-label{font-size:9px;color:#9fb0c7;text-align:center}
 .spark{fill:none;stroke-width:2}
 .spark.acs{stroke:#57e3d6}
 .spark.puffer{stroke:#7aa7ff}
