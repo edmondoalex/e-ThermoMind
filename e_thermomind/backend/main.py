@@ -1192,17 +1192,16 @@ async def _apply_gas_emergenza_live() -> None:
     mans_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_mans)
     lab_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_lab)
     scala_active = _zone_active(zone_scala, cooling_blocked) if zone_scala and (zone_scala in zones) else False
-    demand_on = pt_active or p1_active or mans_active or lab_active or scala_active
+    demand_any = pt_active or p1_active or mans_active or lab_active or scala_active
 
-    await _set_actuator(power, True)
+    await _set_actuator(power, bool(demand_any))
     for z in zones:
-        await _set_climate_hvac_mode(z, "heat")
-    await _set_actuator(ta, bool(demand_on))
+        await _set_climate_hvac_mode(z, "heat" if demand_any else "off")
+    await _set_actuator(ta, bool(demand_any))
 
     r2 = act.get("r2_valve_comparto_mandata_imp_pt")
     r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
     r1 = act.get("r1_valve_comparto_laboratorio")
-    r12 = act.get("r12_pump_mandata_piani")
     r11 = act.get("r11_pump_mandata_laboratorio")
     r4 = act.get("r4_valve_impianto_da_puffer")
     r5 = act.get("r5_valve_impianto_da_pdc")
@@ -1210,24 +1209,22 @@ async def _apply_gas_emergenza_live() -> None:
     await _set_actuator(r4, False)
     await _set_actuator(r5, False)
 
-    if not demand_on:
+    if not demand_any:
         if r2:
             await _set_actuator(r2, False)
         if r3:
             await _set_actuator(r3, False)
         if r1:
             await _set_actuator(r1, False)
-        await _set_pump_delayed("gas:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_pump_delayed("gas:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         return
 
     if r2:
-        await _set_actuator(r2, pt_active or scala_active or lab_active)
+        await _set_actuator(r2, pt_active or scala_active)
     if r3:
-        await _set_actuator(r3, pt_active or scala_active)
+        await _set_actuator(r3, pt_active or scala_active or lab_active)
     if r1:
         await _set_actuator(r1, lab_active)
-    await _set_pump_delayed("gas:pump", r12, True, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
     await _set_pump_delayed("gas:lab_pump", r11, lab_active, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
 @app.get("/api/status")
