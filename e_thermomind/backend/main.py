@@ -1224,17 +1224,6 @@ async def _apply_gas_emergenza_live() -> None:
     zones_lab = set(imp.get("zones_lab", []))
     zone_scala = (imp.get("zone_scala") or "").strip()
 
-    def _gas_zone_demand(eid: str | None) -> bool:
-        if not eid:
-            return False
-        st = ha.states.get(eid, {})
-        dom = eid.split(".", 1)[0] if "." in eid else ""
-        action = str(st.get("attributes", {}).get("hvac_action") or "").lower()
-        if dom == "climate":
-            # in gas: richiesta solo se realmente in heating
-            return action == "heating"
-        return _zone_active(eid, cooling_blocked)
-
     pt_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_pt)
     p1_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_p1)
     mans_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_mans)
