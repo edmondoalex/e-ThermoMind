@@ -84,3 +84,29 @@ Data export: 2026-02-08 (Europe/Rome)
 - Dot (green/red): mapped in logic (entity_id present)
 - Input border green: entity present
 - Input fill red: entity state ON
+
+## Aggiornamenti 2026-02-11
+- Modulo **Caldaia Gas Emergenza** con:
+  - soglie dedicate Volano/Puffer + isteresi;
+  - lista termostati “gas emergenza” gestiti dal modulo;
+  - attuatori `220V caldaia gas` e `TA caldaia gas`.
+- Logica gas:
+  - GAS attivo solo se Volano/Puffer sotto soglia;
+  - termostati gas sempre forzati in `heat` quando GAS attivo;
+  - TA/220V ON solo se almeno un termostato è in `heating`;
+  - **R4/R5 sempre OFF** in gas.
+- Valvole in gas:
+  - PT/Scala → R2 + R3
+  - Laboratorio → R3 + R1 + pompa lab (R11)
+  - Mansarda/1P da soli → nessuna valvola (caldaia spinge con pompa interna).
+- **Pompa mandata piani (R12)** mai usata in gas.
+- **Miscelatrice**:
+  - in gas, se PT o Lab in heating → apertura totale (ALZA fisso);
+  - fuori gas → logica normale.
+- Modalità normale (impianto):
+  - se calore disponibile (Puffer/Volano sopra soglia) → termostati in `heat`;
+  - se calore assente → termostati in `off` (risparmio testine).
+- Fix vari:
+  - `/api/setpoints` include `gas_emergenza`;
+  - persistenza flag “Storico” per Volano Alto/Basso;
+  - log “SAVE …” in Ultime azioni per setpoints/entities/actuators/modules.
