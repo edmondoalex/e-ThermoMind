@@ -386,7 +386,7 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(gas, dict):
         if "zones" in gas:
             cfg["gas_emergenza"]["zones"] = _parse_list(gas.get("zones"))
-        for key in ("volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c"):
+        for key in _NUM_KEYS["gas_emergenza"]:
             if key in gas:
                 cfg["gas_emergenza"][key] = _float(gas.get(key), cfg["gas_emergenza"].get(key, 0.0))
 
