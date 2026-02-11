@@ -1276,6 +1276,7 @@ async def get_setpoints():
         "timers": cfg.get("timers", {}),
         "runtime": cfg.get("runtime", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),
+        "gas_emergenza": cfg.get("gas_emergenza", {}),
         "impianto": cfg.get("impianto", {}),
         "history": cfg.get("history", {}),
         "security": cfg.get("security", {}),
