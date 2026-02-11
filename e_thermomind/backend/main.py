@@ -150,7 +150,11 @@ def _gas_sources_ok() -> bool:
     gas_cfg = cfg.get("gas_emergenza", {})
     ent = cfg.get("entities", {})
     t_volano = _get_num(ent.get("t_volano"))
+    if t_volano is None:
+        t_volano = _get_num(ent.get("t_volano_alto"))
     t_puffer = _get_num(ent.get("t_puffer"))
+    if t_puffer is None:
+        t_puffer = _get_num(ent.get("t_puffer_alto"))
     vol_min = float(gas_cfg.get("volano_min_c", 35.0))
     vol_h = float(gas_cfg.get("volano_hyst_c", 2.0))
     puf_min = float(gas_cfg.get("puffer_min_c", 35.0))
