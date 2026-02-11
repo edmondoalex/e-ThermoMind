@@ -992,7 +992,7 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     miscelatrice_last_action = direction
     miscelatrice_pause_until = now + pause_s
 
-async def _set_climate_hvac_mode(entity_id: str | None, mode: str) -> None:
+async def _set_climate_hvac_mode(entity_id: str | None, mode: str, reason: str | None = None) -> None:
     if not entity_id or not ha.enabled:
         return
     prev = last_hvac_cmd.get(entity_id)
@@ -1003,7 +1003,8 @@ async def _set_climate_hvac_mode(entity_id: str | None, mode: str) -> None:
     if current == mode:
         return
     await ha.call_service_named("climate", "set_hvac_mode", {"entity_id": entity_id, "hvac_mode": mode})
-    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode}")
+    reason_txt = f" ({reason})" if reason else ""
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode}{reason_txt}")
     last_hvac_cmd[entity_id] = (mode, now)
 
 
@@ -1014,7 +1015,7 @@ async def _set_climate_hvac_mode_guard(entity_id: str | None, mode: str, min_swi
     now = time.time()
     if prev and prev[0] != mode and (now - prev[1]) < min_switch_s:
         return
-    await _set_climate_hvac_mode(entity_id, mode)
+    await _set_climate_hvac_mode(entity_id, mode, reason)
 
 async def _set_input_select(entity_id: str | None, option: str) -> None:
     if not entity_id or not ha.enabled:
@@ -1046,13 +1047,13 @@ async def _apply_impianto_live() -> None:
         clima = ent.get("puffer_consenso_riscaldamento_piani")
         off_centralina = ent.get("off_centralina_termoregolazione")
         for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off")
+            await _set_climate_hvac_mode(z, "off", "IMPIANTO module OFF")
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_actuator(r31, False)
-        await _set_climate_hvac_mode(clima, "off")
+        await _set_climate_hvac_mode(clima, "off", "IMPIANTO module OFF")
         await _set_actuator(off_centralina, True)
         return
 
@@ -1155,8 +1156,9 @@ async def _apply_impianto_live() -> None:
     if season == "winter":
         auto_heat = bool(source)
 
+    heat_reason = f"IMPIANTO auto_heat={'ON' if auto_heat else 'OFF'} source={source or 'OFF'}"
     for z in _collect_zones(imp):
-        await _set_climate_hvac_mode(z, "heat" if auto_heat else "off")
+        await _set_climate_hvac_mode(z, "heat" if auto_heat else "off", heat_reason)
 
     if not source:
         if r2:
@@ -1169,7 +1171,7 @@ async def _apply_impianto_live() -> None:
         await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
-        await _set_climate_hvac_mode(clima, "off")
+        await _set_climate_hvac_mode(clima, "off", "IMPIANTO no source")
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
         return
@@ -1187,7 +1189,7 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r5, False)
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-        await _set_climate_hvac_mode(clima, "off")
+        await _set_climate_hvac_mode(clima, "off", "IMPIANTO no demand")
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
         return
@@ -1210,11 +1212,11 @@ async def _apply_impianto_live() -> None:
     if source == "PDC":
         await _set_actuator(r5, True)
         await _set_actuator(r4, False)
-        await _set_climate_hvac_mode(clima, "off")
+        await _set_climate_hvac_mode(clima, "off", "IMPIANTO source=PDC")
     else:  # PUFFER
         await _set_actuator(r4, True)
         await _set_actuator(r5, False)
-        await _set_climate_hvac_mode(clima, "cool")
+        await _set_climate_hvac_mode(clima, "cool", "IMPIANTO source=PUFFER")
 
 async def _apply_gas_emergenza_live() -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
@@ -1233,7 +1235,7 @@ async def _apply_gas_emergenza_live() -> None:
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         for z in (gas_cfg.get("zones") or []):
-            await _set_climate_hvac_mode(z, "off")
+            await _set_climate_hvac_mode(z, "off", "IMPIANTO module OFF")
         return
 
     zones = gas_cfg.get("zones", [])
@@ -1246,7 +1248,7 @@ async def _apply_gas_emergenza_live() -> None:
         await _set_actuator(ta, False)
         if not cfg.get("modules_enabled", {}).get("impianto", True):
             for z in zones:
-                await _set_climate_hvac_mode(z, "off")
+                await _set_climate_hvac_mode(z, "off", "IMPIANTO module OFF")
         return
 
     cooling_blocked = set(imp.get("cooling_blocked", []))
@@ -1265,7 +1267,7 @@ async def _apply_gas_emergenza_live() -> None:
 
     # In gas emergenza metti sempre i termostati in heat
     for z in zones:
-        await _set_climate_hvac_mode(z, "heat")
+        await _set_climate_hvac_mode(z, "heat", "GAS emergency")
     await _set_actuator(power, bool(demand_any))
     await _set_actuator(ta, bool(demand_any))
 
