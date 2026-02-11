@@ -1187,11 +1187,33 @@ async def _apply_gas_emergenza_live() -> None:
     zones_lab = set(imp.get("zones_lab", []))
     zone_scala = (imp.get("zone_scala") or "").strip()
 
-    pt_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_pt)
-    p1_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_p1)
-    mans_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_mans)
-    lab_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_lab)
-    scala_active = _zone_active(zone_scala, cooling_blocked) if zone_scala and (zone_scala in zones) else False
+    def _gas_zone_demand(eid: str | None) -> bool:
+        if not eid:
+            return False
+        st = ha.states.get(eid, {})
+        dom = eid.split(".", 1)[0] if "." in eid else ""
+        state = str(st.get("state") or "").lower()
+        action = str(st.get("attributes", {}).get("hvac_action") or "").lower()
+        if dom == "climate":
+            # considera richiesta se heating o se setpoint > temp attuale
+            if action == "heating":
+                return True
+            if state == "heat":
+                try:
+                    cur = float(st.get("attributes", {}).get("current_temperature"))
+                    tgt = float(st.get("attributes", {}).get("temperature"))
+                    if cur < (tgt - 0.2):
+                        return True
+                except Exception:
+                    return False
+            return False
+        return _zone_active(eid, cooling_blocked)
+
+    pt_active = any(_gas_zone_demand(z) for z in zones if z in zones_pt)
+    p1_active = any(_gas_zone_demand(z) for z in zones if z in zones_p1)
+    mans_active = any(_gas_zone_demand(z) for z in zones if z in zones_mans)
+    lab_active = any(_gas_zone_demand(z) for z in zones if z in zones_lab)
+    scala_active = _gas_zone_demand(zone_scala) if zone_scala and (zone_scala in zones) else False
     demand_any = pt_active or p1_active or mans_active or lab_active or scala_active
 
     await _set_actuator(power, bool(demand_any))
