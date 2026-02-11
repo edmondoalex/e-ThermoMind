@@ -57,16 +57,27 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             return default
         st = ha_states.get(eid, {}).get("state")
         return default if st is None else str(st)
+    def get_num_optional(eid: str | None):
+        if not eid:
+            return None
+        st = ha_states.get(eid, {}).get("state")
+        return _f(st, None)
 
-    t_acs = get_num(ent.get("t_acs"), 0.0)
+    t_acs = get_num_optional(ent.get("t_acs"))
+    if t_acs is None:
+        t_acs = get_num(ent.get("t_acs_alto"), 0.0)
     t_acs_alto = get_num(ent.get("t_acs_alto"), 0.0)
     t_acs_medio = get_num(ent.get("t_acs_medio"), 0.0)
     t_acs_basso = get_num(ent.get("t_acs_basso"), 0.0)
-    t_puffer = get_num(ent.get("t_puffer"), 0.0)
+    t_puffer = get_num_optional(ent.get("t_puffer"))
+    if t_puffer is None:
+        t_puffer = get_num(ent.get("t_puffer_alto"), 0.0)
     t_puffer_alto = get_num(ent.get("t_puffer_alto"), 0.0)
     t_puffer_medio = get_num(ent.get("t_puffer_medio"), 0.0)
     t_puffer_basso = get_num(ent.get("t_puffer_basso"), 0.0)
-    t_volano = get_num(ent.get("t_volano"), 0.0)
+    t_volano = get_num_optional(ent.get("t_volano"))
+    if t_volano is None:
+        t_volano = get_num(ent.get("t_volano_alto"), 0.0)
     t_volano_alto = get_num(ent.get("t_volano_alto"), 0.0)
     t_volano_basso = get_num(ent.get("t_volano_basso"), 0.0)
     t_sol = get_num(ent.get("t_solare_mandata"), 0.0)

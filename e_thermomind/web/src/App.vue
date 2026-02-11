@@ -32,15 +32,15 @@
         <p v-if="status?.runtime_mode !== 'live'" class="muted">Dry-run: nessun comando agli attuatori. Serve per validare la logica.</p>
 
         <div v-if="d" class="grid">
-          <div class="kpi" :class="historyEnabled('t_acs') ? 'clickable' : ''" @click="openHistory('t_acs','T_ACS')">
+          <div class="kpi" :class="historyEnabled('t_acs_alto') ? 'clickable' : ''" @click="openHistory('t_acs_alto','T_ACS')">
             <div class="k"><i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i> T_ACS</div>
             <div class="v">{{ fmtTemp(d.inputs.t_acs) }}</div>
           </div>
-          <div class="kpi" :class="historyEnabled('t_puffer') ? 'clickable' : ''" @click="openHistory('t_puffer','T_Puffer')">
+          <div class="kpi" :class="historyEnabled('t_puffer_alto') ? 'clickable' : ''" @click="openHistory('t_puffer_alto','T_Puffer')">
             <div class="k"><i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i> T_Puffer</div>
             <div class="v">{{ fmtTemp(d.inputs.t_puffer) }}</div>
           </div>
-          <div class="kpi" :class="historyEnabled('t_volano') ? 'clickable' : ''" @click="openHistory('t_volano','T_Volano')">
+          <div class="kpi" :class="historyEnabled('t_volano_alto') ? 'clickable' : ''" @click="openHistory('t_volano_alto','T_Volano')">
             <div class="k"><i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i> T_Volano</div>
             <div class="v">{{ fmtTemp(d.inputs.t_volano) }}</div>
           </div>
@@ -86,9 +86,9 @@
             <div class="chart">
               <div class="chart-title">Temperature</div>
               <svg viewBox="0 0 300 90" role="img" aria-label="Grafico temperature">
-                <polyline :points="sparkPoints(history.t_acs)" class="spark acs"/>
-                <polyline :points="sparkPoints(history.t_puffer)" class="spark puffer"/>
-                <polyline :points="sparkPoints(history.t_volano)" class="spark volano"/>
+                <polyline :points="sparkPoints(history.t_acs_alto)" class="spark acs"/>
+                <polyline :points="sparkPoints(history.t_puffer_alto)" class="spark puffer"/>
+                <polyline :points="sparkPoints(history.t_volano_alto)" class="spark volano"/>
               </svg>
               <div class="axis-note">Y: {{ tempStats.label }}</div>
               <div class="axis-note">X: ultimi ~2–3 min</div>
@@ -1005,22 +1005,6 @@
           <summary class="section">Sensori da e-manager</summary>
           <div class="field">
             <label>
-              <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
-              T_ACS
-            </label>
-            <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent?.t_acs?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-                <input type="text"
-                       :class="isFilled(ent?.t_acs?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.t_acs.entity_id"
-                       placeholder="sensor.acs_temp"
-                       @input="dirtyEnt.t_acs = true"
-                       @focus="onFocus" @blur="onBlur"/>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_acs"/> Storico</label></div>
-            </div>
-          </div>
-          <div class="field">
-            <label>
               <i v-if="mdiClass(ent?.t_acs_alto?.attributes?.icon)" :class="mdiClass(ent?.t_acs_alto?.attributes?.icon)"></i>
               T_ACS Alto (ACS)
             </label>
@@ -1067,21 +1051,6 @@
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_acs_basso"/> Storico</label></div>
             </div>
           </div>
-          <div class="field">
-            <label>
-              <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
-              T_Puffer
-            </label>
-            <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent?.t_puffer?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-                <input type="text"
-                       :class="isFilled(ent?.t_puffer?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.t_puffer.entity_id"
-                       placeholder="sensor.puffer_temp"
-                       @input="dirtyEnt.t_puffer = true"
-                       @focus="onFocus" @blur="onBlur"/>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_puffer"/> Storico</label></div>
-            </div>
           <div class="field">
             <label>
               <i v-if="mdiClass(ent?.t_puffer_alto?.attributes?.icon)" :class="mdiClass(ent?.t_puffer_alto?.attributes?.icon)"></i>
@@ -1131,21 +1100,6 @@
             </div>
           </div>
           </div>
-          <div class="field">
-            <label>
-              <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
-              T_Volano
-            </label>
-            <div class="input-row">
-              <span class="logic-dot" :class="isFilled(ent?.t_volano?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-                <input type="text"
-                       :class="isFilled(ent?.t_volano?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.t_volano.entity_id"
-                       placeholder="sensor.volano_temp"
-                       @input="dirtyEnt.t_volano = true"
-                       @focus="onFocus" @blur="onBlur"/>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_volano"/> Storico</label></div>
-            </div>
           <div class="field">
             <label>
               <i v-if="mdiClass(ent?.t_volano_alto?.attributes?.icon)" :class="mdiClass(ent?.t_volano_alto?.attributes?.icon)"></i>
@@ -1703,9 +1657,9 @@ function statsLabel(values, unit){
 }
 const tempStats = computed(() => {
   const vals = []
-  vals.push(...(history.value.t_acs || []))
-  vals.push(...(history.value.t_puffer || []))
-  vals.push(...(history.value.t_volano || []))
+  vals.push(...(history.value.t_acs_alto || []))
+  vals.push(...(history.value.t_puffer_alto || []))
+  vals.push(...(history.value.t_volano_alto || []))
   return { label: statsLabel(vals, '°C') }
 })
 const exportStats = computed(() => {
