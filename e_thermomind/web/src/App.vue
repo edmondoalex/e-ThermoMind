@@ -1170,7 +1170,6 @@
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_puffer_basso"/> Storico</label></div>
             </div>
           </div>
-          </div>
           <div class="field">
             <label>
               <i v-if="mdiClass(ent?.t_volano_alto?.attributes?.icon)" :class="mdiClass(ent?.t_volano_alto?.attributes?.icon)"></i>
