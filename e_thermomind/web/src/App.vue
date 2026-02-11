@@ -19,7 +19,17 @@
     <main class="main">
       <section v-if="tab==='user'" class="card">
         <h2>Stato (v0.2)</h2>
-        <p class="muted">Dry-run: nessun comando agli attuatori. Serve per validare la logica.</p>
+        <div class="statusline">
+          <span class="muted">v{{ status?.version || '-' }}</span>
+          <span v-if="status?.runtime_mode === 'live'" class="muted">modo: live operativo</span>
+          <span v-else class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
+          <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
+            {{ status?.ha_connected ? 'Online' : 'Offline' }}
+          </span>
+          <span class="muted">HA</span>
+          <span class="muted">Ultimo aggiornamento: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</span>
+        </div>
+        <p v-if="status?.runtime_mode !== 'live'" class="muted">Dry-run: nessun comando agli attuatori. Serve per validare la logica.</p>
 
         <div v-if="d" class="grid">
           <div class="kpi" :class="historyEnabled('t_acs') ? 'clickable' : ''" @click="openHistory('t_acs','T_ACS')">
@@ -33,6 +43,18 @@
           <div class="kpi" :class="historyEnabled('t_volano') ? 'clickable' : ''" @click="openHistory('t_volano','T_Volano')">
             <div class="k"><i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i> T_Volano</div>
             <div class="v">{{ fmtTemp(d.inputs.t_volano) }}</div>
+          </div>
+          <div class="kpi" :class="historyEnabled('t_solare_mandata') ? 'clickable' : ''" @click="openHistory('t_solare_mandata','T_Solare mandata')">
+            <div class="k"><i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i> T_Solare mandata</div>
+            <div class="v">{{ fmtTemp(d.inputs.t_solare_mandata) }}</div>
+          </div>
+          <div class="kpi" :class="historyEnabled('t_mandata_miscelata') ? 'clickable' : ''" @click="openHistory('t_mandata_miscelata','T mandata miscelata')">
+            <div class="k"><i v-if="mdiClass(ent?.t_mandata_miscelata?.attributes?.icon)" :class="mdiClass(ent?.t_mandata_miscelata?.attributes?.icon)"></i> T mandata</div>
+            <div class="v">{{ fmtTemp(d.inputs.t_mandata_miscelata) }}</div>
+          </div>
+          <div class="kpi" :class="historyEnabled('t_ritorno_miscelato') ? 'clickable' : ''" @click="openHistory('t_ritorno_miscelato','T ritorno miscelato')">
+            <div class="k"><i v-if="mdiClass(ent?.t_ritorno_miscelato?.attributes?.icon)" :class="mdiClass(ent?.t_ritorno_miscelato?.attributes?.icon)"></i> T ritorno</div>
+            <div class="v">{{ fmtTemp(d.inputs.t_ritorno_miscelato) }}</div>
           </div>
           <div class="kpi">
             <div class="k"><i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i> Export rete</div>
@@ -72,18 +94,6 @@
           </div>
         </div>
 
-        <div class="statusline">
-          <span class="muted">v{{ status?.version || '-' }}</span>
-          <span class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
-          <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
-            {{ status?.ha_connected ? 'Online' : 'Offline' }}
-          </span>
-          <span class="muted">HA</span>
-          <span class="muted">Ultimo aggiornamento: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</span>
-        </div>
-
-
-        
         <div class="card inner">
           <div class="row"><strong>Moduli (User)</strong></div>
           <div class="row3">
@@ -398,34 +408,52 @@
           <div v-if="d?.computed?.impianto?.blocked_cold" class="warn">
             Sorgenti troppo fredde: impianto bloccato.
           </div>
-          <div v-if="d?.computed?.impianto?.reason" class="muted">
-            {{ d?.computed?.impianto?.reason }}
-          </div>
           <div class="row3">
             <div class="kpi kpi-center" :class="stateClass(act?.r12_pump_mandata_piani?.state)">
-              <div class="k">R12 Pompa mandata piani</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r12_pump_mandata_piani?.attributes?.icon)" :class="[mdiClass(act?.r12_pump_mandata_piani?.attributes?.icon), stateClass(act?.r12_pump_mandata_piani?.state)]"></i>
+                R12 Pompa mandata piani
+              </div>
             </div>
             <div class="kpi kpi-center" :class="stateClass(act?.r11_pump_mandata_laboratorio?.state)">
-              <div class="k">R11 Pompa mandata laboratorio</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r11_pump_mandata_laboratorio?.attributes?.icon)" :class="[mdiClass(act?.r11_pump_mandata_laboratorio?.attributes?.icon), stateClass(act?.r11_pump_mandata_laboratorio?.state)]"></i>
+                R11 Pompa mandata laboratorio
+              </div>
             </div>
             <div class="kpi kpi-center" :class="stateClass(act?.r4_valve_impianto_da_puffer?.state)">
-              <div class="k">R4 Valvola impianto da Puffer</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r4_valve_impianto_da_puffer?.attributes?.icon)" :class="[mdiClass(act?.r4_valve_impianto_da_puffer?.attributes?.icon), stateClass(act?.r4_valve_impianto_da_puffer?.state)]"></i>
+                R4 Valvola impianto da Puffer
+              </div>
             </div>
           </div>
           <div class="row3">
             <div class="kpi kpi-center" :class="stateClass(act?.r5_valve_impianto_da_pdc?.state)">
-              <div class="k">R5 Valvola impianto da PDC/Volano</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r5_valve_impianto_da_pdc?.attributes?.icon)" :class="[mdiClass(act?.r5_valve_impianto_da_pdc?.attributes?.icon), stateClass(act?.r5_valve_impianto_da_pdc?.state)]"></i>
+                R5 Valvola impianto da PDC/Volano
+              </div>
             </div>
             <div class="kpi kpi-center" :class="stateClass(act?.r2_valve_comparto_mandata_imp_pt?.state)">
-              <div class="k">R2 Valvola comparto PT</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r2_valve_comparto_mandata_imp_pt?.attributes?.icon)" :class="[mdiClass(act?.r2_valve_comparto_mandata_imp_pt?.attributes?.icon), stateClass(act?.r2_valve_comparto_mandata_imp_pt?.state)]"></i>
+                R2 Valvola comparto PT
+              </div>
             </div>
             <div class="kpi kpi-center" :class="stateClass(act?.r3_valve_comparto_mandata_imp_m1p?.state)">
-              <div class="k">R3 Valvola comparto M+1P</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r3_valve_comparto_mandata_imp_m1p?.attributes?.icon)" :class="[mdiClass(act?.r3_valve_comparto_mandata_imp_m1p?.attributes?.icon), stateClass(act?.r3_valve_comparto_mandata_imp_m1p?.state)]"></i>
+                R3 Valvola comparto M+1P
+              </div>
             </div>
           </div>
           <div class="row3">
             <div class="kpi kpi-center" :class="stateClass(act?.r1_valve_comparto_laboratorio?.state)">
-              <div class="k">R1 Valvola laboratorio</div>
+              <div class="k">
+                <i v-if="mdiClass(act?.r1_valve_comparto_laboratorio?.attributes?.icon)" :class="[mdiClass(act?.r1_valve_comparto_laboratorio?.attributes?.icon), stateClass(act?.r1_valve_comparto_laboratorio?.state)]"></i>
+                R1 Valvola laboratorio
+              </div>
             </div>
           </div>
           <div class="zones-card">
@@ -555,29 +583,31 @@
                 <option value="dry-run">dry-run</option>
                 <option value="live">live</option>
               </select>
+              <div class="help">dry-run = nessun comando agli attuatori. live = comandi reali su HA.</div>
             </div>
             <div class="field">
               <label>Polling UI (ms)</label>
               <input type="number" min="500" step="500" v-model.number="sp.runtime.ui_poll_ms"/>
+              <div class="help">Intervallo aggiornamento UI. Non influisce sulla logica interna.</div>
             </div>
           </div>
 
           <div class="set-section">
             <div class="section-title">ACS</div>
-            <div class="field"><label>ACS setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.acs.setpoint_c"/></div>
-            <div class="field"><label>ACS MAX (C)</label><input type="number" step="0.5" v-model.number="sp.acs.max_c"/></div>
+            <div class="field"><label>ACS setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.acs.setpoint_c"/><div class="help">Target acqua sanitaria. Sotto questo valore il sistema cerca una sorgente.</div></div>
+            <div class="field"><label>ACS MAX (C)</label><input type="number" step="0.5" v-model.number="sp.acs.max_c"/><div class="help">Sicurezza: sopra questo valore blocca il riscaldamento ACS.</div></div>
           </div>
 
           <div class="set-section">
             <div class="section-title">Volano</div>
-            <div class="field"><label>Volano margine (C)</label><input type="number" step="0.5" v-model.number="sp.volano.margin_c"/></div>
-            <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/></div>
-            <div class="field"><label>Volano min → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.volano.min_to_acs_c"/></div>
-            <div class="field"><label>Volano isteresi → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.volano.hyst_to_acs_c"/></div>
-            <div class="field"><label>Δ Start Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_start_c"/></div>
-            <div class="field"><label>Δ Hold Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_hold_c"/></div>
-            <div class="field"><label>Δ Start Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_start_c"/></div>
-            <div class="field"><label>Δ Hold Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_hold_c"/></div>
+            <div class="field"><label>Volano margine (C)</label><input type="number" step="0.5" v-model.number="sp.volano.margin_c"/><div class="help">Margine usato per decisioni volano (buffer).</div></div>
+            <div class="field"><label>Volano MAX (C)</label><input type="number" step="0.5" v-model.number="sp.volano.max_c"/><div class="help">Sicurezza: sopra questo valore non carica volano.</div></div>
+            <div class="field"><label>Volano min → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.volano.min_to_acs_c"/><div class="help">Minimo volano per poter scaldare ACS.</div></div>
+            <div class="field"><label>Volano isteresi → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.volano.hyst_to_acs_c"/><div class="help">Isteresi per evitare ON/OFF continui su ACS.</div></div>
+            <div class="field"><label>Δ Start Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_start_c"/><div class="help">Differenza T_VOL - T_ACS per avviare.</div></div>
+            <div class="field"><label>Δ Hold Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_hold_c"/><div class="help">Differenza per mantenere attivo il flusso.</div></div>
+            <div class="field"><label>Δ Start Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_start_c"/><div class="help">Differenza T_VOL - T_PUF per avviare.</div></div>
+            <div class="field"><label>Δ Hold Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_hold_c"/><div class="help">Differenza per mantenere attivo il flusso.</div></div>
             <div class="field">
               <label>Sequenza Volano → ACS (valvola + pompa)</label>
               <div class="row2">
@@ -610,32 +640,32 @@
 
           <div class="set-section">
             <div class="section-title">Puffer</div>
-            <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/></div>
-            <div class="field"><label>Puffer min → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.min_to_acs_c"/></div>
-            <div class="field"><label>Puffer isteresi → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.hyst_to_acs_c"/></div>
-            <div class="field"><label>Δ Start Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_start_c"/></div>
-            <div class="field"><label>Δ Hold Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_hold_c"/></div>
+            <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/><div class="help">Target puffer quando ACS e ok.</div></div>
+            <div class="field"><label>Puffer min → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.min_to_acs_c"/><div class="help">Minimo puffer per poter scaldare ACS.</div></div>
+            <div class="field"><label>Puffer isteresi → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.hyst_to_acs_c"/><div class="help">Isteresi per evitare ON/OFF continui su ACS.</div></div>
+            <div class="field"><label>Δ Start Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_start_c"/><div class="help">Differenza T_PUF - T_ACS per avviare.</div></div>
+            <div class="field"><label>Δ Hold Puffer → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.delta_to_acs_hold_c"/><div class="help">Differenza per mantenere attivo il flusso.</div></div>
           </div>
 
           <div class="set-section">
             <div class="section-title">Miscelatrice</div>
-            <div class="field"><label>SP mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.setpoint_c"/></div>
-            <div class="field"><label>Isteresi (C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.hyst_c"/></div>
-            <div class="field"><label>Kp base (sec/°C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.kp"/></div>
-            <div class="field"><label>Impulso min (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.min_imp_s"/></div>
-            <div class="field"><label>Impulso max (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.max_imp_s"/></div>
-            <div class="field"><label>Pausa dopo impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.pause_s"/></div>
-            <div class="field"><label>ΔT ref (°C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.dt_ref_c"/></div>
-            <div class="field"><label>ΔT fattore min</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.dt_min_factor"/></div>
-            <div class="field"><label>ΔT fattore max</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.dt_max_factor"/></div>
-            <div class="field"><label>Min mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.min_temp_c"/></div>
-            <div class="field"><label>Max mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.max_temp_c"/></div>
-            <div class="field"><label>Forza impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.force_impulse_s"/></div>
+            <div class="field"><label>SP mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.setpoint_c"/><div class="help">Setpoint mandata per la miscelatrice.</div></div>
+            <div class="field"><label>Isteresi (C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.hyst_c"/><div class="help">Banda di tolleranza intorno al setpoint.</div></div>
+            <div class="field"><label>Kp base (sec/°C)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.kp"/><div class="help">Quanto dura l'impulso per ogni grado di errore.</div></div>
+            <div class="field"><label>Impulso min (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.min_imp_s"/><div class="help">Durata minima impulso alza/abbassa.</div></div>
+            <div class="field"><label>Impulso max (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.max_imp_s"/><div class="help">Durata massima impulso alza/abbassa.</div></div>
+            <div class="field"><label>Pausa dopo impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.pause_s"/><div class="help">Attesa tra un impulso e il successivo.</div></div>
+            <div class="field"><label>ΔT ref (°C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.dt_ref_c"/><div class="help">Delta mandata/ritorno di riferimento per Kp eff.</div></div>
+            <div class="field"><label>ΔT fattore min</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.dt_min_factor"/><div class="help">Limite minimo del fattore Kp eff.</div></div>
+            <div class="field"><label>ΔT fattore max</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.dt_max_factor"/><div class="help">Limite massimo del fattore Kp eff.</div></div>
+            <div class="field"><label>Min mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.min_temp_c"/><div class="help">Safety: sotto questo valore la miscelatrice si ferma.</div></div>
+            <div class="field"><label>Max mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.max_temp_c"/><div class="help">Safety: sopra questo valore la miscelatrice si ferma.</div></div>
+            <div class="field"><label>Forza impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.force_impulse_s"/><div class="help">Impulso extra per evitare stallo.</div></div>
           </div>
 
           <div class="set-section">
             <div class="section-title">Resistenze</div>
-            <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/></div>
+            <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/><div class="help">Ritardo prima di spegnere le resistenze.</div></div>
             <div class="field">
               <label>Soglie export (W) [1/2/3]</label>
               <div class="row3">
@@ -643,6 +673,7 @@
                 <input type="number" v-model.number="sp.resistance.thresholds_w[1]"/>
                 <input type="number" v-model.number="sp.resistance.thresholds_w[2]"/>
               </div>
+              <div class="help">Soglie potenza FV per step 1/2/3 resistenze.</div>
             </div>
           </div>
 
@@ -655,6 +686,7 @@
                   <input type="text" v-model="sp.impianto.zones_pt[i]" placeholder="climate.pt_1"/>
                   <button class="ghost" @click="removeZone('zones_pt', i)">Rimuovi</button>
                 </div>
+            <div class="help">Elenco termostati PT (climate.*).</div>
                 <button class="ghost" @click="addZone('zones_pt')">+ Aggiungi</button>
               </div>
             </div>
@@ -665,6 +697,7 @@
                   <input type="text" v-model="sp.impianto.zones_p1[i]" placeholder="climate.p1_1"/>
                   <button class="ghost" @click="removeZone('zones_p1', i)">Rimuovi</button>
                 </div>
+            <div class="help">Elenco termostati 1P.</div>
                 <button class="ghost" @click="addZone('zones_p1')">+ Aggiungi</button>
               </div>
             </div>
@@ -675,6 +708,7 @@
                   <input type="text" v-model="sp.impianto.zones_mans[i]" placeholder="climate.jolly"/>
                   <button class="ghost" @click="removeZone('zones_mans', i)">Rimuovi</button>
                 </div>
+            <div class="help">Elenco termostati mansarda (usano valvola R3).</div>
                 <button class="ghost" @click="addZone('zones_mans')">+ Aggiungi</button>
               </div>
             </div>
@@ -685,10 +719,12 @@
                   <input type="text" v-model="sp.impianto.zones_lab[i]" placeholder="climate.lab"/>
                   <button class="ghost" @click="removeZone('zones_lab', i)">Rimuovi</button>
                 </div>
+            <div class="help">Elenco termostati laboratorio.</div>
                 <button class="ghost" @click="addZone('zones_lab')">+ Aggiungi</button>
               </div>
             </div>
             <div class="field"><label>Zona Scala (singolo)</label><input type="text" v-model="sp.impianto.zone_scala" placeholder="climate.scala"/></div>
+            <div class="help">Termostato scala, se presente.</div>
             <div class="field">
               <label>Cooling bloccato</label>
               <div class="list">
@@ -696,20 +732,22 @@
                   <input type="text" v-model="sp.impianto.cooling_blocked[i]" placeholder="climate.radiatori_1"/>
                   <button class="ghost" @click="removeZone('cooling_blocked', i)">Rimuovi</button>
                 </div>
+            <div class="help">Termostati che non devono attivare raffrescamento.</div>
                 <button class="ghost" @click="addZone('cooling_blocked')">+ Aggiungi</button>
               </div>
             </div>
-            <div class="field"><label>Volano min (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_min_c"/></div>
-            <div class="field"><label>Volano isteresi (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_hyst_c"/></div>
-            <div class="field"><label>Puffer min (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_min_c"/></div>
-            <div class="field"><label>Puffer isteresi (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_hyst_c"/></div>
-            <div class="field"><label>Ritardo avvio pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_start_delay_s"/></div>
-            <div class="field"><label>Ritardo stop pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_stop_delay_s"/></div>
+            <div class="field"><label>Volano min (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_min_c"/><div class="help">Minimo volano per abilitare impianto riscaldamento.</div></div>
+            <div class="field"><label>Volano isteresi (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_hyst_c"/><div class="help">Isteresi volano per impianto.</div></div>
+            <div class="field"><label>Puffer min (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_min_c"/><div class="help">Minimo puffer per abilitare impianto riscaldamento.</div></div>
+            <div class="field"><label>Puffer isteresi (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_hyst_c"/><div class="help">Isteresi puffer per impianto.</div></div>
+            <div class="field"><label>Ritardo avvio pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_start_delay_s"/><div class="help">Ritardo avvio pompa impianto.</div></div>
+            <div class="field"><label>Ritardo stop pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_stop_delay_s"/><div class="help">Ritardo stop pompa impianto.</div></div>
             <div class="field"><label>Stagione</label>
               <select v-model="sp.impianto.season_mode">
                 <option value="winter">Inverno</option>
                 <option value="summer">Estate</option>
               </select>
+              <div class="help">In estate blocca riscaldamento.</div>
             </div>
             <div class="help">Mansarda e 1P condividono la stessa valvola (R3).</div>
           </div>
@@ -726,13 +764,14 @@
             <div class="field">
               <label>FV entity (W) per giorno/notte</label>
               <input type="text" v-model="sp.solare.pv_entity" placeholder="sensor.zcs_easas_1_activepower_pv_ext"/>
+              <div class="help">Sensore FV usato per decidere giorno/notte.</div>
             </div>
-            <div class="field"><label>Soglia giorno FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_day_w"/></div>
-            <div class="field"><label>Soglia notte FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_night_w"/></div>
-            <div class="field"><label>Debounce FV (s)</label><input type="number" step="10" v-model.number="sp.solare.pv_debounce_s"/></div>
+            <div class="field"><label>Soglia giorno FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_day_w"/><div class="help">Se FV > soglia allora giorno.</div></div>
+            <div class="field"><label>Soglia notte FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_night_w"/><div class="help">Se FV < soglia allora notte.</div></div>
+            <div class="field"><label>Debounce FV (s)</label><input type="number" step="10" v-model.number="sp.solare.pv_debounce_s"/><div class="help">Tempo minimo per cambiare stato giorno/notte.</div></div>
             <div class="field"><label>Δ Start Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_on_c"/></div>
             <div class="field"><label>Δ Hold Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_hold_c"/></div>
-            <div class="field"><label>Solare MAX (C)</label><input type="number" step="0.5" v-model.number="sp.solare.max_c"/></div>
+            <div class="field"><label>Solare MAX (C)</label><input type="number" step="0.5" v-model.number="sp.solare.max_c"/><div class="help">Sicurezza: sopra questo valore stop solare.</div></div>
             <div class="help">In NOTTE: R8 ON e R9 OFF. R18/R19 restano manuali con interblocco.</div>
           </div>
 

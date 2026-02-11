@@ -902,11 +902,13 @@ async def _apply_impianto_live() -> None:
         r5 = act.get("r5_valve_impianto_da_pdc")
         r31 = act.get("r31_valve_impianto_da_volano")
         r12 = act.get("r12_pump_mandata_piani")
+        r11 = act.get("r11_pump_mandata_laboratorio")
         clima = ent.get("puffer_consenso_riscaldamento_piani")
         off_centralina = ent.get("off_centralina_termoregolazione")
         for z in _collect_zones(imp):
             await _set_climate_hvac_mode(z, "off")
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_actuator(r31, False)
@@ -990,6 +992,7 @@ async def _apply_impianto_live() -> None:
         demand_on = False
 
     r12 = act.get("r12_pump_mandata_piani")
+    r11 = act.get("r11_pump_mandata_laboratorio")
     r2 = act.get("r2_valve_comparto_mandata_imp_pt")
     r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
     r1 = act.get("r1_valve_comparto_laboratorio")
@@ -1014,6 +1017,7 @@ async def _apply_impianto_live() -> None:
         if r1:
             await _set_actuator(r1, False)
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_climate_hvac_mode(clima, "off")
@@ -1036,6 +1040,7 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_climate_hvac_mode(clima, "off")
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
@@ -1062,6 +1067,7 @@ async def _apply_impianto_live() -> None:
 
     # Pompa con ritardi
     await _set_pump_delayed("impianto:pump", r12, True, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+    await _set_pump_delayed("impianto:lab_pump", r11, lab_active, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
     if source == "PDC":
         await _set_actuator(r5, True)

@@ -177,7 +177,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     vol_ready = _is_on_state(ha_states.get(vol_eid, {}).get("state") if vol_eid else ("on" if imp_cfg.get("volano_ready") else "off"))
     pdc_vol_ready = pdc_ready or vol_ready
     puf_ready = _is_on_state(ha_states.get(ent_cfg.get("source_puffer_ready"), {}).get("state")) if ent_cfg.get("source_puffer_ready") else bool(imp_cfg.get("puffer_ready", True))
-    # richiesta: se esiste un'entità, usa quella; altrimenti deriva dai termostati
+    # richiesta: se esiste un'entitÃ , usa quella; altrimenti deriva dai termostati
     zones_pt = imp_cfg.get("zones_pt", []) or []
     zones_p1 = imp_cfg.get("zones_p1", []) or []
     zones_mans = imp_cfg.get("zones_mans", []) or []
@@ -242,10 +242,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 mix_reason = "Delta entro isteresi."
             elif err > 0:
                 mix_action = "ALZA"
-                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C < SP {mix_sp:.1f}°C | ΔT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C < SP {mix_sp:.1f}°C | dT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
             else:
                 mix_action = "ABBASSA"
-                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | ΔT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | dT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
 
     blocked_cold = req_on and (source == "OFF")
     imp_active = req_on and (source != "OFF") and (not blocked_cold)
@@ -317,15 +317,27 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "reason": mix_reason
             },
             "module_reasons": {
-                "solare": source_reason if source_to_acs == "SOLAR" else "Solare non attivo per ACS.",
-                "volano_to_acs": source_reason if source_to_acs == "VOLANO" else "Volano → ACS non attivo.",
-                "puffer_to_acs": source_reason if source_to_acs == "PUFFER" else "Puffer → ACS non attivo.",
-                "volano_to_puffer": (
-                    f"T_VOL {t_volano:.1f}°C >= T_PUF+{puf_delta_start:.1f}°C ({t_puffer + puf_delta_start:.1f}°C)"
-                    if volano_to_puffer
-                    else f"T_VOL {t_volano:.1f}°C < T_PUF+{puf_delta_hold:.1f}°C ({t_puffer + puf_delta_hold:.1f}°C)"
+                "solare": (
+                    f"{source_reason} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C"
+                    if source_to_acs == "SOLAR"
+                    else f"Solare non attivo. T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C"
                 ),
-                "resistenze_volano": charge_reason,
+                "volano_to_acs": (
+                    f"{source_reason} | T_VOL {t_volano:.1f}C | T_ACS {t_acs:.1f}C | d_start {delta_start:.1f}C / d_hold {delta_hold:.1f}C | Min {vol_min_acs:.1f}C (+{vol_h_acs:.1f}C)"
+                    if source_to_acs == "VOLANO"
+                    else f"Volano -> ACS non attivo. T_VOL {t_volano:.1f}C | T_ACS {t_acs:.1f}C | d_start {delta_start:.1f}C / d_hold {delta_hold:.1f}C | Min {vol_min_acs:.1f}C (+{vol_h_acs:.1f}C)"
+                ),
+                "puffer_to_acs": (
+                    f"{source_reason} | T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
+                    if source_to_acs == "PUFFER"
+                    else f"Puffer -> ACS non attivo. T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
+                ),
+                "volano_to_puffer": (
+                    f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_start:.1f}C ({t_puffer + puf_delta_start:.1f}C) | d_hold {puf_delta_hold:.1f}C"
+                    if volano_to_puffer
+                    else f"T_VOL {t_volano:.1f}C < T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C) | d_start {puf_delta_start:.1f}C"
+                ),
+                "resistenze_volano": f"{charge_reason} | Export {export_w:.0f}W",
                 "impianto": impianto_reason,
                 "miscelatrice": mix_reason
             },
@@ -340,3 +352,4 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             }
         }
     }
+
