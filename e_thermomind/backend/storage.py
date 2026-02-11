@@ -528,7 +528,9 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(hist, dict):
         for key in (
             "t_acs", "t_acs_alto", "t_acs_medio", "t_acs_basso",
-            "t_puffer", "t_volano", "t_solare_mandata", "t_esterna",
+            "t_puffer", "t_volano",
+            "t_volano_alto", "t_volano_basso",
+            "t_solare_mandata", "t_esterna",
             "t_puffer_alto", "t_puffer_medio", "t_puffer_basso",
             "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint",
             "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff"
