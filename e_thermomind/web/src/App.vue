@@ -1026,7 +1026,7 @@
               <div class="help">Sensore FV usato per decidere giorno/notte.</div>
             </div>
             <div class="field"><label>Soglia giorno FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_day_w"/><div class="help">Se FV > soglia allora giorno.</div></div>
-            <div class="field"><label>Soglia notte FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_night_w"/><div class="help">Se FV < soglia allora notte.</div></div>
+            <div class="field"><label>Soglia notte FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_night_w"/><div class="help">Se FV &lt; soglia allora notte.</div></div>
             <div class="field"><label>Debounce FV (s)</label><input type="number" step="10" v-model.number="sp.solare.pv_debounce_s"/><div class="help">Tempo minimo per cambiare stato giorno/notte.</div></div>
             <div class="field"><label>Δ Start Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_on_c"/></div>
             <div class="field"><label>Δ Hold Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_hold_c"/></div>
@@ -1201,7 +1201,6 @@
                        @focus="onFocus" @blur="onBlur"/>
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_volano_basso"/> Storico</label></div>
             </div>
-          </div>
           </div>
           <div class="field">
             <label>
