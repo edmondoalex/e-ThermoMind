@@ -8,10 +8,31 @@ CONF_PATH = DATA_DIR / "thermomind_config.json"
 DEFAULT_CONFIG: Dict[str, Any] = {
   "entities": {
     "t_acs": None,
+    "t_acs_alto": None,
+    "t_acs_medio": None,
+    "t_acs_basso": None,
     "t_puffer": None,
     "t_volano": None,
+    "t_volano_alto": None,
+    "t_volano_basso": None,
     "t_solare_mandata": None,
+    "collettore_status_code": None,
+    "collettore_status": None,
+    "collettore_datetime": None,
+    "collettore_energy_day_kwh": None,
+    "collettore_energy_total_kwh": None,
+    "collettore_flow_lmin": None,
+    "collettore_pwm_pct": None,
+    "collettore_status2": None,
+    "collettore_temp_esterna": None,
+    "collettore_tsa1": None,
+    "collettore_tse": None,
+    "collettore_tsv": None,
+    "collettore_twu": None,
     "t_esterna": None,
+    "t_puffer_alto": None,
+    "t_puffer_medio": None,
+    "t_puffer_basso": None,
     "t_mandata_miscelata": None,
     "t_ritorno_miscelato": None,
     "grid_export_w": None,
@@ -171,11 +192,20 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_acs": False,
     "t_puffer": False,
     "t_volano": False,
+    "t_volano_alto": False,
+    "t_volano_basso": False,
     "t_solare_mandata": False,
     "t_esterna": False,
+    "t_puffer_alto": False,
+    "t_puffer_medio": False,
+    "t_puffer_basso": False,
     "t_mandata_miscelata": False,
     "t_ritorno_miscelato": False,
-    "miscelatrice_setpoint": False
+    "miscelatrice_setpoint": False,
+    "delta_puffer_acs": False,
+    "delta_volano_acs": False,
+    "delta_mandata_ritorno": False,
+    "kp_eff": False
   },
   "security": {
     "user_pin": ""
@@ -346,7 +376,14 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
 
     hist = raw.get("history", {})
     if isinstance(hist, dict):
-        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata", "t_esterna", "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint"):
+        for key in (
+            "t_acs", "t_puffer", "t_volano",
+            "t_volano_alto", "t_volano_basso",
+            "t_solare_mandata", "t_esterna",
+            "t_puffer_alto", "t_puffer_medio", "t_puffer_basso",
+            "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint",
+            "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff"
+        ):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
 

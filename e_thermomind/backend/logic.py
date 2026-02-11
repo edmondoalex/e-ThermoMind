@@ -52,11 +52,37 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             return default
         st = ha_states.get(eid, {}).get("state")
         return _f(st, default)
+    def get_text(eid: str | None, default: str = "") -> str:
+        if not eid:
+            return default
+        st = ha_states.get(eid, {}).get("state")
+        return default if st is None else str(st)
 
     t_acs = get_num(ent.get("t_acs"), 0.0)
+    t_acs_alto = get_num(ent.get("t_acs_alto"), 0.0)
+    t_acs_medio = get_num(ent.get("t_acs_medio"), 0.0)
+    t_acs_basso = get_num(ent.get("t_acs_basso"), 0.0)
     t_puffer = get_num(ent.get("t_puffer"), 0.0)
+    t_puffer_alto = get_num(ent.get("t_puffer_alto"), 0.0)
+    t_puffer_medio = get_num(ent.get("t_puffer_medio"), 0.0)
+    t_puffer_basso = get_num(ent.get("t_puffer_basso"), 0.0)
     t_volano = get_num(ent.get("t_volano"), 0.0)
+    t_volano_alto = get_num(ent.get("t_volano_alto"), 0.0)
+    t_volano_basso = get_num(ent.get("t_volano_basso"), 0.0)
     t_sol = get_num(ent.get("t_solare_mandata"), 0.0)
+    col_status_code = get_text(ent.get("collettore_status_code"), "")
+    col_status = get_text(ent.get("collettore_status"), "")
+    col_datetime = get_text(ent.get("collettore_datetime"), "")
+    col_energy_day = get_num(ent.get("collettore_energy_day_kwh"), 0.0)
+    col_energy_total = get_num(ent.get("collettore_energy_total_kwh"), 0.0)
+    col_flow = get_num(ent.get("collettore_flow_lmin"), 0.0)
+    col_pwm = get_num(ent.get("collettore_pwm_pct"), 0.0)
+    col_status2 = get_text(ent.get("collettore_status2"), "")
+    col_t_ext = get_num(ent.get("collettore_temp_esterna"), None)
+    col_tsa1 = get_num(ent.get("collettore_tsa1"), 0.0)
+    col_tse = get_num(ent.get("collettore_tse"), 0.0)
+    col_tsv = get_num(ent.get("collettore_tsv"), 0.0)
+    col_twu = get_num(ent.get("collettore_twu"), 0.0)
     t_esterna = get_num(ent.get("t_esterna"), None)
     t_mandata_mix = get_num(ent.get("t_mandata_miscelata"), 0.0)
     t_ritorno_mix = get_num(ent.get("t_ritorno_miscelato"), 0.0)
@@ -333,9 +359,30 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     return {
         "inputs": {
             "t_acs": t_acs,
+            "t_acs_alto": t_acs_alto,
+            "t_acs_medio": t_acs_medio,
+            "t_acs_basso": t_acs_basso,
             "t_puffer": t_puffer,
+            "t_puffer_alto": t_puffer_alto,
+            "t_puffer_medio": t_puffer_medio,
+            "t_puffer_basso": t_puffer_basso,
             "t_volano": t_volano,
+            "t_volano_alto": t_volano_alto,
+            "t_volano_basso": t_volano_basso,
             "t_solare_mandata": t_sol,
+            "collettore_status_code": col_status_code,
+            "collettore_status": col_status,
+            "collettore_datetime": col_datetime,
+            "collettore_energy_day_kwh": col_energy_day,
+            "collettore_energy_total_kwh": col_energy_total,
+            "collettore_flow_lmin": col_flow,
+            "collettore_pwm_pct": col_pwm,
+            "collettore_status2": col_status2,
+            "collettore_temp_esterna": col_t_ext,
+            "collettore_tsa1": col_tsa1,
+            "collettore_tse": col_tse,
+            "collettore_tsv": col_tsv,
+            "collettore_twu": col_twu,
             "t_esterna": t_esterna,
             "t_mandata_miscelata": t_mandata_mix,
             "t_ritorno_miscelato": t_ritorno_mix,
