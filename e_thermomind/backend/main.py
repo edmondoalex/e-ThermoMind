@@ -146,6 +146,30 @@ def _get_num(entity_id: str | None) -> float | None:
     except Exception:
         return None
 
+def _gas_sources_ok() -> bool:
+    gas_cfg = cfg.get("gas_emergenza", {})
+    ent = cfg.get("entities", {})
+    t_volano = _get_num(ent.get("t_volano"))
+    t_puffer = _get_num(ent.get("t_puffer"))
+    vol_min = float(gas_cfg.get("volano_min_c", 35.0))
+    vol_h = float(gas_cfg.get("volano_hyst_c", 2.0))
+    puf_min = float(gas_cfg.get("puffer_min_c", 35.0))
+    puf_h = float(gas_cfg.get("puffer_hyst_c", 2.0))
+    vol_prev = bool(gas_emergenza_state.get("vol_ok"))
+    puf_prev = bool(gas_emergenza_state.get("puf_ok"))
+    # se sensori mancanti/unavailable, trattali come NON ok per evitare flapping
+    if t_volano is None:
+        vol_ok = False
+    else:
+        vol_ok = t_volano > vol_min if vol_prev else t_volano >= (vol_min + vol_h)
+    if t_puffer is None:
+        puf_ok = False
+    else:
+        puf_ok = t_puffer > puf_min if puf_prev else t_puffer >= (puf_min + puf_h)
+    gas_emergenza_state["vol_ok"] = vol_ok
+    gas_emergenza_state["puf_ok"] = puf_ok
+    return bool(vol_ok or puf_ok)
+
 def _collect_zones(imp: dict) -> list[str]:
     zones: list[str] = []
     for key in ("zones_pt", "zones_p1", "zones_mans", "zones_lab"):
@@ -905,6 +929,10 @@ async def _apply_impianto_live() -> None:
         return
     if not ha.enabled:
         return
+    if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        if not _gas_sources_ok():
+            # gas emergenza attiva: non interferire con impianto
+            return
     if not cfg.get("modules_enabled", {}).get("impianto", True):
         ent = cfg.get("entities", {})
         act = cfg.get("actuators", {})
@@ -1109,27 +1137,7 @@ async def _apply_gas_emergenza_live() -> None:
             await _set_climate_hvac_mode(z, "off")
         return
 
-    t_volano = _get_num(ent.get("t_volano"))
-    t_puffer = _get_num(ent.get("t_puffer"))
-    vol_min = float(gas_cfg.get("volano_min_c", 35.0))
-    vol_h = float(gas_cfg.get("volano_hyst_c", 2.0))
-    puf_min = float(gas_cfg.get("puffer_min_c", 35.0))
-    puf_h = float(gas_cfg.get("puffer_hyst_c", 2.0))
-
-    vol_prev = bool(gas_emergenza_state.get("vol_ok"))
-    puf_prev = bool(gas_emergenza_state.get("puf_ok"))
-    if t_volano is None:
-        vol_ok = True
-    else:
-        vol_ok = t_volano > vol_min if vol_prev else t_volano >= (vol_min + vol_h)
-    if t_puffer is None:
-        puf_ok = True
-    else:
-        puf_ok = t_puffer > puf_min if puf_prev else t_puffer >= (puf_min + puf_h)
-    gas_emergenza_state["vol_ok"] = vol_ok
-    gas_emergenza_state["puf_ok"] = puf_ok
-
-    if vol_ok or puf_ok:
+    if _gas_sources_ok():
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         if not cfg.get("modules_enabled", {}).get("impianto", True):
