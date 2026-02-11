@@ -48,6 +48,10 @@
             <div class="k"><i v-if="mdiClass(ent?.t_solare_mandata?.attributes?.icon)" :class="mdiClass(ent?.t_solare_mandata?.attributes?.icon)"></i> T_Solare mandata</div>
             <div class="v">{{ fmtTemp(d.inputs.t_solare_mandata) }}</div>
           </div>
+          <div class="kpi" :class="historyEnabled('t_esterna') ? 'clickable' : ''" @click="openHistory('t_esterna','T esterna')">
+            <div class="k"><i v-if="mdiClass(ent?.t_esterna?.attributes?.icon)" :class="mdiClass(ent?.t_esterna?.attributes?.icon)"></i> T esterna</div>
+            <div class="v">{{ fmtTemp(d.inputs.t_esterna) }}</div>
+          </div>
           <div class="kpi" :class="historyEnabled('t_mandata_miscelata') ? 'clickable' : ''" @click="openHistory('t_mandata_miscelata','T mandata miscelata')">
             <div class="k"><i v-if="mdiClass(ent?.t_mandata_miscelata?.attributes?.icon)" :class="mdiClass(ent?.t_mandata_miscelata?.attributes?.icon)"></i> T mandata</div>
             <div class="v">{{ fmtTemp(d.inputs.t_mandata_miscelata) }}</div>
@@ -117,6 +121,9 @@
             </button>
             <button class="ghost toggle" :class="modules.miscelatrice ? 'on' : 'off'" @click="toggleModule('miscelatrice')">
               Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.curva_climatica ? 'on' : 'off'" @click="toggleModule('curva_climatica')">
+              Curva climatica: {{ modules.curva_climatica ? 'ON' : 'OFF' }}
             </button>
             <button class="ghost toggle" :class="modules.pdc ? 'on' : 'off'" @click="toggleModule('pdc')">
               PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
@@ -508,6 +515,44 @@
           </div>
         </div>
 
+        <div v-if="d && sp?.curva_climatica" class="card inner">
+          <div class="row"><strong>Curva climatica mandata</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">T esterna</div>
+              <div class="v">{{ fmtTemp(d?.computed?.curva_climatica?.t_ext) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Setpoint curva</div>
+              <div class="v">{{ fmtNum(d?.computed?.curva_climatica?.setpoint) }}&deg;C</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Offset</div>
+              <div class="v">{{ fmtNum(sp?.curva_climatica?.offset) }}&deg;C</div>
+            </div>
+          </div>
+          <div class="curve-chart">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Curva climatica">
+              <polyline :points="curvePoints" class="curve-line"/>
+              <line v-if="curveExtX !== null" :x1="curveExtX" y1="0" :x2="curveExtX" y2="100" class="curve-marker"/>
+              <circle v-if="curveExtX !== null && curveExtY !== null" :cx="curveExtX" :cy="curveExtY" r="2.6" class="curve-dot"/>
+            </svg>
+          </div>
+          <div class="row2">
+            <div class="mini-field">
+              <span class="mini-label">Inclinazione</span>
+              <input type="range" min="-1" max="1" step="0.05" v-model.number="sp.curva_climatica.slope"/>
+            </div>
+            <div class="mini-field">
+              <span class="mini-label">Offset (C)</span>
+              <input type="range" min="-10" max="10" step="0.5" v-model.number="sp.curva_climatica.offset"/>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="ghost" @click="save">Salva curva</button>
+          </div>
+        </div>
+
         <div v-if="d" class="card inner">
           <div class="row"><strong>Schema impianto (live)</strong></div>
           <div class="muted">Flussi evidenziati in tempo reale.</div>
@@ -664,6 +709,16 @@
           </div>
 
           <div class="set-section">
+            <div class="section-title">Curva climatica</div>
+            <div class="field"><label>Punti X (T esterna)</label><input type="text" v-model="curveXText" @blur="applyCurveText" @focus="onFocus"/><div class="help">Lista temperature esterne, separate da virgola.</div></div>
+            <div class="field"><label>Punti Y (Mandata)</label><input type="text" v-model="curveYText" @blur="applyCurveText" @focus="onFocus"/><div class="help">Lista mandata corrispondente, stessa lunghezza di X.</div></div>
+            <div class="field"><label>Inclinazione</label><input type="number" step="0.05" v-model.number="sp.curva_climatica.slope"/><div class="help">Regola la pendenza della curva (0 = base).</div></div>
+            <div class="field"><label>Offset (C)</label><input type="number" step="0.5" v-model.number="sp.curva_climatica.offset"/><div class="help">Sposta tutta la curva su/giu.</div></div>
+            <div class="field"><label>Min mandata (C)</label><input type="number" step="0.5" v-model.number="sp.curva_climatica.min_c"/><div class="help">Limite minimo mandata.</div></div>
+            <div class="field"><label>Max mandata (C)</label><input type="number" step="0.5" v-model.number="sp.curva_climatica.max_c"/><div class="help">Limite massimo mandata.</div></div>
+          </div>
+
+          <div class="set-section">
             <div class="section-title">Resistenze</div>
             <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/><div class="help">Ritardo prima di spegnere le resistenze.</div></div>
             <div class="field">
@@ -801,6 +856,9 @@
             <button class="ghost toggle" :class="modules.miscelatrice ? 'on' : 'off'" @click="toggleModule('miscelatrice')">
               Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
             </button>
+            <button class="ghost toggle" :class="modules.curva_climatica ? 'on' : 'off'" @click="toggleModule('curva_climatica')">
+              Curva climatica: {{ modules.curva_climatica ? 'ON' : 'OFF' }}
+            </button>
             <button class="ghost toggle" :class="modules.pdc ? 'on' : 'off'" @click="toggleModule('pdc')">
               PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
             </button>
@@ -872,6 +930,22 @@
                        @focus="onFocus" @blur="onBlur"/>
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_solare_mandata"/> Storico</label></div>
             </div>
+          <div class="field">
+            <label>
+              <i v-if="mdiClass(ent?.t_esterna?.attributes?.icon)" :class="mdiClass(ent?.t_esterna?.attributes?.icon)"></i>
+              T esterna
+            </label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_esterna?.entity_id) ? 'logic-ok' : 'logic-no'">?</span>
+                <input type="text"
+                       :class="isFilled(ent?.t_esterna?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_esterna.entity_id"
+                       placeholder="sensor.temp_esterna"
+                       @input="dirtyEnt.t_esterna = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_esterna"/> Storico</label></div>
+            </div>
+          </div>
           </div>
           <div class="field">
             <label>
@@ -1066,11 +1140,14 @@ const history = ref({
   t_acs: [],
   t_puffer: [],
   t_volano: [],
+  t_esterna: [],
   t_mandata_miscelata: [],
   t_ritorno_miscelato: [],
   miscelatrice_setpoint: [],
   export_w: []
 })
+const curveXText = ref('')
+const curveYText = ref('')
 const zoneModal = ref({ open: false, entity_id: '', title: '', temperature: 0, setpoint: 0, hvac_action: '' })
 const historyModal = ref({ open: false, title: '', points: '', minY: '-', maxY: '-', rangeLabel: '', xTicks: [], yTicks: [], w: 600, h: 220, padL: 40, padR: 10, padT: 10, padB: 20 })
 const maxPoints = 60
@@ -1088,6 +1165,7 @@ const modules = ref({
   impianto: false,
   solare: false,
   miscelatrice: false,
+  curva_climatica: true,
   pdc: false
 })
 const solareModeInit = ref(false)
@@ -1299,6 +1377,7 @@ const moduleReasonsList = computed(() => {
     { key: 'volano_to_puffer', label: 'Volano -> Puffer', active: !!flags.volano_to_puffer },
     { key: 'puffer_to_acs', label: 'Puffer -> ACS', active: !!flags.puffer_to_acs },
     { key: 'miscelatrice', label: 'Miscelatrice', active: mixActive },
+    { key: 'curva_climatica', label: 'Curva climatica', active: !!d.value?.computed?.curva_climatica?.setpoint },
     { key: 'impianto', label: 'Impianto Riscaldamento', active: false },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
@@ -1317,6 +1396,42 @@ const solarModeClass = computed(() => {
 })
 const flowChargeVolano = computed(() => (d.value?.computed?.resistance_step || 0) > 0)
 const flowPdcToVolano = computed(() => false)
+const curvePoints = computed(() => {
+  const xs = (sp.value?.curva_climatica?.x || []).map(Number).filter(v => !Number.isNaN(v))
+  const ys = (sp.value?.curva_climatica?.y || []).map(Number).filter(v => !Number.isNaN(v))
+  if (!xs.length || xs.length !== ys.length) return ''
+  const xMin = Math.min(...xs)
+  const xMax = Math.max(...xs)
+  const yMin = Math.min(...ys)
+  const yMax = Math.max(...ys)
+  const spanX = xMax - xMin || 1
+  const spanY = yMax - yMin || 1
+  return xs.map((x, i) => {
+    const nx = ((x - xMin) / spanX) * 100
+    const ny = 100 - ((ys[i] - yMin) / spanY) * 100
+    return `${nx.toFixed(2)},${ny.toFixed(2)}`
+  }).join(' ')
+})
+const curveExtX = computed(() => {
+  const xs = (sp.value?.curva_climatica?.x || []).map(Number).filter(v => !Number.isNaN(v))
+  if (!xs.length) return null
+  const xMin = Math.min(...xs)
+  const xMax = Math.max(...xs)
+  const spanX = xMax - xMin || 1
+  const ext = d.value?.computed?.curva_climatica?.t_ext
+  if (ext === null || ext === undefined) return null
+  return ((Number(ext) - xMin) / spanX) * 100
+})
+const curveExtY = computed(() => {
+  const ys = (sp.value?.curva_climatica?.y || []).map(Number).filter(v => !Number.isNaN(v))
+  if (!ys.length) return null
+  const yMin = Math.min(...ys)
+  const yMax = Math.max(...ys)
+  const spanY = yMax - yMin || 1
+  const spv = d.value?.computed?.curva_climatica?.setpoint
+  if (spv === null || spv === undefined) return null
+  return 100 - ((Number(spv) - yMin) / spanY) * 100
+})
 
   function mergeEntities(next){
     if (!ent.value) { ent.value = next; return }
@@ -1359,7 +1474,7 @@ async function load(){
     }
   }
   if (!sp.value?.history) {
-    sp.value.history = { t_acs: false, t_puffer: false, t_volano: false, t_solare_mandata: false, t_mandata_miscelata: false, t_ritorno_miscelato: false, miscelatrice_setpoint: false }
+    sp.value.history = { t_acs: false, t_puffer: false, t_volano: false, t_solare_mandata: false, t_esterna: false, t_mandata_miscelata: false, t_ritorno_miscelato: false, miscelatrice_setpoint: false }
   }
   if (!sp.value?.solare) {
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
@@ -1367,9 +1482,14 @@ async function load(){
   if (!sp.value?.miscelatrice) {
     sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }
   }
+  if (!sp.value?.curva_climatica) {
+    sp.value.curva_climatica = { x: [-15,-11.25,-7.5,-3.75,0,3.75,7.5,11.25,15], y: [60,57.6,55,52.6,50,47.6,45,42.6,40], slope: 0, offset: 0, min_c: 40, max_c: 60 }
+  }
   if (!sp.value?.impianto) {
   sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, puffer_ready: true, richiesta_heat: false, volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
   }
+  curveXText.value = (sp.value.curva_climatica?.x || []).join(', ')
+  curveYText.value = (sp.value.curva_climatica?.y || []).join(', ')
   // normalize lists (allow CSV from older configs)
   const normalizeList = (v) => {
     if (Array.isArray(v)) return v.filter(x => String(x).trim().length > 0)
@@ -1385,11 +1505,24 @@ async function load(){
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }
 }
+function parseCurveText(text, fallback){
+  if (!text || typeof text !== 'string') return fallback
+  const out = text.split(',').map(s => parseFloat(s.trim())).filter(v => !Number.isNaN(v))
+  return out.length ? out : fallback
+}
+function applyCurveText(){
+  if (!sp.value?.curva_climatica) return
+  const fallbackX = sp.value.curva_climatica.x || []
+  const fallbackY = sp.value.curva_climatica.y || []
+  sp.value.curva_climatica.x = parseCurveText(curveXText.value, fallbackX)
+  sp.value.curva_climatica.y = parseCurveText(curveYText.value, fallbackY)
+}
 async function loadActuators(){
   if (editingCount.value > 0) return
   const r = await fetch('/api/actuators'); act.value = await r.json()
 }
 async function save(){
+  applyCurveText()
   await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
   await refresh()
   if (sp.value?.runtime?.ui_poll_ms) {
@@ -1563,6 +1696,7 @@ function updateHistoryFromDecision(decision){
   pushHistory(history.value.t_acs, decision.inputs.t_acs)
   pushHistory(history.value.t_puffer, decision.inputs.t_puffer)
   pushHistory(history.value.t_volano, decision.inputs.t_volano)
+  pushHistory(history.value.t_esterna, decision.inputs.t_esterna)
   pushHistory(history.value.t_mandata_miscelata, decision.inputs.t_mandata_miscelata)
   pushHistory(history.value.t_ritorno_miscelato, decision.inputs.t_ritorno_miscelato)
   pushHistory(history.value.miscelatrice_setpoint, decision.computed?.miscelatrice?.setpoint)
@@ -1720,6 +1854,10 @@ details.form summary{cursor:pointer;list-style:none}
 .chart{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}
 .chart-title{font-size:12px;color:var(--muted);margin-bottom:6px}
 .axis-note{font-size:10px;color:var(--muted);margin-top:4px}
+.curve-chart{border:1px solid var(--border);border-radius:14px;padding:8px;background:rgba(10,15,22,.6);margin:8px 0}
+.curve-line{fill:none;stroke:#57e3d6;stroke-width:1.5}
+.curve-marker{stroke:#7aa7ff;stroke-width:0.8;opacity:0.8}
+.curve-dot{fill:#7aa7ff}
 .spark{fill:none;stroke-width:2}
 .spark.acs{stroke:#57e3d6}
 .spark.puffer{stroke:#7aa7ff}

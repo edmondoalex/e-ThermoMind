@@ -11,6 +11,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_puffer": None,
     "t_volano": None,
     "t_solare_mandata": None,
+    "t_esterna": None,
     "t_mandata_miscelata": None,
     "t_ritorno_miscelato": None,
     "grid_export_w": None,
@@ -101,6 +102,14 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "max_temp_c": 80.0,
     "force_impulse_s": 3.0
   },
+  "curva_climatica": {
+    "x": [-15, -11.25, -7.5, -3.75, 0, 3.75, 7.5, 11.25, 15],
+    "y": [60, 57.6, 55, 52.6, 50, 47.6, 45, 42.6, 40],
+    "slope": 0.0,
+    "offset": 0.0,
+    "min_c": 40.0,
+    "max_c": 60.0
+  },
   "resistance": {
     "enabled": True,
     "off_delay_s": 5,
@@ -134,6 +143,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "puffer_to_acs": False,
     "solare": False,
     "miscelatrice": False,
+    "curva_climatica": True,
     "pdc": False,
     "impianto": False
   },
@@ -162,6 +172,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_puffer": False,
     "t_volano": False,
     "t_solare_mandata": False,
+    "t_esterna": False,
     "t_mandata_miscelata": False,
     "t_ritorno_miscelato": False,
     "miscelatrice_setpoint": False
@@ -175,6 +186,7 @@ _NUM_KEYS = {
   "acs": ["setpoint_c", "on_delta_c", "off_hyst_c", "max_c", "max_hyst_c"],
   "puffer": ["setpoint_c", "off_hyst_c", "max_c", "max_hyst_c", "min_to_acs_c", "hyst_to_acs_c", "delta_to_acs_start_c", "delta_to_acs_hold_c"],
   "miscelatrice": ["setpoint_c", "hyst_c", "kp", "min_imp_s", "max_imp_s", "pause_s", "dt_ref_c", "dt_min_factor", "dt_max_factor", "min_temp_c", "max_temp_c", "force_impulse_s"],
+  "curva_climatica": ["slope", "offset", "min_c", "max_c"],
   "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
   "volano": [
     "margin_c",
@@ -216,6 +228,18 @@ def _float_list_3(value: Any, defaults: Iterable[float]) -> list[float]:
         else:
             out.append(base[idx])
     return out
+
+def _float_list_any(value: Any, defaults: Iterable[float]) -> list[float]:
+    base = list(defaults)
+    if not isinstance(value, (list, tuple)):
+        return base
+    out: list[float] = []
+    for item in value:
+        try:
+            out.append(float(item))
+        except Exception:
+            continue
+    return out if out else base
 
 def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     cfg = json.loads(json.dumps(DEFAULT_CONFIG))
@@ -269,6 +293,16 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             if key in sol:
                 cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
 
+    curve = raw.get("curva_climatica", {})
+    if isinstance(curve, dict):
+        if "x" in curve:
+            cfg["curva_climatica"]["x"] = _float_list_any(curve.get("x"), cfg["curva_climatica"]["x"])
+        if "y" in curve:
+            cfg["curva_climatica"]["y"] = _float_list_any(curve.get("y"), cfg["curva_climatica"]["y"])
+        for key in ("slope", "offset", "min_c", "max_c"):
+            if key in curve:
+                cfg["curva_climatica"][key] = _float(curve.get(key), cfg["curva_climatica"][key])
+
     timers = raw.get("timers", {})
     if isinstance(timers, dict):
         # Backward compatibility for older shared timers
@@ -312,7 +346,7 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
 
     hist = raw.get("history", {})
     if isinstance(hist, dict):
-        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata", "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint"):
+        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata", "t_esterna", "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint"):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
 
@@ -380,6 +414,15 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
         for key in _NUM_KEYS["solare"]:
             if key in sol:
                 cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
+    curve = payload.get("curva_climatica", {})
+    if isinstance(curve, dict):
+        if "x" in curve:
+            cfg["curva_climatica"]["x"] = _float_list_any(curve.get("x"), cfg["curva_climatica"]["x"])
+        if "y" in curve:
+            cfg["curva_climatica"]["y"] = _float_list_any(curve.get("y"), cfg["curva_climatica"]["y"])
+        for key in ("slope", "offset", "min_c", "max_c"):
+            if key in curve:
+                cfg["curva_climatica"][key] = _float(curve.get(key), cfg["curva_climatica"][key])
     timers = payload.get("timers", {})
     if isinstance(timers, dict):
         if "volano_to_acs_start_s" in timers:

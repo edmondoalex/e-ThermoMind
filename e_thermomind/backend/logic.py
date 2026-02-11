@@ -44,6 +44,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     puf_cfg = cfg.get("puffer", {})
     vol_cfg = cfg.get("volano", {})
     res_cfg = cfg.get("resistance", {})
+    curve_cfg = cfg.get("curva_climatica", {})
+    curve_enabled = cfg.get("modules_enabled", {}).get("curva_climatica", True)
 
     def get_num(eid: str | None, default: float = 0.0) -> float:
         if not eid:
@@ -55,6 +57,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     t_puffer = get_num(ent.get("t_puffer"), 0.0)
     t_volano = get_num(ent.get("t_volano"), 0.0)
     t_sol = get_num(ent.get("t_solare_mandata"), 0.0)
+    t_esterna = get_num(ent.get("t_esterna"), None)
     t_mandata_mix = get_num(ent.get("t_mandata_miscelata"), 0.0)
     t_ritorno_mix = get_num(ent.get("t_ritorno_miscelato"), 0.0)
     export_w = get_num(ent.get("grid_export_w"), 0.0)
@@ -219,7 +222,69 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if not req_on:
         source = "OFF"
 
+    def _float_list(val, default_list):
+        if isinstance(val, (list, tuple)):
+            out = []
+            for v in val:
+                try:
+                    out.append(float(v))
+                except Exception:
+                    continue
+            if out:
+                return out
+        return list(default_list)
+
+    def _interp_curve(x_val, xs, ys):
+        n = len(xs)
+        if n == 0 or len(ys) != n:
+            return None
+        x_min = min(xs)
+        x_max = max(xs)
+        if x_val <= x_min:
+            for i in range(n):
+                if xs[i] == x_min:
+                    return ys[i]
+            return ys[0]
+        if x_val >= x_max:
+            for i in range(n):
+                if xs[i] == x_max:
+                    return ys[i]
+            return ys[-1]
+        for i in range(n - 1):
+            xi = xs[i]
+            xj = xs[i + 1]
+            yi = ys[i]
+            yj = ys[i + 1]
+            if (xi <= x_val <= xj) or (xj <= x_val <= xi):
+                if xj == xi:
+                    return yi
+                return yi + ((yj - yi) * ((x_val - xi) / (xj - xi)))
+        return ys[0]
+
+    default_x = [-15, -11.25, -7.5, -3.75, 0, 3.75, 7.5, 11.25, 15]
+    default_y = [60, 57.6, 55, 52.6, 50, 47.6, 45, 42.6, 40]
+    curve_x = _float_list(curve_cfg.get("x"), default_x)
+    curve_y = _float_list(curve_cfg.get("y"), default_y)
+    if len(curve_x) != len(curve_y) or len(curve_x) < 2:
+        curve_x = list(default_x)
+        curve_y = list(default_y)
+    curve_slope = float(curve_cfg.get("slope", 0.0))
+    curve_offset = float(curve_cfg.get("offset", 0.0))
+    curve_min = float(curve_cfg.get("min_c", 40.0))
+    curve_max = float(curve_cfg.get("max_c", 60.0))
+
+    curve_base = None
+    curve_setpoint = None
+    if curve_enabled and t_esterna is not None:
+        curve_base = _interp_curve(float(t_esterna), curve_x, curve_y)
+        if curve_base is not None:
+            y_avg = sum(curve_y) / len(curve_y)
+            mod = y_avg + (1.0 + curve_slope) * (curve_base - y_avg) + curve_offset
+            curve_setpoint = max(curve_min, min(curve_max, mod))
+
     mix_sp = get_num(ent.get("miscelatrice_setpoint"), float(misc_cfg.get("setpoint_c", 45.0)))
+    if curve_enabled and curve_setpoint is not None:
+        mix_sp = float(curve_setpoint)
     mix_h = float(misc_cfg.get("hyst_c", 0.5))
     mix_min = float(misc_cfg.get("min_temp_c", 20.0))
     mix_max = float(misc_cfg.get("max_temp_c", 80.0))
@@ -271,6 +336,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "t_puffer": t_puffer,
             "t_volano": t_volano,
             "t_solare_mandata": t_sol,
+            "t_esterna": t_esterna,
             "t_mandata_miscelata": t_mandata_mix,
             "t_ritorno_miscelato": t_ritorno_mix,
             "grid_export_w": export_w
@@ -316,6 +382,18 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "action": mix_action,
                 "reason": mix_reason
             },
+            "curva_climatica": {
+                "enabled": curve_enabled,
+                "t_ext": t_esterna,
+                "base": curve_base,
+                "setpoint": curve_setpoint,
+                "slope": curve_slope,
+                "offset": curve_offset,
+                "min_c": curve_min,
+                "max_c": curve_max,
+                "x": curve_x,
+                "y": curve_y
+            },
             "module_reasons": {
                 "solare": (
                     f"{source_reason} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C"
@@ -336,6 +414,11 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_start:.1f}C ({t_puffer + puf_delta_start:.1f}C) | d_hold {puf_delta_hold:.1f}C"
                     if volano_to_puffer
                     else f"T_VOL {t_volano:.1f}C < T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C) | d_start {puf_delta_start:.1f}C"
+                ),
+                "curva_climatica": (
+                    f"T_EXT {t_esterna:.1f}C -> SP {curve_setpoint:.1f}C"
+                    if curve_enabled and curve_setpoint is not None and t_esterna is not None
+                    else "Curva climatica non attiva o senza T_EXT."
                 ),
                 "resistenze_volano": f"{charge_reason} | Export {export_w:.0f}W",
                 "impianto": impianto_reason,

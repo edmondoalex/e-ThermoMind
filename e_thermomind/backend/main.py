@@ -803,6 +803,12 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
             sp = float(cfg_misc.get("setpoint_c", 45.0))
         except Exception:
             sp = 45.0
+    curve = (decision_data.get("computed", {}) or {}).get("curva_climatica", {}) or {}
+    if cfg.get("modules_enabled", {}).get("curva_climatica", True) and curve.get("setpoint") is not None:
+        try:
+            sp = float(curve.get("setpoint"))
+        except Exception:
+            pass
 
     hyst = float(cfg_misc.get("hyst_c", 0.5))
     kp_base = float(cfg_misc.get("kp", 2.0))
@@ -1119,6 +1125,7 @@ async def get_setpoints():
         "puffer": cfg.get("puffer", {}),
         "volano": cfg.get("volano", {}),
         "miscelatrice": cfg.get("miscelatrice", {}),
+        "curva_climatica": cfg.get("curva_climatica", {}),
         "resistance": cfg.get("resistance", {}),
         "solare": cfg.get("solare", {}),
         "timers": cfg.get("timers", {}),
