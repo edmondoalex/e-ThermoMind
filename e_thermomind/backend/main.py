@@ -1192,21 +1192,10 @@ async def _apply_gas_emergenza_live() -> None:
             return False
         st = ha.states.get(eid, {})
         dom = eid.split(".", 1)[0] if "." in eid else ""
-        state = str(st.get("state") or "").lower()
         action = str(st.get("attributes", {}).get("hvac_action") or "").lower()
         if dom == "climate":
-            # considera richiesta se heating o se setpoint > temp attuale
-            if action == "heating":
-                return True
-            if state == "heat":
-                try:
-                    cur = float(st.get("attributes", {}).get("current_temperature"))
-                    tgt = float(st.get("attributes", {}).get("temperature"))
-                    if cur < (tgt - 0.2):
-                        return True
-                except Exception:
-                    return False
-            return False
+            # in gas: richiesta solo se realmente in heating
+            return action == "heating"
         return _zone_active(eid, cooling_blocked)
 
     pt_active = any(_gas_zone_demand(z) for z in zones if z in zones_pt)
