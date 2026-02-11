@@ -79,7 +79,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "r27_comparto_pdc2_avvio": None,
     "r28_scarico_antigelo_mandata_pdc": None,
     "r29_scarico_antigelo_ritorno_pdc": None,
-    "r30_alimentazione_caldaia_legna": None
+    "r30_alimentazione_caldaia_legna": None,
+    "gas_boiler_power": None,
+    "gas_boiler_ta": None
   },
   "acs": {
     "setpoint_c": 55.0,
@@ -166,7 +168,15 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "miscelatrice": False,
     "curva_climatica": True,
     "pdc": False,
-    "impianto": False
+    "impianto": False,
+    "gas_emergenza": False
+  },
+  "gas_emergenza": {
+    "zones": [],
+    "volano_min_c": 35.0,
+    "volano_hyst_c": 2.0,
+    "puffer_min_c": 35.0,
+    "puffer_hyst_c": 2.0
   },
   "impianto": {
     "source_mode": "AUTO",
@@ -190,6 +200,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   },
   "history": {
     "t_acs": False,
+    "t_acs_alto": False,
+    "t_acs_medio": False,
+    "t_acs_basso": False,
     "t_puffer": False,
     "t_volano": False,
     "t_volano_alto": False,
@@ -218,6 +231,7 @@ _NUM_KEYS = {
   "miscelatrice": ["setpoint_c", "hyst_c", "kp", "min_imp_s", "max_imp_s", "pause_s", "dt_ref_c", "dt_min_factor", "dt_max_factor", "min_temp_c", "max_temp_c", "force_impulse_s"],
   "curva_climatica": ["slope", "offset", "min_c", "max_c"],
   "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
+  "gas_emergenza": ["volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c"],
   "volano": [
     "margin_c",
     "max_c",
@@ -366,6 +380,14 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             if key in modules:
                 cfg["modules_enabled"][key] = bool(modules[key])
 
+    gas = raw.get("gas_emergenza", {})
+    if isinstance(gas, dict):
+        if "zones" in gas:
+            cfg["gas_emergenza"]["zones"] = _parse_list(gas.get("zones"))
+        for key in ("volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c"):
+            if key in gas:
+                cfg["gas_emergenza"][key] = _float(gas.get(key), cfg["gas_emergenza"].get(key, 0.0))
+
     imp = raw.get("impianto", {})
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
@@ -377,7 +399,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     hist = raw.get("history", {})
     if isinstance(hist, dict):
         for key in (
-            "t_acs", "t_puffer", "t_volano",
+            "t_acs", "t_acs_alto", "t_acs_medio", "t_acs_basso",
+            "t_puffer", "t_volano",
             "t_volano_alto", "t_volano_basso",
             "t_solare_mandata", "t_esterna",
             "t_puffer_alto", "t_puffer_medio", "t_puffer_basso",
@@ -483,6 +506,14 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             if key in modules:
                 cfg["modules_enabled"][key] = bool(modules[key])
 
+    gas = payload.get("gas_emergenza", {})
+    if isinstance(gas, dict):
+        if "zones" in gas:
+            cfg["gas_emergenza"]["zones"] = _parse_list(gas.get("zones"))
+        for key in _NUM_KEYS["gas_emergenza"]:
+            if key in gas:
+                cfg["gas_emergenza"][key] = _float(gas.get(key), cfg["gas_emergenza"][key])
+
     imp = payload.get("impianto", {})
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
@@ -493,7 +524,13 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
 
     hist = payload.get("history", {})
     if isinstance(hist, dict):
-        for key in ("t_acs", "t_puffer", "t_volano", "t_solare_mandata", "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint"):
+        for key in (
+            "t_acs", "t_acs_alto", "t_acs_medio", "t_acs_basso",
+            "t_puffer", "t_volano", "t_solare_mandata", "t_esterna",
+            "t_puffer_alto", "t_puffer_medio", "t_puffer_basso",
+            "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint",
+            "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff"
+        ):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
 

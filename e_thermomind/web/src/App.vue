@@ -130,6 +130,9 @@
             <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
               Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
             </button>
+            <button class="ghost toggle" :class="modules.gas_emergenza ? 'on' : 'off'" @click="toggleModule('gas_emergenza')">
+              Caldaia Gas Emergenza: {{ modules.gas_emergenza ? 'ON' : 'OFF' }}
+            </button>
             <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
               Solare: {{ modules.solare ? 'ON' : 'OFF' }}
             </button>
@@ -600,6 +603,52 @@
         </div>
 
         <div v-if="d" class="card inner">
+          <div class="row"><strong>Caldaia Gas Emergenza</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Modulo</div>
+              <div class="v">{{ modules.gas_emergenza ? 'ON' : 'OFF' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Necessaria</div>
+              <div class="v">{{ d?.computed?.gas_emergenza?.need ? 'SI' : 'NO' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Domanda</div>
+              <div class="v">{{ d?.computed?.gas_emergenza?.demand ? 'ON' : 'OFF' }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Volano OK</div>
+              <div class="v">{{ d?.computed?.gas_emergenza?.vol_ok ? 'SI' : 'NO' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Puffer OK</div>
+              <div class="v">{{ d?.computed?.gas_emergenza?.puf_ok ? 'SI' : 'NO' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Motivo</div>
+              <div class="v">{{ d?.computed?.module_reasons?.gas_emergenza || '-' }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center" :class="stateClass(act?.gas_boiler_power?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.gas_boiler_power?.attributes?.icon)" :class="[mdiClass(act?.gas_boiler_power?.attributes?.icon), stateClass(act?.gas_boiler_power?.state)]"></i>
+                220V Caldaia Gas
+              </div>
+            </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.gas_boiler_ta?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.gas_boiler_ta?.attributes?.icon)" :class="[mdiClass(act?.gas_boiler_ta?.attributes?.icon), stateClass(act?.gas_boiler_ta?.state)]"></i>
+                TA Caldaia Gas Emergenza
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="d" class="card inner">
           <div class="row"><strong>Miscelatrice</strong></div>
           <div class="row3">
             <div class="kpi kpi-center" :class="historyEnabled('t_mandata_miscelata') ? 'clickable' : ''" @click="openHistory('t_mandata_miscelata','T mandata miscelata')">
@@ -944,6 +993,25 @@
           </div>
 
           <div class="set-section">
+            <div class="section-title">Caldaia Gas Emergenza</div>
+            <div class="field">
+              <label>Zone gas emergenza</label>
+              <div class="list">
+                <div v-for="(z, i) in sp.gas_emergenza.zones" :key="`gas-${i}`" class="list-row">
+                  <input type="text" v-model="sp.gas_emergenza.zones[i]" placeholder="climate.pt_1"/>
+                  <button class="ghost" @click="removeGasZone(i)">Rimuovi</button>
+                </div>
+                <div class="help">Termostati da attivare in emergenza gas.</div>
+                <button class="ghost" @click="addGasZone">+ Aggiungi</button>
+              </div>
+            </div>
+            <div class="field"><label>Volano min gas (°C)</label><input type="number" step="0.5" v-model.number="sp.gas_emergenza.volano_min_c"/><div class="help">Soglia dedicata: sopra questo valore il gas si spegne.</div></div>
+            <div class="field"><label>Volano isteresi gas (°C)</label><input type="number" step="0.5" v-model.number="sp.gas_emergenza.volano_hyst_c"/><div class="help">Isteresi volano per evitare ON/OFF gas.</div></div>
+            <div class="field"><label>Puffer min gas (°C)</label><input type="number" step="0.5" v-model.number="sp.gas_emergenza.puffer_min_c"/><div class="help">Soglia dedicata: sopra questo valore il gas si spegne.</div></div>
+            <div class="field"><label>Puffer isteresi gas (°C)</label><input type="number" step="0.5" v-model.number="sp.gas_emergenza.puffer_hyst_c"/><div class="help">Isteresi puffer per evitare ON/OFF gas.</div></div>
+          </div>
+
+          <div class="set-section">
             <div class="section-title">Solare</div>
             <div class="field">
               <label>Modalità</label>
@@ -985,6 +1053,9 @@
             </button>
             <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
               Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.gas_emergenza ? 'on' : 'off'" @click="toggleModule('gas_emergenza')">
+              Caldaia Gas Emergenza: {{ modules.gas_emergenza ? 'ON' : 'OFF' }}
             </button>
             <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
               Solare: {{ modules.solare ? 'ON' : 'OFF' }}
@@ -1584,7 +1655,8 @@ const modules = ref({
   solare: false,
   miscelatrice: false,
   curva_climatica: true,
-  pdc: false
+  pdc: false,
+  gas_emergenza: false
 })
 const solareModeInit = ref(false)
 
@@ -1619,7 +1691,9 @@ const actuatorDefs = [
   { key: 'r27_comparto_pdc2_avvio', label: 'R27 Comparto PDC 2 Avvio', impl: false },
   { key: 'r28_scarico_antigelo_mandata_pdc', label: 'R28 Scarico Antigelo Mandata PDC', impl: false },
   { key: 'r29_scarico_antigelo_ritorno_pdc', label: 'R29 Scarico Antigelo Ritorno PDC', impl: false },
-  { key: 'r30_alimentazione_caldaia_legna', label: 'R30 Alimentazione Caldaia Legna', impl: false }
+  { key: 'r30_alimentazione_caldaia_legna', label: 'R30 Alimentazione Caldaia Legna', impl: false },
+  { key: 'gas_boiler_power', label: '220V Caldaia Gas Emergenza', impl: true },
+  { key: 'gas_boiler_ta', label: 'TA Caldaia Gas Emergenza', impl: true }
 ]
 
 const isFilled = (v) => (typeof v === 'string' ? v.trim().length > 0 : false)
@@ -1679,6 +1753,16 @@ function removeZone(key, idx){
   if (!sp.value?.impianto) return
   if (!Array.isArray(sp.value.impianto[key])) return
   sp.value.impianto[key].splice(idx, 1)
+}
+function addGasZone(){
+  if (!sp.value?.gas_emergenza) return
+  if (!Array.isArray(sp.value.gas_emergenza.zones)) sp.value.gas_emergenza.zones = []
+  sp.value.gas_emergenza.zones.push('')
+}
+function removeGasZone(idx){
+  if (!sp.value?.gas_emergenza) return
+  if (!Array.isArray(sp.value.gas_emergenza.zones)) return
+  sp.value.gas_emergenza.zones.splice(idx, 1)
 }
 const historyEnabled = (key) => !!sp.value?.history?.[key]
 async function openHistory(key, title){
@@ -1815,6 +1899,7 @@ const moduleReasonsList = computed(() => {
     { key: 'miscelatrice', label: 'Miscelatrice', active: mixActive },
     { key: 'curva_climatica', label: 'Curva climatica', active: !!d.value?.computed?.curva_climatica?.setpoint },
     { key: 'impianto', label: 'Impianto Riscaldamento', active: false },
+    { key: 'gas_emergenza', label: 'Caldaia Gas Emergenza', active: !!d.value?.computed?.gas_emergenza?.need },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
   return labels
@@ -1968,6 +2053,9 @@ async function load(){
   if (!sp.value?.curva_climatica) {
     sp.value.curva_climatica = { x: [-15,-11.25,-7.5,-3.75,0,3.75,7.5,11.25,15], y: [60,57.6,55,52.6,50,47.6,45,42.6,40], slope: 0, offset: 0, min_c: 40, max_c: 60 }
   }
+  if (!sp.value?.gas_emergenza) {
+    sp.value.gas_emergenza = { zones: [], volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2 }
+  }
   if (!sp.value?.impianto) {
   sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, puffer_ready: true, richiesta_heat: false, volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
   }
@@ -1984,6 +2072,7 @@ async function load(){
   sp.value.impianto.zones_mans = normalizeList(sp.value.impianto.zones_mans)
   sp.value.impianto.zones_lab = normalizeList(sp.value.impianto.zones_lab)
   sp.value.impianto.cooling_blocked = normalizeList(sp.value.impianto.cooling_blocked)
+  sp.value.gas_emergenza.zones = normalizeList(sp.value.gas_emergenza.zones)
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }

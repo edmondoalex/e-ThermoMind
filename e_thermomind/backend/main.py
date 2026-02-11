@@ -46,6 +46,7 @@ miscelatrice_pause_until: float = 0.0
 miscelatrice_last_action: str = "STOP"
 miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
+gas_emergenza_state: dict[str, bool] = {"vol_ok": False, "puf_ok": False}
 
 @app.on_event("startup")
 async def on_startup():
@@ -115,6 +116,7 @@ async def decision():
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
     await _apply_impianto_live()
+    await _apply_gas_emergenza_live()
     await _apply_miscelatrice_live(data)
     data["zones"] = _build_zones_state()
     return JSONResponse(data)
@@ -166,6 +168,7 @@ async def _build_snapshot() -> dict:
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
     await _apply_impianto_live()
+    await _apply_gas_emergenza_live()
     act = {}
     for k, eid in (cfg.get("actuators", {}) or {}).items():
         if eid:
@@ -253,6 +256,8 @@ def _module_for_actuator_key(key: str) -> str | None:
         return "puffer_to_acs"
     if "pdc" in key or "antigelo" in key or "comparto_pdc" in key:
         return "pdc"
+    if "gas_boiler" in key or "caldaia_gas" in key:
+        return "gas_emergenza"
     return None
 
 
@@ -1083,6 +1088,109 @@ async def _apply_impianto_live() -> None:
         await _set_actuator(r4, True)
         await _set_actuator(r5, False)
         await _set_climate_hvac_mode(clima, "cool")
+
+async def _apply_gas_emergenza_live() -> None:
+    if cfg.get("runtime", {}).get("mode") != "live":
+        return
+    if not ha.enabled:
+        return
+    ent = cfg.get("entities", {})
+    act = cfg.get("actuators", {})
+    imp = cfg.get("impianto", {})
+    gas_cfg = cfg.get("gas_emergenza", {})
+
+    power = act.get("gas_boiler_power")
+    ta = act.get("gas_boiler_ta")
+
+    if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        await _set_actuator(power, False)
+        await _set_actuator(ta, False)
+        for z in (gas_cfg.get("zones") or []):
+            await _set_climate_hvac_mode(z, "off")
+        return
+
+    t_volano = _get_num(ent.get("t_volano"))
+    t_puffer = _get_num(ent.get("t_puffer"))
+    vol_min = float(gas_cfg.get("volano_min_c", 35.0))
+    vol_h = float(gas_cfg.get("volano_hyst_c", 2.0))
+    puf_min = float(gas_cfg.get("puffer_min_c", 35.0))
+    puf_h = float(gas_cfg.get("puffer_hyst_c", 2.0))
+
+    vol_prev = bool(gas_emergenza_state.get("vol_ok"))
+    puf_prev = bool(gas_emergenza_state.get("puf_ok"))
+    if t_volano is None:
+        vol_ok = True
+    else:
+        vol_ok = t_volano > vol_min if vol_prev else t_volano >= (vol_min + vol_h)
+    if t_puffer is None:
+        puf_ok = True
+    else:
+        puf_ok = t_puffer > puf_min if puf_prev else t_puffer >= (puf_min + puf_h)
+    gas_emergenza_state["vol_ok"] = vol_ok
+    gas_emergenza_state["puf_ok"] = puf_ok
+
+    if vol_ok or puf_ok:
+        await _set_actuator(power, False)
+        await _set_actuator(ta, False)
+        if not cfg.get("modules_enabled", {}).get("impianto", True):
+            for z in (gas_cfg.get("zones") or []):
+                await _set_climate_hvac_mode(z, "off")
+        return
+
+    zones = gas_cfg.get("zones", [])
+    if not isinstance(zones, list):
+        zones = []
+    zones = [str(z).strip() for z in zones if str(z).strip()]
+
+    cooling_blocked = set(imp.get("cooling_blocked", []))
+    zones_pt = set(imp.get("zones_pt", []))
+    zones_p1 = set(imp.get("zones_p1", []))
+    zones_mans = set(imp.get("zones_mans", []))
+    zones_lab = set(imp.get("zones_lab", []))
+    zone_scala = (imp.get("zone_scala") or "").strip()
+
+    pt_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_pt)
+    p1_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_p1)
+    mans_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_mans)
+    lab_active = any(_zone_active(z, cooling_blocked) for z in zones if z in zones_lab)
+    scala_active = _zone_active(zone_scala, cooling_blocked) if zone_scala and (zone_scala in zones) else False
+    demand_on = pt_active or p1_active or mans_active or lab_active or scala_active
+
+    await _set_actuator(power, True)
+    for z in zones:
+        await _set_climate_hvac_mode(z, "heat")
+    await _set_actuator(ta, bool(demand_on))
+
+    r2 = act.get("r2_valve_comparto_mandata_imp_pt")
+    r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
+    r1 = act.get("r1_valve_comparto_laboratorio")
+    r12 = act.get("r12_pump_mandata_piani")
+    r11 = act.get("r11_pump_mandata_laboratorio")
+    r4 = act.get("r4_valve_impianto_da_puffer")
+    r5 = act.get("r5_valve_impianto_da_pdc")
+
+    await _set_actuator(r4, False)
+    await _set_actuator(r5, False)
+
+    if not demand_on:
+        if r2:
+            await _set_actuator(r2, False)
+        if r3:
+            await _set_actuator(r3, False)
+        if r1:
+            await _set_actuator(r1, False)
+        await _set_pump_delayed("gas:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        await _set_pump_delayed("gas:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        return
+
+    if r2:
+        await _set_actuator(r2, pt_active or scala_active or lab_active)
+    if r3:
+        await _set_actuator(r3, pt_active or scala_active)
+    if r1:
+        await _set_actuator(r1, lab_active)
+    await _set_pump_delayed("gas:pump", r12, True, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+    await _set_pump_delayed("gas:lab_pump", r11, lab_active, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
 @app.get("/api/status")
 async def status():

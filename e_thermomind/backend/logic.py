@@ -28,7 +28,9 @@ def _thr_list(value: Any) -> list[float]:
 _LAST: Dict[str, Any] = {
     "dest": None,
     "source_to_acs": None,
-    "volano_to_puffer": False
+    "volano_to_puffer": False,
+    "gas_vol_ok": False,
+    "gas_puf_ok": False
 }
 
 def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool) -> bool:
@@ -46,6 +48,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     res_cfg = cfg.get("resistance", {})
     curve_cfg = cfg.get("curva_climatica", {})
     curve_enabled = cfg.get("modules_enabled", {}).get("curva_climatica", True)
+    gas_cfg = cfg.get("gas_emergenza", {})
+    gas_enabled = cfg.get("modules_enabled", {}).get("gas_emergenza", False)
 
     def get_num(eid: str | None, default: float = 0.0) -> float:
         if not eid:
@@ -367,6 +371,55 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         f"| Miscelatrice={'ON' if miscelatrice_on else 'OFF'}"
         )
 
+    cooling_blocked = set(imp_cfg.get("cooling_blocked", []))
+    gas_zones = gas_cfg.get("zones", []) if isinstance(gas_cfg.get("zones"), list) else []
+    gas_zones = [str(z).strip() for z in gas_zones if str(z).strip()]
+    zones_pt = set(imp_cfg.get("zones_pt", []))
+    zones_p1 = set(imp_cfg.get("zones_p1", []))
+    zones_mans = set(imp_cfg.get("zones_mans", []))
+    zones_lab = set(imp_cfg.get("zones_lab", []))
+    zone_scala = (imp_cfg.get("zone_scala") or "").strip()
+    gas_active_any = False
+    gas_pt = gas_p1 = gas_mans = gas_lab = gas_scala = False
+    for z in gas_zones:
+        st = ha_states.get(z, {})
+        is_active = _zone_active(st.get("state"), st.get("attributes", {}).get("hvac_action"), z in cooling_blocked)
+        gas_active_any = gas_active_any or is_active
+        if z == zone_scala:
+            gas_scala = gas_scala or is_active
+        if z in zones_pt:
+            gas_pt = gas_pt or is_active
+        if z in zones_p1:
+            gas_p1 = gas_p1 or is_active
+        if z in zones_mans:
+            gas_mans = gas_mans or is_active
+        if z in zones_lab:
+            gas_lab = gas_lab or is_active
+
+    gas_vol_min = float(gas_cfg.get("volano_min_c", 35.0))
+    gas_vol_h = float(gas_cfg.get("volano_hyst_c", 2.0))
+    gas_puf_min = float(gas_cfg.get("puffer_min_c", 35.0))
+    gas_puf_h = float(gas_cfg.get("puffer_hyst_c", 2.0))
+    gas_vol_prev = bool(_LAST.get("gas_vol_ok"))
+    gas_puf_prev = bool(_LAST.get("gas_puf_ok"))
+    if t_volano is None:
+        gas_vol_ok = True
+    else:
+        gas_vol_ok = t_volano > gas_vol_min if gas_vol_prev else t_volano >= (gas_vol_min + gas_vol_h)
+    if t_puffer is None:
+        gas_puf_ok = True
+    else:
+        gas_puf_ok = t_puffer > gas_puf_min if gas_puf_prev else t_puffer >= (gas_puf_min + gas_puf_h)
+    _LAST["gas_vol_ok"] = gas_vol_ok
+    _LAST["gas_puf_ok"] = gas_puf_ok
+    gas_need = bool(gas_enabled and (not (gas_vol_ok or gas_puf_ok)))
+    gas_reason = "Modulo gas OFF."
+    if gas_enabled:
+        if gas_need:
+            gas_reason = f"Gas attivo: domanda={'ON' if gas_active_any else 'OFF'} | VOL_OK={gas_vol_ok} PUF_OK={gas_puf_ok}"
+        else:
+            gas_reason = "Gas standby: fonte principale disponibile."
+
     return {
         "inputs": {
             "t_acs": t_acs,
@@ -452,6 +505,18 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "x": curve_x,
                 "y": curve_y
             },
+            "gas_emergenza": {
+                "enabled": gas_enabled,
+                "need": gas_need,
+                "vol_ok": gas_vol_ok,
+                "puf_ok": gas_puf_ok,
+                "demand": gas_active_any,
+                "pt": gas_pt,
+                "p1": gas_p1,
+                "mans": gas_mans,
+                "lab": gas_lab,
+                "scala": gas_scala
+            },
             "module_reasons": {
                 "solare": (
                     f"{source_reason} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C"
@@ -480,6 +545,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 ),
                 "resistenze_volano": f"{charge_reason} | Export {export_w:.0f}W",
                 "impianto": impianto_reason,
+                "gas_emergenza": gas_reason,
                 "miscelatrice": mix_reason
             },
             "state": {
