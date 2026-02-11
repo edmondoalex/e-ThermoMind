@@ -4,7 +4,7 @@ import logging
 import time
 from typing import Any
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -1036,6 +1036,7 @@ async def _apply_impianto_live() -> None:
         # gas emergenza attiva: non interferire con impianto
         return
     if not cfg.get("modules_enabled", {}).get("impianto", True):
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO module OFF state={cfg.get('modules_enabled', {})}")
         ent = cfg.get("entities", {})
         act = cfg.get("actuators", {})
         imp = cfg.get("impianto", {})
@@ -1047,7 +1048,7 @@ async def _apply_impianto_live() -> None:
         clima = ent.get("puffer_consenso_riscaldamento_piani")
         off_centralina = ent.get("off_centralina_termoregolazione")
         for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off", "IMPIANTO module OFF")
+            await _set_climate_hvac_mode(z, "off", "GAS inactive")
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
@@ -1234,8 +1235,20 @@ async def _apply_gas_emergenza_live() -> None:
     if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
+        r2 = act.get("r2_valve_comparto_mandata_imp_pt")
+        r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
+        r1 = act.get("r1_valve_comparto_laboratorio")
+        r11 = act.get("r11_pump_mandata_laboratorio")
+        r16 = act.get("r16_cmd_miscelatrice_alza")
+        r17 = act.get("r17_cmd_miscelatrice_abbassa")
+        if r2: await _set_actuator(r2, False)
+        if r3: await _set_actuator(r3, False)
+        if r1: await _set_actuator(r1, False)
+        await _set_pump_delayed("gas:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        if r16: await _set_actuator(r16, False)
+        if r17: await _set_actuator(r17, False)
         for z in (gas_cfg.get("zones") or []):
-            await _set_climate_hvac_mode(z, "off", "IMPIANTO module OFF")
+            await _set_climate_hvac_mode(z, "off", "GAS module OFF")
         return
 
     zones = gas_cfg.get("zones", [])
@@ -1248,7 +1261,7 @@ async def _apply_gas_emergenza_live() -> None:
         await _set_actuator(ta, False)
         if not cfg.get("modules_enabled", {}).get("impianto", True):
             for z in zones:
-                await _set_climate_hvac_mode(z, "off", "IMPIANTO module OFF")
+                await _set_climate_hvac_mode(z, "off", "GAS inactive")
         return
 
     cooling_blocked = set(imp.get("cooling_blocked", []))
@@ -1385,7 +1398,7 @@ async def get_modules():
     return JSONResponse(cfg.get("modules_enabled", {}))
 
 @app.post("/api/modules")
-async def set_modules(payload: dict):
+async def set_modules(payload: dict, request: Request):
     global cfg
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
@@ -1398,7 +1411,10 @@ async def set_modules(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid modules")
     cfg = apply_setpoints(cfg, {"modules_enabled": modules})
     save_config(cfg)
+    client = getattr(getattr(request, 'client', None), 'host', None)
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE modules")
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES client={client} payload={modules}")
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
     return JSONResponse({"ok": True})
 
 @app.get("/api/history")
