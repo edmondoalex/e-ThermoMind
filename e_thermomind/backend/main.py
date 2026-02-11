@@ -1132,7 +1132,7 @@ async def _apply_impianto_live() -> None:
             heat_available = bool(puffer_ready and puf_temp_ok)
         else:
             heat_available = bool((pdc_volano_ready and vol_temp_ok) or (puffer_ready and puf_temp_ok))
-    auto_heat = _impianto_auto_heat(heat_available, imp)
+    auto_heat = heat_available
 
     # Termostati: seguono solo disponibilit? calore (anti-flap)
     for z in _collect_zones(imp):
