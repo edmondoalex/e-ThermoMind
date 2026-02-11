@@ -1289,6 +1289,7 @@ async def set_setpoints(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
     cfg = apply_setpoints(cfg, payload)
     save_config(cfg)
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE setpoints")
     return JSONResponse({"ok": True})
 
 @app.post("/api/climate_setpoint")
@@ -1327,6 +1328,7 @@ async def set_modules(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid modules")
     cfg = apply_setpoints(cfg, {"modules_enabled": modules})
     save_config(cfg)
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE modules")
     return JSONResponse({"ok": True})
 
 @app.get("/api/history")
@@ -1391,6 +1393,7 @@ async def set_entities(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
     cfg = apply_entities(cfg, payload)
     save_config(cfg)
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE entities")
     return JSONResponse({"ok": True})
 
 @app.get("/api/actuators")
@@ -1417,6 +1420,7 @@ async def set_actuators(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
     cfg = apply_actuators(cfg, payload)
     save_config(cfg)
+    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE actuators")
     return JSONResponse({"ok": True})
 
 @app.post("/api/actuate")
