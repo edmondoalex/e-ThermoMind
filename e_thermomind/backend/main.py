@@ -1177,7 +1177,6 @@ async def _apply_impianto_live() -> None:
     impianto_last_source = source
 
     if not demand_on:
-        impianto_last_source = None
         if r2:
             await _set_actuator(r2, False)
         if r3:
