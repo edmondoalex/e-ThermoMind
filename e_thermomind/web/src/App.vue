@@ -536,6 +536,14 @@
               <polyline :points="curvePoints" class="curve-line"/>
               <line v-if="curveExtX !== null" :x1="curveExtX" y1="0" :x2="curveExtX" y2="100" class="curve-marker"/>
               <circle v-if="curveExtX !== null && curveExtY !== null" :cx="curveExtX" :cy="curveExtY" r="2.6" class="curve-dot"/>
+              <text v-if="curveBounds.xMin !== null" x="2" y="96" class="curve-axis">{{ curveBounds.xMin.toFixed(1) }}
+              </text>
+              <text v-if="curveBounds.xMax !== null" x="98" y="96" text-anchor="end" class="curve-axis">{{ curveBounds.xMax.toFixed(1) }}
+              </text>
+              <text v-if="curveBounds.yMax !== null" x="2" y="10" class="curve-axis">{{ curveBounds.yMax.toFixed(1) }}
+              </text>
+              <text v-if="curveBounds.yMin !== null" x="2" y="90" class="curve-axis">{{ curveBounds.yMin.toFixed(1) }}
+              </text>
             </svg>
           </div>
           <div class="row2">
@@ -1400,15 +1408,24 @@ const curvePoints = computed(() => {
   const xs = (sp.value?.curva_climatica?.x || []).map(Number).filter(v => !Number.isNaN(v))
   const ys = (sp.value?.curva_climatica?.y || []).map(Number).filter(v => !Number.isNaN(v))
   if (!xs.length || xs.length !== ys.length) return ''
+  const slope = Number(sp.value?.curva_climatica?.slope || 0)
+  const offset = Number(sp.value?.curva_climatica?.offset || 0)
+  const minC = Number(sp.value?.curva_climatica?.min_c || -999)
+  const maxC = Number(sp.value?.curva_climatica?.max_c || 999)
+  const yAvg = ys.reduce((a, b) => a + b, 0) / ys.length
+  const adj = ys.map((y) => {
+    const mod = yAvg + (1 + slope) * (y - yAvg) + offset
+    return Math.max(minC, Math.min(maxC, mod))
+  })
   const xMin = Math.min(...xs)
   const xMax = Math.max(...xs)
-  const yMin = Math.min(...ys)
-  const yMax = Math.max(...ys)
+  const yMin = Math.min(...adj)
+  const yMax = Math.max(...adj)
   const spanX = xMax - xMin || 1
   const spanY = yMax - yMin || 1
   return xs.map((x, i) => {
     const nx = ((x - xMin) / spanX) * 100
-    const ny = 100 - ((ys[i] - yMin) / spanY) * 100
+    const ny = 100 - ((adj[i] - yMin) / spanY) * 100
     return `${nx.toFixed(2)},${ny.toFixed(2)}`
   }).join(' ')
 })
@@ -1431,6 +1448,26 @@ const curveExtY = computed(() => {
   const spv = d.value?.computed?.curva_climatica?.setpoint
   if (spv === null || spv === undefined) return null
   return 100 - ((Number(spv) - yMin) / spanY) * 100
+})
+const curveBounds = computed(() => {
+  const xs = (sp.value?.curva_climatica?.x || []).map(Number).filter(v => !Number.isNaN(v))
+  const ys = (sp.value?.curva_climatica?.y || []).map(Number).filter(v => !Number.isNaN(v))
+  if (!xs.length || !ys.length) return { xMin: null, xMax: null, yMin: null, yMax: null }
+  const slope = Number(sp.value?.curva_climatica?.slope || 0)
+  const offset = Number(sp.value?.curva_climatica?.offset || 0)
+  const minC = Number(sp.value?.curva_climatica?.min_c || -999)
+  const maxC = Number(sp.value?.curva_climatica?.max_c || 999)
+  const yAvg = ys.reduce((a, b) => a + b, 0) / ys.length
+  const adj = ys.map((y) => {
+    const mod = yAvg + (1 + slope) * (y - yAvg) + offset
+    return Math.max(minC, Math.min(maxC, mod))
+  })
+  return {
+    xMin: Math.min(...xs),
+    xMax: Math.max(...xs),
+    yMin: Math.min(...adj),
+    yMax: Math.max(...adj)
+  }
 })
 
   function mergeEntities(next){
@@ -1858,6 +1895,7 @@ details.form summary{cursor:pointer;list-style:none}
 .curve-line{fill:none;stroke:#57e3d6;stroke-width:1.5}
 .curve-marker{stroke:#7aa7ff;stroke-width:0.8;opacity:0.8}
 .curve-dot{fill:#7aa7ff}
+.curve-axis{fill:#9fb0c7;font-size:5px}
 .spark{fill:none;stroke-width:2}
 .spark.acs{stroke:#57e3d6}
 .spark.puffer{stroke:#7aa7ff}
