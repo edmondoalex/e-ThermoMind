@@ -1205,9 +1205,10 @@ async def _apply_gas_emergenza_live() -> None:
     scala_active = _gas_zone_demand(zone_scala) if zone_scala and (zone_scala in zones) else False
     demand_any = pt_active or p1_active or mans_active or lab_active or scala_active
 
-    await _set_actuator(power, bool(demand_any))
+    # In gas emergenza metti sempre i termostati in heat
     for z in zones:
-        await _set_climate_hvac_mode(z, "heat" if demand_any else "off")
+        await _set_climate_hvac_mode(z, "heat")
+    await _set_actuator(power, bool(demand_any))
     await _set_actuator(ta, bool(demand_any))
 
     r2 = act.get("r2_valve_comparto_mandata_imp_pt")
