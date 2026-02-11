@@ -198,7 +198,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "cooling_blocked": [],
     "pump_start_delay_s": 9,
     "pump_stop_delay_s": 0,
-    "season_mode": "winter"
+    "season_mode": "winter",
+    "auto_heat_min_on_s": 60,
+    "auto_heat_min_off_s": 60
   },
   "history": {
     "t_acs": False,

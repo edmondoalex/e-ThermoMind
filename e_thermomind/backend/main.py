@@ -47,6 +47,7 @@ miscelatrice_pause_until: float = 0.0
 miscelatrice_last_action: str = "STOP"
 miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
+impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
 
 @app.on_event("startup")
@@ -199,6 +200,29 @@ def _gas_emergenza_active() -> bool:
     if active:
         gas_emergenza_state["active"] = False
         gas_emergenza_state["last_change"] = now
+    return False
+
+
+def _impianto_auto_heat(desired: bool, imp_cfg: dict) -> bool:
+    # anti-flap per termostati in modalit? normale
+    min_on = float(imp_cfg.get("auto_heat_min_on_s", 60.0))
+    min_off = float(imp_cfg.get("auto_heat_min_off_s", 60.0))
+    now = time.time()
+    active = bool(impianto_heat_state.get("active"))
+    last = float(impianto_heat_state.get("last_change") or 0.0)
+    if desired:
+        if not active and (now - last) < min_off:
+            return False
+        if not active:
+            impianto_heat_state["active"] = True
+            impianto_heat_state["last_change"] = now
+        return True
+    # desired false
+    if active and (now - last) < min_on:
+        return True
+    if active:
+        impianto_heat_state["active"] = False
+        impianto_heat_state["last_change"] = now
     return False
 
 def _collect_zones(imp: dict) -> list[str]:
@@ -1096,6 +1120,8 @@ async def _apply_impianto_live() -> None:
         demand_on = (any_active if zones_configured else bool(richiesta_on))
     if season == "summer":
         demand_on = False
+        impianto_heat_state["active"] = False
+        impianto_heat_state["last_change"] = time.time()
 
     # Auto-heat: se c'è una fonte disponibile, forza i termostati in heat
     heat_available = False
@@ -1106,7 +1132,7 @@ async def _apply_impianto_live() -> None:
             heat_available = bool(puffer_ready and puf_temp_ok)
         else:
             heat_available = bool((pdc_volano_ready and vol_temp_ok) or (puffer_ready and puf_temp_ok))
-    auto_heat = heat_available
+    auto_heat = _impianto_auto_heat(heat_available, imp)
 
     r12 = act.get("r12_pump_mandata_piani")
     r11 = act.get("r11_pump_mandata_laboratorio")
