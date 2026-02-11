@@ -176,7 +176,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "volano_min_c": 35.0,
     "volano_hyst_c": 2.0,
     "puffer_min_c": 35.0,
-    "puffer_hyst_c": 2.0
+    "puffer_hyst_c": 2.0,
+    "min_on_s": 120,
+    "min_off_s": 120
   },
   "impianto": {
     "source_mode": "AUTO",
@@ -231,7 +233,7 @@ _NUM_KEYS = {
   "miscelatrice": ["setpoint_c", "hyst_c", "kp", "min_imp_s", "max_imp_s", "pause_s", "dt_ref_c", "dt_min_factor", "dt_max_factor", "min_temp_c", "max_temp_c", "force_impulse_s"],
   "curva_climatica": ["slope", "offset", "min_c", "max_c"],
   "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
-  "gas_emergenza": ["volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c"],
+  "gas_emergenza": ["volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c", "min_on_s", "min_off_s"],
   "volano": [
     "margin_c",
     "max_c",

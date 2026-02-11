@@ -46,7 +46,7 @@ miscelatrice_pause_until: float = 0.0
 miscelatrice_last_action: str = "STOP"
 miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
-gas_emergenza_state: dict[str, bool] = {"vol_ok": False, "puf_ok": False}
+gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
 
 @app.on_event("startup")
 async def on_startup():
@@ -173,6 +173,32 @@ def _gas_sources_ok() -> bool:
     gas_emergenza_state["vol_ok"] = vol_ok
     gas_emergenza_state["puf_ok"] = puf_ok
     return bool(vol_ok or puf_ok)
+
+def _gas_emergenza_active() -> bool:
+    if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        gas_emergenza_state["active"] = False
+        return False
+    gas_cfg = cfg.get("gas_emergenza", {})
+    need = not _gas_sources_ok()
+    now = time.time()
+    min_on = float(gas_cfg.get("min_on_s", 120.0))
+    min_off = float(gas_cfg.get("min_off_s", 120.0))
+    active = bool(gas_emergenza_state.get("active"))
+    last_change = float(gas_emergenza_state.get("last_change") or 0.0)
+    if need:
+        if not active and (now - last_change) < min_off:
+            return False
+        if not active:
+            gas_emergenza_state["active"] = True
+            gas_emergenza_state["last_change"] = now
+        return True
+    # not needed
+    if active and (now - last_change) < min_on:
+        return True
+    if active:
+        gas_emergenza_state["active"] = False
+        gas_emergenza_state["last_change"] = now
+    return False
 
 def _collect_zones(imp: dict) -> list[str]:
     zones: list[str] = []
@@ -933,10 +959,9 @@ async def _apply_impianto_live() -> None:
         return
     if not ha.enabled:
         return
-    if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
-        if not _gas_sources_ok():
-            # gas emergenza attiva: non interferire con impianto
-            return
+    if _gas_emergenza_active():
+        # gas emergenza attiva: non interferire con impianto
+        return
     if not cfg.get("modules_enabled", {}).get("impianto", True):
         ent = cfg.get("entities", {})
         act = cfg.get("actuators", {})
@@ -1141,18 +1166,18 @@ async def _apply_gas_emergenza_live() -> None:
             await _set_climate_hvac_mode(z, "off")
         return
 
-    if _gas_sources_ok():
-        await _set_actuator(power, False)
-        await _set_actuator(ta, False)
-        if not cfg.get("modules_enabled", {}).get("impianto", True):
-            for z in (gas_cfg.get("zones") or []):
-                await _set_climate_hvac_mode(z, "off")
-        return
-
     zones = gas_cfg.get("zones", [])
     if not isinstance(zones, list):
         zones = []
     zones = [str(z).strip() for z in zones if str(z).strip()]
+
+    if not _gas_emergenza_active():
+        await _set_actuator(power, False)
+        await _set_actuator(ta, False)
+        if not cfg.get("modules_enabled", {}).get("impianto", True):
+            for z in zones:
+                await _set_climate_hvac_mode(z, "off")
+        return
 
     cooling_blocked = set(imp.get("cooling_blocked", []))
     zones_pt = set(imp.get("zones_pt", []))
