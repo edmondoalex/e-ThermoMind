@@ -832,6 +832,20 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         return
     if not ha.enabled:
         return
+    # In gas emergenza la miscelatrice resta spenta
+    if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        act = cfg.get("actuators", {})
+        r16 = act.get("r16_cmd_miscelatrice_alza")
+        r17 = act.get("r17_cmd_miscelatrice_abbassa")
+        if miscelatrice_task and not miscelatrice_task.done():
+            miscelatrice_task.cancel()
+            miscelatrice_task = None
+        miscelatrice_shutdown_until = 0.0
+        miscelatrice_pause_until = 0.0
+        await _set_actuator(r16, False)
+        await _set_actuator(r17, False)
+        miscelatrice_last_action = "STOP"
+        return
     if not cfg.get("modules_enabled", {}).get("miscelatrice", True):
         act = cfg.get("actuators", {})
         await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
@@ -844,30 +858,6 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     imp_cfg = cfg.get("impianto", {})
     imp = (decision_data.get("computed", {}) or {}).get("impianto", {}) or {}
 
-    # Gas emergenza: se PT o LAB chiedono, apri miscelatrice a tutta
-    if _gas_emergenza_active():
-        cooling_blocked = set(imp_cfg.get("cooling_blocked", []))
-        zones = cfg.get("gas_emergenza", {}).get("zones", [])
-        if not isinstance(zones, list):
-            zones = []
-        zones = [str(z).strip() for z in zones if str(z).strip()]
-        zones_pt = set(imp_cfg.get("zones_pt", []))
-        zones_lab = set(imp_cfg.get("zones_lab", []))
-        pt_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_pt)
-        lab_active = any(_gas_zone_demand(z, cooling_blocked) for z in zones if z in zones_lab)
-        if pt_active or lab_active:
-            r16 = act.get("r16_cmd_miscelatrice_alza")
-            r17 = act.get("r17_cmd_miscelatrice_abbassa")
-            # stop any shutdown/pulse and force open
-            if miscelatrice_task and not miscelatrice_task.done():
-                miscelatrice_task.cancel()
-                miscelatrice_task = None
-            miscelatrice_shutdown_until = 0.0
-            miscelatrice_pause_until = 0.0
-            await _set_actuator(r17, False)
-            await _set_actuator(r16, True)
-            miscelatrice_last_action = "ALZA"
-            return
     imp_active = (
         cfg.get("modules_enabled", {}).get("impianto", True)
         and imp.get("richiesta")
@@ -1429,6 +1419,15 @@ async def set_modules(payload: dict, request: Request):
     modules = payload.get("modules", {})
     if not isinstance(modules, dict):
         raise HTTPException(status_code=400, detail="Invalid modules")
+    # Mutua esclusione: gas emergenza e impianto non devono essere ON insieme
+    if modules.get("gas_emergenza") is True:
+        if modules.get("impianto") is True:
+            modules["impianto"] = False
+        # miscelatrice spenta in gas
+        modules["miscelatrice"] = False
+    elif modules.get("impianto") is True:
+        if modules.get("gas_emergenza") is True:
+            modules["gas_emergenza"] = False
     global last_modules_payload, last_modules_save_ts
     client = getattr(getattr(request, 'client', None), 'host', None)
     # skip if unchanged or too frequent

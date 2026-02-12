@@ -338,15 +338,19 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     mix_action = "STOP"
     mix_reason = "Miscelatrice non attiva."
     if mix_enabled:
-        err = mix_sp - t_mandata_mix
-        if abs(err) <= mix_h:
-            mix_reason = "Delta entro isteresi."
-        elif err > 0:
-            mix_action = "ALZA"
-            mix_reason = f"T_MAND {t_mandata_mix:.1f}??C < SP {mix_sp:.1f}??C | dT {mix_dt:.1f}??C | KpEff {mix_kp_eff:.2f}"
+        if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+            mix_action = "STOP"
+            mix_reason = "Gas emergenza: miscelatrice OFF."
         else:
-            mix_action = "ABBASSA"
-            mix_reason = f"T_MAND {t_mandata_mix:.1f}??C > SP {mix_sp:.1f}??C | dT {mix_dt:.1f}??C | KpEff {mix_kp_eff:.2f}"
+            err = mix_sp - t_mandata_mix
+            if abs(err) <= mix_h:
+                mix_reason = "Delta entro isteresi."
+            elif err > 0:
+                mix_action = "ALZA"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}??C < SP {mix_sp:.1f}??C | dT {mix_dt:.1f}??C | KpEff {mix_kp_eff:.2f}"
+            else:
+                mix_action = "ABBASSA"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}??C > SP {mix_sp:.1f}??C | dT {mix_dt:.1f}??C | KpEff {mix_kp_eff:.2f}"
 
     blocked_cold = req_on and (source == "OFF")
     imp_active = req_on and (source != "OFF") and (not blocked_cold)
