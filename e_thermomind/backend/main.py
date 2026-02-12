@@ -398,6 +398,12 @@ async def _set_pump_delayed(name: str, pump_eid: str | None, want_on: bool, dela
         _cancel_transfer_task(f"{name}:on")
         if f"{name}:off" not in transfer_tasks:
             transfer_tasks[f"{name}:off"] = asyncio.create_task(_delayed_actuate(f"{name}:off", pump_eid, False, delay_off))
+
+async def _force_pump_off(name: str, pump_eid: str | None) -> None:
+    transfer_desired[name] = False
+    _cancel_transfer_task(f"{name}:on")
+    _cancel_transfer_task(f"{name}:off")
+    await _set_actuator(pump_eid, False)
 def _is_recent_ui(entity_id: str, window_s: float = 4.0) -> bool:
     ts = recent_ui_actuations.get(entity_id)
     if not ts:
@@ -1158,6 +1164,7 @@ async def _apply_impianto_live() -> None:
     for z in _collect_zones(imp):
         await _set_climate_hvac_mode(z, "heat" if auto_heat else "off", heat_reason)
 
+    blocked_cold = bool(demand_on and source is None)
     if not source:
         if r2:
             await _set_actuator(r2, False)
@@ -1165,8 +1172,12 @@ async def _apply_impianto_live() -> None:
             await _set_actuator(r3, False)
         if r1:
             await _set_actuator(r1, False)
-        await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-        await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+        if blocked_cold:
+            await _force_pump_off("impianto:pump", r12)
+            await _force_pump_off("impianto:lab_pump", r11)
+        else:
+            await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+            await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
         await _set_actuator(r5, False)
         await _set_climate_hvac_mode(clima, "off", "IMPIANTO no source")
