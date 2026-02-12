@@ -424,7 +424,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             "t_solare_mandata", "t_esterna",
             "t_puffer_alto", "t_puffer_medio", "t_puffer_basso",
             "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint",
-            "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff"
+            "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff",
+            "t_mandata_caldaia_legna", "t_ritorno_caldaia_legna", "t_caldaia_legna"
         ):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
@@ -550,7 +551,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             "t_solare_mandata", "t_esterna",
             "t_puffer_alto", "t_puffer_medio", "t_puffer_basso",
             "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint",
-            "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff"
+            "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff",
+            "t_mandata_caldaia_legna", "t_ritorno_caldaia_legna", "t_caldaia_legna"
         ):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
