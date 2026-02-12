@@ -2095,9 +2095,28 @@ const moduleReasonsList = computed(() => {
     }))
 })
 const moduleActiveMap = computed(() => {
-  const map = {}
-  for (const item of moduleReasonsList.value) map[item.key] = !!item.active
-  return map
+  const flags = d.value?.computed?.flags || {}
+  const step = Number(d.value?.computed?.resistance_step || 0)
+  const mixActive = !!d.value?.computed?.impianto?.miscelatrice
+  const impActive = !!(
+    d.value?.computed?.impianto?.richiesta &&
+    d.value?.computed?.impianto?.source &&
+    d.value?.computed?.impianto?.source !== 'OFF' &&
+    !d.value?.computed?.gas_emergenza?.enabled
+  )
+  return {
+    solare: !!flags.solare_to_acs,
+    volano_to_acs: !!flags.volano_to_acs,
+    volano_to_puffer: !!flags.volano_to_puffer,
+    puffer_to_acs: !!flags.puffer_to_acs,
+    miscelatrice: mixActive,
+    curva_climatica: !!d.value?.computed?.curva_climatica?.setpoint,
+    impianto: impActive,
+    caldaia_legna: !!(d.value?.computed?.caldaia_legna?.power || d.value?.computed?.caldaia_legna?.ta),
+    gas_emergenza: !!d.value?.computed?.gas_emergenza?.need,
+    resistenze_volano: step > 0,
+    pdc: !!d.value?.computed?.pdc?.active
+  }
 })
 const moduleClass = (key) => {
   const enabled = !!modules.value?.[key]
