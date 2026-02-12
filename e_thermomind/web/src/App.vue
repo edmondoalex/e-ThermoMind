@@ -518,6 +518,9 @@
             </div>
           </div>
           <div class="help">I checkbox sono manuali nel solo add-on. Richiesta calore e consenso miscelatrice sono in sola lettura.</div>
+          <div v-if="d?.computed?.module_reasons?.impianto" class="muted">
+            Motivo: {{ d.computed.module_reasons.impianto }}
+          </div>
           <div v-if="d?.computed?.impianto?.blocked_cold" class="warn">
             Sorgenti troppo fredde: impianto bloccato.
           </div>
