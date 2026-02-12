@@ -358,7 +358,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     miscelatrice_on = imp_active and cfg.get("modules_enabled", {}).get("miscelatrice", True)
     if not miscelatrice_on:
         mix_action = "STOP"
-        mix_reason = "Impianto inattivo."
+        if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+            mix_reason = "Impianto inattivo. Alza fisso per caldaia a GAS emergenza."
+        else:
+            mix_reason = "Impianto inattivo."
 
     if gas_enabled:
         impianto_reason = "Gas emergenza attivo: impianto inattivo."
