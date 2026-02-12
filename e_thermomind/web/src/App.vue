@@ -115,37 +115,37 @@
         <div class="card inner">
           <div class="row"><strong>Moduli (User)</strong></div>
           <div class="row3">
-            <button class="ghost toggle" :class="modules.resistenze_volano ? 'on' : 'off'" @click="toggleModule('resistenze_volano')">
+            <button class="ghost toggle" :class="moduleClass('resistenze_volano')" @click="toggleModule('resistenze_volano')">
               Resistenze Volano: {{ modules.resistenze_volano ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.volano_to_acs ? 'on' : 'off'" @click="toggleModule('volano_to_acs')">
+            <button class="ghost toggle" :class="moduleClass('volano_to_acs')" @click="toggleModule('volano_to_acs')">
               Volano → ACS: {{ modules.volano_to_acs ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.volano_to_puffer ? 'on' : 'off'" @click="toggleModule('volano_to_puffer')">
+            <button class="ghost toggle" :class="moduleClass('volano_to_puffer')" @click="toggleModule('volano_to_puffer')">
               Volano → Puffer: {{ modules.volano_to_puffer ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.puffer_to_acs ? 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
+            <button class="ghost toggle" :class="moduleClass('puffer_to_acs')" @click="toggleModule('puffer_to_acs')">
               Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
+            <button class="ghost toggle" :class="moduleClass('impianto')" @click="toggleModule('impianto')">
               Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.gas_emergenza ? 'on' : 'off'" @click="toggleModule('gas_emergenza')">
+            <button class="ghost toggle" :class="moduleClass('gas_emergenza')" @click="toggleModule('gas_emergenza')">
               Caldaia Gas Emergenza Riscaldamento: {{ modules.gas_emergenza ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.caldaia_legna ? 'on' : 'off'" @click="toggleModule('caldaia_legna')">
+            <button class="ghost toggle" :class="moduleClass('caldaia_legna')" @click="toggleModule('caldaia_legna')">
               Caldaia Legna: {{ modules.caldaia_legna ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
+            <button class="ghost toggle" :class="moduleClass('solare')" @click="toggleModule('solare')">
               Solare: {{ modules.solare ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.miscelatrice ? 'on' : 'off'" @click="toggleModule('miscelatrice')">
+            <button class="ghost toggle" :class="moduleClass('miscelatrice')" @click="toggleModule('miscelatrice')">
               Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.curva_climatica ? 'on' : 'off'" @click="toggleModule('curva_climatica')">
+            <button class="ghost toggle" :class="moduleClass('curva_climatica')" @click="toggleModule('curva_climatica')">
               Curva climatica: {{ modules.curva_climatica ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.pdc ? 'on' : 'off'" @click="toggleModule('pdc')">
+            <button class="ghost toggle" :class="moduleClass('pdc')" @click="toggleModule('pdc')">
               PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
             </button>
           </div>
@@ -1135,37 +1135,37 @@
         <div class="form">
           <h3 class="section">Moduli (Admin)</h3>
           <div class="row3">
-            <button class="ghost toggle" :class="modules.resistenze_volano ? 'on' : 'off'" @click="toggleModule('resistenze_volano')">
+            <button class="ghost toggle" :class="moduleClass('resistenze_volano')" @click="toggleModule('resistenze_volano')">
               Resistenze Volano: {{ modules.resistenze_volano ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.volano_to_acs ? 'on' : 'off'" @click="toggleModule('volano_to_acs')">
+            <button class="ghost toggle" :class="moduleClass('volano_to_acs')" @click="toggleModule('volano_to_acs')">
               Volano → ACS: {{ modules.volano_to_acs ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.volano_to_puffer ? 'on' : 'off'" @click="toggleModule('volano_to_puffer')">
+            <button class="ghost toggle" :class="moduleClass('volano_to_puffer')" @click="toggleModule('volano_to_puffer')">
               Volano → Puffer: {{ modules.volano_to_puffer ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.puffer_to_acs ? 'on' : 'off'" @click="toggleModule('puffer_to_acs')">
+            <button class="ghost toggle" :class="moduleClass('puffer_to_acs')" @click="toggleModule('puffer_to_acs')">
               Puffer → ACS: {{ modules.puffer_to_acs ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.impianto ? 'on' : 'off'" @click="toggleModule('impianto')">
+            <button class="ghost toggle" :class="moduleClass('impianto')" @click="toggleModule('impianto')">
               Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.gas_emergenza ? 'on' : 'off'" @click="toggleModule('gas_emergenza')">
+            <button class="ghost toggle" :class="moduleClass('gas_emergenza')" @click="toggleModule('gas_emergenza')">
               Caldaia Gas Emergenza Riscaldamento: {{ modules.gas_emergenza ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.caldaia_legna ? 'on' : 'off'" @click="toggleModule('caldaia_legna')">
+            <button class="ghost toggle" :class="moduleClass('caldaia_legna')" @click="toggleModule('caldaia_legna')">
               Caldaia Legna: {{ modules.caldaia_legna ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
+            <button class="ghost toggle" :class="moduleClass('solare')" @click="toggleModule('solare')">
               Solare: {{ modules.solare ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.miscelatrice ? 'on' : 'off'" @click="toggleModule('miscelatrice')">
+            <button class="ghost toggle" :class="moduleClass('miscelatrice')" @click="toggleModule('miscelatrice')">
               Miscelatrice: {{ modules.miscelatrice ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.curva_climatica ? 'on' : 'off'" @click="toggleModule('curva_climatica')">
+            <button class="ghost toggle" :class="moduleClass('curva_climatica')" @click="toggleModule('curva_climatica')">
               Curva climatica: {{ modules.curva_climatica ? 'ON' : 'OFF' }}
             </button>
-            <button class="ghost toggle" :class="modules.pdc ? 'on' : 'off'" @click="toggleModule('pdc')">
+            <button class="ghost toggle" :class="moduleClass('pdc')" @click="toggleModule('pdc')">
               PDC: {{ modules.pdc ? 'ON' : 'OFF' }}
             </button>
           </div>
@@ -2082,6 +2082,19 @@ const moduleReasonsList = computed(() => {
       reason: mr[item.key]
     }))
 })
+const moduleActiveMap = computed(() => {
+  const map = {}
+  for (const item of moduleReasonsList.value) map[item.key] = !!item.active
+  return map
+})
+const moduleClass = (key) => {
+  const enabled = !!modules.value?.[key]
+  return {
+    on: enabled,
+    off: !enabled,
+    active: enabled && !!moduleActiveMap.value?.[key]
+  }
+}
 
 const solarModeClass = computed(() => {
   const mode = sp.value?.solare?.mode || 'auto'
@@ -2648,7 +2661,8 @@ details.form summary{cursor:pointer;list-style:none}
 .logic-ok{color:#22c55e}
 .logic-no{color:#ef4444}
 .toggle{justify-content:flex-start;gap:8px}
-.toggle.on{border-color:rgba(239,68,68,.45);background:linear-gradient(135deg, rgba(239,68,68,.22), rgba(239,68,68,.08));box-shadow:0 0 0 1px rgba(239,68,68,.08) inset}
+.toggle.on{border-color:rgba(34,197,94,.45);background:linear-gradient(135deg, rgba(34,197,94,.22), rgba(34,197,94,.08));box-shadow:0 0 0 1px rgba(34,197,94,.08) inset}
+.toggle.active{border-color:rgba(239,68,68,.55);background:linear-gradient(135deg, rgba(239,68,68,.28), rgba(239,68,68,.12));box-shadow:0 0 0 1px rgba(239,68,68,.12) inset}
 .toggle.off{border-color:var(--border);background:transparent}
 .mdi-fallback{font-size:14px;opacity:0.8}
 .state-on{color:#ef4444}
