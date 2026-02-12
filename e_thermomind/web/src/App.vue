@@ -1429,6 +1429,7 @@
                        @input="dirtyEnt.collettore_energy_day_kwh = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_energy_day_kwh"/> Storico</label></div>
           </div>
           <div class="field">
             <label>Energia solare (totale)</label>
@@ -1441,6 +1442,7 @@
                        @input="dirtyEnt.collettore_energy_total_kwh = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_energy_total_kwh"/> Storico</label></div>
           </div>
           <div class="field">
             <label>Portata (L/min)</label>
@@ -1453,6 +1455,7 @@
                        @input="dirtyEnt.collettore_flow_lmin = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_flow_lmin"/> Storico</label></div>
           </div>
           <div class="field">
             <label>PWM Pompa</label>
@@ -1465,6 +1468,7 @@
                        @input="dirtyEnt.collettore_pwm_pct = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_pwm_pct"/> Storico</label></div>
           </div>
           <div class="field">
             <label>Stato 2</label>
@@ -1489,6 +1493,7 @@
                        @input="dirtyEnt.collettore_temp_esterna = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_temp_esterna"/> Storico</label></div>
           </div>
           <div class="field">
             <label>Collettore (TSA1)</label>
@@ -1501,6 +1506,7 @@
                        @input="dirtyEnt.collettore_tsa1 = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_tsa1"/> Storico</label></div>
           </div>
           <div class="field">
             <label>Ritorno solare (TSE)</label>
@@ -1513,6 +1519,7 @@
                        @input="dirtyEnt.collettore_tse = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_tse"/> Storico</label></div>
           </div>
           <div class="field">
             <label>Mandata solare (TSV)</label>
@@ -1525,6 +1532,7 @@
                        @input="dirtyEnt.collettore_tsv = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_tsv"/> Storico</label></div>
           </div>
           <div class="field">
             <label>Serbatoio superiore metà (TWU)</label>
@@ -1537,6 +1545,7 @@
                        @input="dirtyEnt.collettore_twu = true"
                        @focus="onFocus" @blur="onBlur"/>
             </div>
+            <div class="history-inline"><label><input type="checkbox" v-model="sp.history.collettore_twu"/> Storico</label></div>
           </div>
           <div class="field">
             <label>
@@ -2226,15 +2235,19 @@ async function load(){
       volano_to_puffer_stop_s: 2
     }
   }
-  if (!sp.value?.history) {
-    sp.value.history = {
-      t_acs: false, t_acs_alto: false, t_acs_medio: false, t_acs_basso: false, t_puffer: false, t_volano: false,
-      t_volano_alto: false, t_volano_basso: false,
-      t_solare_mandata: false, t_esterna: false,
-      t_puffer_alto: false, t_puffer_medio: false, t_puffer_basso: false,
-      t_mandata_miscelata: false, t_ritorno_miscelato: false, miscelatrice_setpoint: false,
-      delta_puffer_acs: false, delta_volano_acs: false, delta_mandata_ritorno: false, kp_eff: false
-    }
+  if (!sp.value?.history) sp.value.history = {}
+  const histDefaults = {
+    t_acs: false, t_acs_alto: false, t_acs_medio: false, t_acs_basso: false, t_puffer: false, t_volano: false,
+    t_volano_alto: false, t_volano_basso: false,
+    t_solare_mandata: false, t_esterna: false,
+    t_puffer_alto: false, t_puffer_medio: false, t_puffer_basso: false,
+    collettore_energy_day_kwh: false, collettore_energy_total_kwh: false, collettore_flow_lmin: false, collettore_pwm_pct: false,
+    collettore_temp_esterna: false, collettore_tsa1: false, collettore_tse: false, collettore_tsv: false, collettore_twu: false,
+    t_mandata_miscelata: false, t_ritorno_miscelato: false, miscelatrice_setpoint: false,
+    delta_puffer_acs: false, delta_volano_acs: false, delta_mandata_ritorno: false, kp_eff: false
+  }
+  for (const [k, v] of Object.entries(histDefaults)) {
+    if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
   }
   if (!sp.value?.solare) {
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
