@@ -152,7 +152,7 @@
         </div>
 
 
-        <div v-if="d" class="card inner">
+        <div v-if="d" class="card inner module-panel" :class="modulePanelClass('miscelatrice')">
           <div class="row"><strong>Destinazione surplus:</strong> {{ d.computed.dest }}</div>
           <div class="muted">{{ d.computed.dest_reason }}</div>
           <hr />
@@ -778,7 +778,7 @@
           </div>
         </div>
 
-        <div v-if="d && sp?.curva_climatica" class="card inner">
+        <div v-if="d && sp?.curva_climatica" class="card inner module-panel" :class="modulePanelClass('curva_climatica')">
           <div class="row"><strong>Curva climatica mandata</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
