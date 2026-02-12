@@ -152,7 +152,7 @@
         </div>
 
 
-        <div v-if="d" class="card inner module-panel" :class="modulePanelClass('caldaia_legna')">
+        <div v-if="d" class="card inner">
           <div class="row"><strong>Destinazione surplus:</strong> {{ d.computed.dest }}</div>
           <div class="muted">{{ d.computed.dest_reason }}</div>
           <hr />
@@ -165,7 +165,7 @@
             <hr />
             <div class="row"><strong>Moduli</strong></div>
             <div class="module-reasons">
-              <div v-for="item in moduleReasonsList" :key="item.key" class="module-row">
+              <div v-for="item in moduleReasonsList" :key="item.key" class="module-row" :class="{'mod-on': item.enabled, 'mod-active': item.enabled && item.active}">
                 <div class="module-head">
                   <div class="module-label">{{ item.label }}</div>
                   <div class="module-badges">
@@ -2765,6 +2765,8 @@ details.form summary{cursor:pointer;list-style:none}
 .list-row input{flex:1}
 .module-reasons{display:grid;gap:8px;margin-top:6px}
 .module-row{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.45)}
+.module-row.mod-on{background:linear-gradient(135deg, rgba(34,197,94,.08), rgba(34,197,94,.03))}
+.module-row.mod-active{background:linear-gradient(135deg, rgba(239,68,68,.10), rgba(239,68,68,.04))}
 .module-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .module-label{font-size:12px;font-weight:700;letter-spacing:.3px}
 .module-badges{display:flex;gap:6px;align-items:center}
