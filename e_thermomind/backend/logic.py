@@ -1,4 +1,5 @@
 from typing import Any, Dict
+import time
 
 def _f(x: Any, default: float = 0.0) -> float:
     try:
@@ -30,7 +31,9 @@ _LAST: Dict[str, Any] = {
     "source_to_acs": None,
     "volano_to_puffer": False,
     "gas_vol_ok": False,
-    "gas_puf_ok": False
+    "gas_puf_ok": False,
+    "res_step": 0,
+    "res_step_ts": 0.0
 }
 
 def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool) -> bool:
@@ -41,6 +44,7 @@ def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool) -> bool:
     return action in ("heating", "cooling") or sval in ("on", "true", "1", "yes")
 
 def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float | None = None) -> Dict[str, Any]:
+    now_ts = time.time() if now is None else float(now)
     ent = cfg.get("entities", {})
     acs_cfg = cfg.get("acs", {})
     puf_cfg = cfg.get("puffer", {})
@@ -204,11 +208,18 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             desired_step = 1
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
+    step_up_delay = int(_float(res_cfg.get("step_up_delay_s", 10), 10))
     last_step = int(_LAST.get("res_step", 0) or 0)
+    last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
     if export_w <= off_thr:
         step = 0
     else:
-        if desired_step >= last_step:
+        if desired_step > last_step:
+            if now_ts - last_step_ts >= step_up_delay:
+                step = min(desired_step, last_step + 1)
+            else:
+                step = last_step
+        elif desired_step == last_step:
             step = desired_step
         else:
             step = max(1, last_step - 1) if last_step > 0 else desired_step
@@ -232,6 +243,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     _LAST["dest"] = dest
     _LAST["source_to_acs"] = source_to_acs
     _LAST["volano_to_puffer"] = volano_to_puffer
+    if step != last_step:
+        _LAST["res_step_ts"] = now_ts
     _LAST["res_step"] = step
 
     ent_cfg = cfg.get("entities", {})

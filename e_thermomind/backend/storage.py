@@ -140,6 +140,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "enabled": True,
     "off_threshold_w": 0.0,
     "off_delay_s": 5,
+    "step_up_delay_s": 10,
     "thresholds_w": [1100, 2200, 3300],
     "invert_export_sign": False
   },
@@ -352,6 +353,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
             cfg["resistance"]["off_delay_s"] = int(_float(res["off_delay_s"], cfg["resistance"]["off_delay_s"]))
+        if "step_up_delay_s" in res:
+            cfg["resistance"]["step_up_delay_s"] = int(_float(res["step_up_delay_s"], cfg["resistance"]["step_up_delay_s"]))
         if "invert_export_sign" in res:
             cfg["resistance"]["invert_export_sign"] = bool(res["invert_export_sign"])
         if "thresholds_w" in res:
@@ -495,6 +498,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
             cfg["resistance"]["off_delay_s"] = int(_float(res["off_delay_s"], cfg["resistance"]["off_delay_s"]))
+        if "step_up_delay_s" in res:
+            cfg["resistance"]["step_up_delay_s"] = int(_float(res["step_up_delay_s"], cfg["resistance"]["step_up_delay_s"]))
         if "invert_export_sign" in res:
             cfg["resistance"]["invert_export_sign"] = bool(res["invert_export_sign"])
         if "thresholds_w" in res:

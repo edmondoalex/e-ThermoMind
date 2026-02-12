@@ -995,6 +995,7 @@
             <div class="section-title">Resistenze</div>
             <div class="field"><label>Soglia OFF resistenze (W)</label><input type="number" step="1" v-model.number="sp.resistance.off_threshold_w"/><div class="help">Sotto o uguale a questa soglia, le resistenze scendono a 0.</div></div>
             <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/><div class="help">Ritardo prima di spegnere le resistenze.</div></div>
+            <div class="field"><label>Delay salita step (s)</label><input type="number" step="1" v-model.number="sp.resistance.step_up_delay_s"/><div class="help">Ritardo tra step 1→2 e 2→3.</div></div>
             <div class="field">
               <label>Soglie export (W) [1/2/3]</label>
               <div class="row3">
