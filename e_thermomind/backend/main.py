@@ -956,16 +956,6 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     dt_ref = float(cfg_misc.get("dt_ref_c", 10.0))
     dt_min_f = float(cfg_misc.get("dt_min_factor", 0.6))
     dt_max_f = float(cfg_misc.get("dt_max_factor", 1.4))
-    min_t = float(cfg_misc.get("min_temp_c", 20.0))
-    max_t = float(cfg_misc.get("max_temp_c", 80.0))
-
-    # safety
-    if t_mandata < min_t or t_mandata > max_t:
-        await _set_actuator(r16, False)
-        await _set_actuator(r17, False)
-        miscelatrice_last_action = "STOP"
-        return
-
     err = sp - t_mandata
     t_rit = _get_num(ent.get("t_ritorno_miscelato"))
     dt = None
@@ -1252,6 +1242,9 @@ async def _apply_gas_emergenza_live() -> None:
     if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
+        # se impianto attivo: non toccare attuatori condivisi
+        if cfg.get("modules_enabled", {}).get("impianto", True):
+            return
         r2 = act.get("r2_valve_comparto_mandata_imp_pt")
         r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
         r1 = act.get("r1_valve_comparto_laboratorio")
