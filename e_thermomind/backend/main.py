@@ -268,6 +268,21 @@ async def _build_snapshot() -> dict:
     await _apply_impianto_live()
     await _apply_gas_emergenza_live()
     await _apply_caldaia_legna_live()
+    now = time.time()
+    if cfg.get("modules_enabled", {}).get("caldaia_legna", False):
+        deadline = float(caldaia_legna_state.get("startup_deadline") or 0.0)
+        if deadline > now:
+            remaining = int(max(0.0, deadline - now))
+            reason = data.get("computed", {}).get("module_reasons", {}).get("caldaia_legna")
+            suffix = f"Timer spegnimento attivo: {remaining}s"
+            if reason:
+                reason = f"{reason} | {suffix}"
+            else:
+                reason = suffix
+            data["computed"]["module_reasons"]["caldaia_legna"] = reason
+            if "caldaia_legna" in data.get("computed", {}):
+                data["computed"]["caldaia_legna"]["reason"] = reason
+                data["computed"]["caldaia_legna"]["timer_remaining_s"] = remaining
     act = {}
     for k, eid in (cfg.get("actuators", {}) or {}).items():
         if eid:
