@@ -1337,8 +1337,9 @@ async def ws_endpoint(websocket: WebSocket):
         ws_clients.discard(websocket)
 
 @app.get("/api/actions")
-async def actions():
-    return JSONResponse({"items": action_log[-50:]})
+async def actions(limit: int = 300):
+    limit = max(10, min(int(limit), 1000))
+    return JSONResponse({"items": action_log[-limit:]})
 
 @app.get("/api/assets")
 async def list_assets():
