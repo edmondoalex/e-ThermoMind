@@ -1029,8 +1029,8 @@ async def _apply_impianto_live() -> None:
         return
     if not ha.enabled:
         return
-    if _gas_emergenza_active():
-        # gas emergenza attiva: non interferire con impianto
+    if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        # gas emergenza ON: non interferire con impianto
         return
     if not cfg.get("modules_enabled", {}).get("impianto", True):
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO module OFF state={cfg.get('modules_enabled', {})}")
@@ -1045,7 +1045,7 @@ async def _apply_impianto_live() -> None:
         clima = ent.get("puffer_consenso_riscaldamento_piani")
         off_centralina = ent.get("off_centralina_termoregolazione")
         for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off", "GAS inactive")
+            await _set_climate_hvac_mode(z, "off", "IMPIANTO module OFF")
         await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         await _set_actuator(r4, False)
@@ -1419,15 +1419,6 @@ async def set_modules(payload: dict, request: Request):
     modules = payload.get("modules", {})
     if not isinstance(modules, dict):
         raise HTTPException(status_code=400, detail="Invalid modules")
-    # Mutua esclusione: gas emergenza e impianto non devono essere ON insieme
-    if modules.get("gas_emergenza") is True:
-        if modules.get("impianto") is True:
-            modules["impianto"] = False
-        # miscelatrice spenta in gas
-        modules["miscelatrice"] = False
-    elif modules.get("impianto") is True:
-        if modules.get("gas_emergenza") is True:
-            modules["gas_emergenza"] = False
     global last_modules_payload, last_modules_save_ts
     client = getattr(getattr(request, 'client', None), 'host', None)
     # skip if unchanged or too frequent
