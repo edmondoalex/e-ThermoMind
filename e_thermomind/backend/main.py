@@ -1264,8 +1264,10 @@ async def _apply_gas_emergenza_live() -> None:
         await _set_pump_delayed("gas:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         if r16: await _set_actuator(r16, False)
         if r17: await _set_actuator(r17, False)
-        for z in (gas_cfg.get("zones") or []):
-            await _set_climate_hvac_mode(z, "off", "GAS module OFF")
+        # non toccare i termostati se impianto ? attivo (evita conflitti)
+        if not cfg.get("modules_enabled", {}).get("impianto", True):
+            for z in (gas_cfg.get("zones") or []):
+                await _set_climate_hvac_mode(z, "off", "GAS module OFF")
         return
 
     zones = gas_cfg.get("zones", [])
@@ -1276,6 +1278,7 @@ async def _apply_gas_emergenza_live() -> None:
     if not _gas_emergenza_active():
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
+        # solo se impianto ? OFF possiamo spegnere i termostati gas
         if not cfg.get("modules_enabled", {}).get("impianto", True):
             for z in zones:
                 await _set_climate_hvac_mode(z, "off", "GAS inactive")
