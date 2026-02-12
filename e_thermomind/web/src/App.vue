@@ -1897,7 +1897,12 @@ const moduleReasonsList = computed(() => {
     {
       key: 'impianto',
       label: 'Impianto Riscaldamento',
-      active: !!(d.value?.computed?.impianto?.richiesta && d.value?.computed?.impianto?.source && d.value?.computed?.impianto?.source !== 'OFF')
+      active: !!(
+        d.value?.computed?.impianto?.richiesta &&
+        d.value?.computed?.impianto?.source &&
+        d.value?.computed?.impianto?.source !== 'OFF' &&
+        !d.value?.computed?.gas_emergenza?.enabled
+      )
     },
     { key: 'gas_emergenza', label: 'Caldaia Gas Emergenza', active: !!d.value?.computed?.gas_emergenza?.need },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
