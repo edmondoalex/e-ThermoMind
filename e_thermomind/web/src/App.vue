@@ -178,6 +178,24 @@
                   </div>
                 </div>
                 <div class="muted">{{ item.reason }}</div>
+                <div v-if="item.key === 'impianto'" class="module-extra">
+                  <div class="muted">
+                    Selettore: {{ d?.computed?.impianto?.selector || '-' }} | Sorgente: {{ d?.computed?.impianto?.source || '-' }} | Richiesta: {{ d?.computed?.impianto?.richiesta ? 'ON' : 'OFF' }} | Miscelatrice: {{ d?.computed?.impianto?.miscelatrice ? 'ON' : 'OFF' }}
+                  </div>
+                  <div class="muted">
+                    PDC/Volano ready: {{ d?.computed?.impianto?.pdc_ready ? 'SI' : 'NO' }} | Puffer ready: {{ d?.computed?.impianto?.puffer_ready ? 'SI' : 'NO' }}
+                  </div>
+                  <div class="muted">
+                    Volano OK: {{ d?.computed?.impianto?.volano_temp_ok ? 'SI' : 'NO' }} (T={{ fmtTemp(d?.inputs?.t_volano) }} / min {{ fmtNum(sp?.impianto?.volano_min_c) }}°C)
+                    | Puffer OK: {{ d?.computed?.impianto?.puffer_temp_ok ? 'SI' : 'NO' }} (T={{ fmtTemp(d?.inputs?.t_puffer) }} / min {{ fmtNum(sp?.impianto?.puffer_min_c) }}°C)
+                  </div>
+                  <div v-if="d?.computed?.impianto?.blocked_cold" class="muted">
+                    Blocco freddo attivo: sorgenti sotto soglia minima.
+                  </div>
+                  <div v-else class="muted">
+                    Blocco freddo: OFF.
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2799,6 +2817,7 @@ details.form summary{cursor:pointer;list-style:none}
 .list-row{display:flex;gap:8px;align-items:center}
 .list-row input{flex:1}
 .module-reasons{display:grid;gap:8px;margin-top:6px}
+.module-extra{margin-top:6px;display:grid;gap:4px}
 .module-row{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.45)}
 .module-row.mod-on{background:linear-gradient(135deg, rgba(34,197,94,.08), rgba(34,197,94,.03))}
 .module-row.mod-active{background:linear-gradient(135deg, rgba(239,68,68,.10), rgba(239,68,68,.04))}
