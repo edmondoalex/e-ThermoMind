@@ -80,7 +80,7 @@
           </div>
         </div>
 
-        <div v-if="d" class="card inner">
+        <div v-if="d" class="card inner module-panel" :class="modulePanelClass('gas_emergenza')">
           <div class="row"><strong>Grafico rapido (ultimi ~2-3 min)</strong></div>
           <div class="chart-grid">
             <div class="chart">
@@ -152,7 +152,7 @@
         </div>
 
 
-        <div v-if="d" class="card inner">
+        <div v-if="d" class="card inner module-panel" :class="modulePanelClass('caldaia_legna')">
           <div class="row"><strong>Destinazione surplus:</strong> {{ d.computed.dest }}</div>
           <div class="muted">{{ d.computed.dest_reason }}</div>
           <hr />
@@ -183,7 +183,7 @@
           </div>
         </div>
 
-        <div v-if="act" class="card inner">
+        <div v-if="act" class="card inner module-panel" :class="modulePanelClass('resistenze_volano')">
           <div class="row"><strong>Resistenze volano</strong></div>
           <div class="row3">
             <div class="kpi kpi-center clickable" :class="stateClass(act?.r22_resistenza_1_volano_pdc?.state)" @click="userToggle(act?.r22_resistenza_1_volano_pdc, 'resistenze_volano')">
@@ -237,7 +237,7 @@
           </div>
         </div>
 
-        <div v-if="act" class="card inner">
+        <div v-if="act" class="card inner module-panel" :class="modulePanelClass('volano_to_acs')">
           <div class="row"><strong>Volano → ACS</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
@@ -289,7 +289,7 @@
           </div>
         </div>
 
-        <div v-if="act" class="card inner">
+        <div v-if="act" class="card inner module-panel" :class="modulePanelClass('volano_to_puffer')">
           <div class="row"><strong>Volano → Puffer</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
@@ -331,7 +331,7 @@
           </div>
         </div>
 
-        <div v-if="act" class="card inner">
+        <div v-if="act" class="card inner module-panel" :class="modulePanelClass('solare')">
           <div class="row"><strong>Solare</strong></div>
           <div class="row3">
             <div class="kpi kpi-center" :class="historyEnabled('t_solare_mandata') ? 'clickable' : ''" @click="openHistory('t_solare_mandata','T_Solare mandata')">
@@ -386,7 +386,7 @@
           </div>
         </div>
 
-        <div v-if="d" class="card inner">
+        <div v-if="d" class="card inner module-panel" :class="modulePanelClass('miscelatrice')">
           <div class="row"><strong>Collettore solare</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
@@ -452,7 +452,7 @@
           </div>
         </div>
 
-        <div v-if="act" class="card inner">
+        <div v-if="act" class="card inner module-panel" :class="modulePanelClass('puffer_to_acs')">
           <div class="row"><strong>Puffer → ACS</strong></div>
 
           <div class="row3">
@@ -489,7 +489,7 @@
           </div>
         </div>
 
-        <div v-if="act" class="card inner">
+        <div v-if="act" class="card inner module-panel" :class="modulePanelClass('impianto')">
           <div class="row"><strong>Impianto riscaldamento (interno)</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
@@ -2095,6 +2095,13 @@ const moduleClass = (key) => {
     active: enabled && !!moduleActiveMap.value?.[key]
   }
 }
+const modulePanelClass = (key) => {
+  const enabled = !!modules.value?.[key]
+  return {
+    'mod-on': enabled,
+    'mod-active': enabled && !!moduleActiveMap.value?.[key]
+  }
+}
 
 const solarModeClass = computed(() => {
   const mode = sp.value?.solare?.mode || 'auto'
@@ -2761,6 +2768,8 @@ details.form summary{cursor:pointer;list-style:none}
 .module-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .module-label{font-size:12px;font-weight:700;letter-spacing:.3px}
 .module-badges{display:flex;gap:6px;align-items:center}
+.module-panel.mod-on{background:linear-gradient(135deg, rgba(34,197,94,.08), rgba(34,197,94,.03))}
+.module-panel.mod-active{background:linear-gradient(135deg, rgba(239,68,68,.10), rgba(239,68,68,.04))}
 .badge-mini{font-size:10px;border:1px solid var(--border);padding:2px 6px;border-radius:999px;color:var(--muted)}
 .badge-mini.on{background:rgba(87,227,214,.12);border-color:rgba(87,227,214,.4);color:#c6fff6}
 .badge-mini.off{background:rgba(148,163,184,.08)}
