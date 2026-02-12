@@ -760,7 +760,7 @@
               <div class="v">{{ fmtDelta(d?.computed?.miscelatrice?.setpoint, d?.inputs?.t_mandata_miscelata) }}</div>
             </div>
             <div class="kpi kpi-center" :class="historyEnabled('delta_mandata_ritorno') ? 'clickable' : ''" @click="openHistory('delta_mandata_ritorno','Delta Mandata/Ritorno')">
-              <div class="k">?? Mandata/Ritorno</div>
+              <div class="k">Δ Mandata/Ritorno</div>
               <div class="v">{{ fmtDelta(d?.inputs?.t_mandata_miscelata, d?.inputs?.t_ritorno_miscelato) }}</div>
             </div>
             <div class="kpi kpi-center" :class="historyEnabled('kp_eff') ? 'clickable' : ''" @click="openHistory('kp_eff','Kp eff')">

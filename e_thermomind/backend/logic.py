@@ -368,10 +368,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 mix_reason = "Delta entro isteresi."
             elif err > 0:
                 mix_action = "ALZA"
-                mix_reason = f"T_MAND {t_mandata_mix:.1f}??C < SP {mix_sp:.1f}??C | dT {mix_dt:.1f}??C | KpEff {mix_kp_eff:.2f}"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C < SP {mix_sp:.1f}°C | dT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
             else:
                 mix_action = "ABBASSA"
-                mix_reason = f"T_MAND {t_mandata_mix:.1f}??C > SP {mix_sp:.1f}??C | dT {mix_dt:.1f}??C | KpEff {mix_kp_eff:.2f}"
+                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | dT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
 
     gas_enabled = cfg.get("modules_enabled", {}).get("gas_emergenza", False)
     blocked_cold = req_on and (source == "OFF")
