@@ -888,8 +888,6 @@
             <div class="field"><label>ΔT ref (°C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.dt_ref_c"/><div class="help">Delta mandata/ritorno di riferimento per Kp eff.</div></div>
             <div class="field"><label>ΔT fattore min</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.dt_min_factor"/><div class="help">Limite minimo del fattore Kp eff.</div></div>
             <div class="field"><label>ΔT fattore max</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.dt_max_factor"/><div class="help">Limite massimo del fattore Kp eff.</div></div>
-            <div class="field"><label>Min mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.min_temp_c"/><div class="help">Safety: sotto questo valore la miscelatrice si ferma.</div></div>
-            <div class="field"><label>Max mandata (C)</label><input type="number" step="0.5" v-model.number="sp.miscelatrice.max_temp_c"/><div class="help">Safety: sopra questo valore la miscelatrice si ferma.</div></div>
             <div class="field"><label>Forza impulso (s)</label><input type="number" step="0.1" v-model.number="sp.miscelatrice.force_impulse_s"/><div class="help">Impulso extra per evitare stallo.</div></div>
           </div>
 

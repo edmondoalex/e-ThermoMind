@@ -327,8 +327,6 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if curve_enabled and curve_setpoint is not None:
         mix_sp = float(curve_setpoint)
     mix_h = float(misc_cfg.get("hyst_c", 0.5))
-    mix_min = float(misc_cfg.get("min_temp_c", 20.0))
-    mix_max = float(misc_cfg.get("max_temp_c", 80.0))
     mix_dt_ref = float(misc_cfg.get("dt_ref_c", 10.0))
     mix_dt_min_f = float(misc_cfg.get("dt_min_factor", 0.6))
     mix_dt_max_f = float(misc_cfg.get("dt_max_factor", 1.4))
@@ -340,18 +338,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     mix_action = "STOP"
     mix_reason = "Miscelatrice non attiva."
     if mix_enabled:
-        if t_mandata_mix < mix_min or t_mandata_mix > mix_max:
-            mix_reason = "Safety temperatura mandata."
+        err = mix_sp - t_mandata_mix
+        if abs(err) <= mix_h:
+            mix_reason = "Delta entro isteresi."
+        elif err > 0:
+            mix_action = "ALZA"
+            mix_reason = f"T_MAND {t_mandata_mix:.1f}??C < SP {mix_sp:.1f}??C | dT {mix_dt:.1f}??C | KpEff {mix_kp_eff:.2f}"
         else:
-            err = mix_sp - t_mandata_mix
-            if abs(err) <= mix_h:
-                mix_reason = "Delta entro isteresi."
-            elif err > 0:
-                mix_action = "ALZA"
-                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C < SP {mix_sp:.1f}°C | dT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
-            else:
-                mix_action = "ABBASSA"
-                mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | dT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f}"
+            mix_action = "ABBASSA"
+            mix_reason = f"T_MAND {t_mandata_mix:.1f}??C > SP {mix_sp:.1f}??C | dT {mix_dt:.1f}??C | KpEff {mix_kp_eff:.2f}"
 
     blocked_cold = req_on and (source == "OFF")
     imp_active = req_on and (source != "OFF") and (not blocked_cold)
