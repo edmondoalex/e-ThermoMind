@@ -208,7 +208,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             desired_step = 1
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
-    step_up_delay = int(_float(res_cfg.get("step_up_delay_s", 10), 10))
+    step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))
     last_step = int(_LAST.get("res_step", 0) or 0)
     last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
     if export_w <= off_thr:
