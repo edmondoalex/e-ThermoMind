@@ -2657,6 +2657,14 @@ details.form summary{cursor:pointer;list-style:none}
 .top-actions{display:flex;gap:8px;align-items:center}
 .action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
 .action-btn.upload{display:inline-flex;align-items:center;gap:6px}
+@media(max-width:640px){
+  .top{flex-wrap:wrap;gap:10px;padding:12px 14px}
+  .brand{flex:1 1 100%;font-size:18px}
+  .top-actions{flex:1 1 100%;flex-wrap:wrap}
+  .top-actions .action-btn{flex:1 1 46%;min-width:140px;text-align:center}
+  .tabs{margin-left:auto}
+  .tabs button{padding:6px 10px}
+}
 .setpoint-grid{column-count:1;column-gap:12px}
 .setpoint-grid .section{column-span:all}
 .setpoint-grid .set-section{display:inline-block;width:100%;margin:0 0 10px;break-inside:avoid}
