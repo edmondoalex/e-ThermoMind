@@ -652,6 +652,60 @@
         </div>
 
         <div v-if="d" class="card inner">
+          <div class="row"><strong>Caldaia Legna</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Modulo</div>
+              <div class="v">{{ modules.caldaia_legna ? 'ON' : 'OFF' }}</div>
+            </div>
+            <div class="kpi kpi-center" :class="historyEnabled('t_mandata_caldaia_legna') ? 'clickable' : ''" @click="openHistory('t_mandata_caldaia_legna','T mandata legna')">
+              <div class="k">T mandata</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_mandata_caldaia_legna) }}</div>
+            </div>
+            <div class="kpi kpi-center" :class="historyEnabled('t_puffer_alto') ? 'clickable' : ''" @click="openHistory('t_puffer_alto','T Puffer Alto')">
+              <div class="k">T Puffer Alto</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_puffer_alto) }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Min alim</div>
+              <div class="v">{{ fmtNum(d?.computed?.caldaia_legna?.min_alim) }}&deg;C</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Isteresi alim</div>
+              <div class="v">{{ fmtNum(d?.computed?.caldaia_legna?.min_alim_hyst) }}&deg;C</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">SP Puffer Alto</div>
+              <div class="v">{{ fmtNum(d?.computed?.caldaia_legna?.sp_puffer_alto) }}&deg;C</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Isteresi TA</div>
+              <div class="v">{{ fmtNum(d?.computed?.caldaia_legna?.puffer_hyst) }}&deg;C</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center" :class="stateClass(act?.r30_alimentazione_caldaia_legna?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r30_alimentazione_caldaia_legna?.attributes?.icon)" :class="[mdiClass(act?.r30_alimentazione_caldaia_legna?.attributes?.icon), stateClass(act?.r30_alimentazione_caldaia_legna?.state)]"></i>
+                R30 Alimentazione Caldaia Legna
+              </div>
+            </div>
+            <div class="kpi kpi-center" :class="stateClass(act?.r20_ta_caldaia_legna?.state)">
+              <div class="k">
+                <i v-if="mdiClass(act?.r20_ta_caldaia_legna?.attributes?.icon)" :class="[mdiClass(act?.r20_ta_caldaia_legna?.attributes?.icon), stateClass(act?.r20_ta_caldaia_legna?.state)]"></i>
+                R20 TA Caldaia Legna
+              </div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Motivo</div>
+              <div class="v">{{ d?.computed?.caldaia_legna?.reason || d?.computed?.module_reasons?.caldaia_legna || '-' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="d" class="card inner">
           <div class="row"><strong>Miscelatrice</strong></div>
           <div class="row3">
             <div class="kpi kpi-center" :class="historyEnabled('t_mandata_miscelata') ? 'clickable' : ''" @click="openHistory('t_mandata_miscelata','T mandata miscelata')">
