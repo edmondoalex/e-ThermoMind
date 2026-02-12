@@ -654,7 +654,7 @@
           </div>
         </div>
 
-        <div v-if="d" class="card inner">
+        <div v-if="d" class="card inner module-panel" :class="modulePanelClass('caldaia_legna')">
           <div class="row"><strong>Caldaia Legna</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
