@@ -2582,9 +2582,10 @@ details.form summary{cursor:pointer;list-style:none}
 .top-actions{display:flex;gap:8px;align-items:center}
 .action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
 .action-btn.upload{display:inline-flex;align-items:center;gap:6px}
-.setpoint-grid{display:grid;gap:8px}
-.setpoint-grid .section{grid-column:1/-1}
-@media(min-width:900px){.setpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.setpoint-grid{column-count:1;column-gap:12px}
+.setpoint-grid .section{column-span:all}
+.setpoint-grid .set-section{display:inline-block;width:100%;margin:0 0 10px;break-inside:avoid}
+@media(min-width:900px){.setpoint-grid{column-count:2}}
 .set-section{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(12,18,30,.55)}
 .setpoint-grid .set-section:nth-of-type(odd){background:rgba(14,20,34,.6)}
 .setpoint-grid .set-section:nth-of-type(even){background:rgba(10,16,26,.65)}
