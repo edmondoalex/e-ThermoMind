@@ -668,6 +668,20 @@
             </div>
           </div>
           <div class="row3">
+            <div class="kpi kpi-center" :class="historyEnabled('t_ritorno_caldaia_legna') ? 'clickable' : ''" @click="openHistory('t_ritorno_caldaia_legna','T ritorno legna')">
+              <div class="k">T ritorno</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_ritorno_caldaia_legna) }}</div>
+            </div>
+            <div class="kpi kpi-center" :class="historyEnabled('t_caldaia_legna') ? 'clickable' : ''" @click="openHistory('t_caldaia_legna','T caldaia legna')">
+              <div class="k">T caldaia</div>
+              <div class="v">{{ fmtTemp(d?.inputs?.t_caldaia_legna) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Motivo</div>
+              <div class="v">{{ d?.computed?.caldaia_legna?.reason || d?.computed?.module_reasons?.caldaia_legna || '-' }}</div>
+            </div>
+          </div>
+          <div class="row3">
             <div class="kpi kpi-center">
               <div class="k">Min alim</div>
               <div class="v">{{ fmtNum(d?.computed?.caldaia_legna?.min_alim) }}&deg;C</div>
@@ -691,16 +705,14 @@
                 <i v-if="mdiClass(act?.r30_alimentazione_caldaia_legna?.attributes?.icon)" :class="[mdiClass(act?.r30_alimentazione_caldaia_legna?.attributes?.icon), stateClass(act?.r30_alimentazione_caldaia_legna?.state)]"></i>
                 R30 Alimentazione Caldaia Legna
               </div>
+              <div class="v">{{ act?.r30_alimentazione_caldaia_legna?.state || '-' }}</div>
             </div>
             <div class="kpi kpi-center" :class="stateClass(act?.r20_ta_caldaia_legna?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.r20_ta_caldaia_legna?.attributes?.icon)" :class="[mdiClass(act?.r20_ta_caldaia_legna?.attributes?.icon), stateClass(act?.r20_ta_caldaia_legna?.state)]"></i>
                 R20 TA Caldaia Legna
               </div>
-            </div>
-            <div class="kpi kpi-center">
-              <div class="k">Motivo</div>
-              <div class="v">{{ d?.computed?.caldaia_legna?.reason || d?.computed?.module_reasons?.caldaia_legna || '-' }}</div>
+              <div class="v">{{ act?.r20_ta_caldaia_legna?.state || '-' }}</div>
             </div>
           </div>
         </div>
@@ -1303,6 +1315,38 @@
                        @input="dirtyEnt.t_mandata_caldaia_legna = true"
                        @focus="onFocus" @blur="onBlur"/>
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_mandata_caldaia_legna"/> Storico</label></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>
+              <i v-if="mdiClass(ent?.t_ritorno_caldaia_legna?.attributes?.icon)" :class="mdiClass(ent?.t_ritorno_caldaia_legna?.attributes?.icon)"></i>
+              T Ritorno Caldaia Legna
+            </label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_ritorno_caldaia_legna?.entity_id) ? 'logic-ok' : 'logic-no'">?</span>
+                <input type="text"
+                       :class="isFilled(ent?.t_ritorno_caldaia_legna?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_ritorno_caldaia_legna.entity_id"
+                       placeholder="sensor.esp32_s3_ct_temp_ritorno_caldaia_legna"
+                       @input="dirtyEnt.t_ritorno_caldaia_legna = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_ritorno_caldaia_legna"/> Storico</label></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>
+              <i v-if="mdiClass(ent?.t_caldaia_legna?.attributes?.icon)" :class="mdiClass(ent?.t_caldaia_legna?.attributes?.icon)"></i>
+              T Caldaia Legna
+            </label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_caldaia_legna?.entity_id) ? 'logic-ok' : 'logic-no'">?</span>
+                <input type="text"
+                       :class="isFilled(ent?.t_caldaia_legna?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_caldaia_legna.entity_id"
+                       placeholder="sensor.esp32_s3_ct_temp_caldaia_legna"
+                       @input="dirtyEnt.t_caldaia_legna = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_caldaia_legna"/> Storico</label></div>
             </div>
           </div>
           <div class="field">

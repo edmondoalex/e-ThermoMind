@@ -46,7 +46,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "source_volano_ready": None,
     "source_caldaia_ready": None,
     "miscelatrice_setpoint": None,
-    "t_mandata_caldaia_legna": None
+    "t_mandata_caldaia_legna": None,
+    "t_ritorno_caldaia_legna": None,
+    "t_caldaia_legna": None
   },
   "actuators": {
     "r1_valve_comparto_laboratorio": None,
@@ -228,6 +230,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_mandata_miscelata": False,
     "t_ritorno_miscelato": False,
     "t_mandata_caldaia_legna": False,
+    "t_ritorno_caldaia_legna": False,
+    "t_caldaia_legna": False,
     "miscelatrice_setpoint": False,
     "delta_puffer_acs": False,
     "delta_volano_acs": False,

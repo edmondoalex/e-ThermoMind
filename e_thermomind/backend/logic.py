@@ -105,6 +105,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     t_ritorno_mix = get_num(ent.get("t_ritorno_miscelato"), 0.0)
     export_w = get_num(ent.get("grid_export_w"), 0.0)
     t_mandata_legna = get_num(ent.get("t_mandata_caldaia_legna"), None)
+    t_ritorno_legna = get_num(ent.get("t_ritorno_caldaia_legna"), None)
+    t_caldaia_legna = get_num(ent.get("t_caldaia_legna"), None)
 
     if res_cfg.get("invert_export_sign"):
         export_w = -export_w
@@ -479,7 +481,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "t_mandata_miscelata": t_mandata_mix,
             "t_ritorno_miscelato": t_ritorno_mix,
             "grid_export_w": export_w,
-            "t_mandata_caldaia_legna": t_mandata_legna
+            "t_mandata_caldaia_legna": t_mandata_legna,
+            "t_ritorno_caldaia_legna": t_ritorno_legna,
+            "t_caldaia_legna": t_caldaia_legna
         },
         "computed": {
             "acs_sp": acs_sp,

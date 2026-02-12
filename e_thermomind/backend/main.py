@@ -1522,12 +1522,28 @@ async def history(entity_id: str, hours: int = 24):
     hist_cfg = cfg.get("history", {})
     allowed = {
         "t_acs",
+        "t_acs_alto",
+        "t_acs_medio",
+        "t_acs_basso",
         "t_puffer",
+        "t_puffer_alto",
+        "t_puffer_medio",
+        "t_puffer_basso",
         "t_volano",
+        "t_volano_alto",
+        "t_volano_basso",
         "t_solare_mandata",
+        "t_esterna",
         "t_mandata_miscelata",
         "t_ritorno_miscelato",
         "miscelatrice_setpoint",
+        "delta_puffer_acs",
+        "delta_volano_acs",
+        "delta_mandata_ritorno",
+        "kp_eff",
+        "t_mandata_caldaia_legna",
+        "t_ritorno_caldaia_legna",
+        "t_caldaia_legna",
     }
     key = None
     for k in allowed:
