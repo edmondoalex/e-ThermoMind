@@ -838,8 +838,8 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         return
     if not ha.enabled:
         return
-    # In gas emergenza la miscelatrice resta spenta
-    if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+    # In gas emergenza la miscelatrice resta sempre in ALZA
+    if cfg.get("modules_enabled", {}).get("gas_emergenza", False) and _gas_emergenza_active():
         act = cfg.get("actuators", {})
         r16 = act.get("r16_cmd_miscelatrice_alza")
         r17 = act.get("r17_cmd_miscelatrice_abbassa")
@@ -848,9 +848,9 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
             miscelatrice_task = None
         miscelatrice_shutdown_until = 0.0
         miscelatrice_pause_until = 0.0
-        await _set_actuator(r16, False)
         await _set_actuator(r17, False)
-        miscelatrice_last_action = "STOP"
+        await _set_actuator(r16, True)
+        miscelatrice_last_action = "ALZA"
         return
     if not cfg.get("modules_enabled", {}).get("miscelatrice", True):
         act = cfg.get("actuators", {})
