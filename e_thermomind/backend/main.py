@@ -64,6 +64,7 @@ miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
 impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
+caldaia_legna_state: dict[str, Any] = {"startup_deadline": 0.0, "last_enabled": False}
 last_modules_payload: dict[str, bool] | None = None
 last_modules_save_ts: float = 0.0
 
@@ -136,6 +137,7 @@ async def decision():
     await _apply_solar_live(data)
     await _apply_impianto_live()
     await _apply_gas_emergenza_live()
+    await _apply_caldaia_legna_live()
     await _apply_miscelatrice_live(data)
     data["zones"] = _build_zones_state()
     return JSONResponse(data)
@@ -265,6 +267,7 @@ async def _build_snapshot() -> dict:
     await _apply_solar_live(data)
     await _apply_impianto_live()
     await _apply_gas_emergenza_live()
+    await _apply_caldaia_legna_live()
     act = {}
     for k, eid in (cfg.get("actuators", {}) or {}).items():
         if eid:
@@ -354,6 +357,8 @@ def _module_for_actuator_key(key: str) -> str | None:
         return "pdc"
     if "gas_boiler" in key or "caldaia_gas" in key:
         return "gas_emergenza"
+    if "caldaia_legna" in key:
+        return "caldaia_legna"
     return None
 
 
@@ -1326,6 +1331,63 @@ async def _apply_gas_emergenza_live() -> None:
         await _set_actuator(r1, lab_active)
     await _set_pump_delayed("gas:lab_pump", r11, lab_active, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
+async def _apply_caldaia_legna_live() -> None:
+    if cfg.get("runtime", {}).get("mode") != "live":
+        return
+    if not ha.enabled:
+        return
+    ent = cfg.get("entities", {})
+    act = cfg.get("actuators", {})
+    legna_cfg = cfg.get("caldaia_legna", {})
+
+    power = act.get("r30_alimentazione_caldaia_legna")
+    ta = act.get("r20_ta_caldaia_legna")
+
+    enabled = cfg.get("modules_enabled", {}).get("caldaia_legna", False)
+    now = time.time()
+    if not enabled:
+        caldaia_legna_state["last_enabled"] = False
+        caldaia_legna_state["startup_deadline"] = 0.0
+        await _set_actuator(power, False)
+        await _set_actuator(ta, False)
+        return
+
+    if not caldaia_legna_state.get("last_enabled"):
+        caldaia_legna_state["last_enabled"] = True
+        startup_s = float(legna_cfg.get("startup_check_s", 600.0))
+        caldaia_legna_state["startup_deadline"] = now + max(0.0, startup_s)
+
+    t_mandata = _get_num(ent.get("t_mandata_caldaia_legna"))
+    t_puffer_alto = _get_num(ent.get("t_puffer_alto"))
+    min_alim = float(legna_cfg.get("temp_min_alim_c", 35.0))
+    min_alim_hyst = float(legna_cfg.get("temp_min_alim_hyst_c", 5.0))
+    sp_puf_alto = float(legna_cfg.get("puffer_alto_sp_c", 80.0))
+    sp_puf_hyst = float(legna_cfg.get("puffer_alto_hyst_c", 3.0))
+    allow_startup = now < float(caldaia_legna_state.get("startup_deadline") or 0.0)
+
+    if t_mandata is None:
+        power_on = bool(allow_startup)
+    elif allow_startup and t_mandata < min_alim:
+        power_on = True
+    elif t_mandata <= (min_alim - min_alim_hyst):
+        power_on = False
+    elif t_mandata >= min_alim:
+        power_on = True
+    else:
+        power_on = _is_on(power)
+
+    if t_puffer_alto is None:
+        ta_on = False
+    elif t_puffer_alto <= (sp_puf_alto - sp_puf_hyst):
+        ta_on = True
+    elif t_puffer_alto >= sp_puf_alto:
+        ta_on = False
+    else:
+        ta_on = _is_on(ta)
+
+    await _set_actuator(power, power_on)
+    await _set_actuator(ta, ta_on)
+
 @app.get("/api/status")
 async def status():
     return JSONResponse({
@@ -1381,6 +1443,7 @@ async def get_setpoints():
         "runtime": cfg.get("runtime", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),
         "gas_emergenza": cfg.get("gas_emergenza", {}),
+        "caldaia_legna": cfg.get("caldaia_legna", {}),
         "impianto": cfg.get("impianto", {}),
         "history": cfg.get("history", {}),
         "security": cfg.get("security", {}),

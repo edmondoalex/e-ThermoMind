@@ -45,7 +45,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "source_pdc_ready": None,
     "source_volano_ready": None,
     "source_caldaia_ready": None,
-    "miscelatrice_setpoint": None
+    "miscelatrice_setpoint": None,
+    "t_mandata_caldaia_legna": None
   },
   "actuators": {
     "r1_valve_comparto_laboratorio": None,
@@ -169,7 +170,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "curva_climatica": True,
     "pdc": False,
     "impianto": False,
-    "gas_emergenza": False
+    "gas_emergenza": False,
+    "caldaia_legna": False
   },
   "gas_emergenza": {
     "zones": [],
@@ -179,6 +181,13 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "puffer_hyst_c": 2.0,
     "min_on_s": 120,
     "min_off_s": 120
+  },
+  "caldaia_legna": {
+    "temp_min_alim_c": 35.0,
+    "temp_min_alim_hyst_c": 5.0,
+    "startup_check_s": 600,
+    "puffer_alto_sp_c": 80.0,
+    "puffer_alto_hyst_c": 3.0
   },
   "impianto": {
     "source_mode": "AUTO",
@@ -218,6 +227,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_puffer_basso": False,
     "t_mandata_miscelata": False,
     "t_ritorno_miscelato": False,
+    "t_mandata_caldaia_legna": False,
     "miscelatrice_setpoint": False,
     "delta_puffer_acs": False,
     "delta_volano_acs": False,
@@ -236,6 +246,7 @@ _NUM_KEYS = {
   "curva_climatica": ["slope", "offset", "min_c", "max_c"],
   "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
   "gas_emergenza": ["volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c", "min_on_s", "min_off_s"],
+  "caldaia_legna": ["temp_min_alim_c", "temp_min_alim_hyst_c", "startup_check_s", "puffer_alto_sp_c", "puffer_alto_hyst_c"],
   "volano": [
     "margin_c",
     "max_c",

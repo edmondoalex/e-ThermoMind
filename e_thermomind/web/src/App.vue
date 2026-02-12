@@ -131,7 +131,10 @@
               Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
             </button>
             <button class="ghost toggle" :class="modules.gas_emergenza ? 'on' : 'off'" @click="toggleModule('gas_emergenza')">
-              Caldaia Gas Emergenza: {{ modules.gas_emergenza ? 'ON' : 'OFF' }}
+              Caldaia Gas Emergenza Riscaldamento: {{ modules.gas_emergenza ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.caldaia_legna ? 'on' : 'off'" @click="toggleModule('caldaia_legna')">
+              Caldaia Legna: {{ modules.caldaia_legna ? 'ON' : 'OFF' }}
             </button>
             <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
               Solare: {{ modules.solare ? 'ON' : 'OFF' }}
@@ -603,7 +606,7 @@
         </div>
 
         <div v-if="d" class="card inner">
-          <div class="row"><strong>Caldaia Gas Emergenza</strong></div>
+          <div class="row"><strong>Caldaia Gas Emergenza Riscaldamento</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
               <div class="k">Modulo</div>
@@ -642,7 +645,7 @@
             <div class="kpi kpi-center" :class="stateClass(act?.gas_boiler_ta?.state)">
               <div class="k">
                 <i v-if="mdiClass(act?.gas_boiler_ta?.attributes?.icon)" :class="[mdiClass(act?.gas_boiler_ta?.attributes?.icon), stateClass(act?.gas_boiler_ta?.state)]"></i>
-                TA Caldaia Gas Emergenza
+                TA Caldaia Gas Emergenza Riscaldamento
               </div>
             </div>
           </div>
@@ -991,7 +994,7 @@
           </div>
 
           <div class="set-section">
-            <div class="section-title">Caldaia Gas Emergenza</div>
+            <div class="section-title">Caldaia Gas Emergenza Riscaldamento</div>
             <div class="field">
               <label>Zone gas emergenza</label>
               <div class="list">
@@ -1007,6 +1010,35 @@
             <div class="field"><label>Volano isteresi gas (°C)</label><input type="number" step="0.5" v-model.number="sp.gas_emergenza.volano_hyst_c"/><div class="help">Isteresi volano per evitare ON/OFF gas.</div></div>
             <div class="field"><label>Puffer min gas (°C)</label><input type="number" step="0.5" v-model.number="sp.gas_emergenza.puffer_min_c"/><div class="help">Soglia dedicata: sopra questo valore il gas si spegne.</div></div>
             <div class="field"><label>Puffer isteresi gas (°C)</label><input type="number" step="0.5" v-model.number="sp.gas_emergenza.puffer_hyst_c"/><div class="help">Isteresi puffer per evitare ON/OFF gas.</div></div>
+          </div>
+
+          <div class="set-section">
+            <div class="section-title">Caldaia Legna</div>
+            <div class="field">
+              <label>Temp min alimentazione (Â°C)</label>
+              <input type="number" step="0.5" v-model.number="sp.caldaia_legna.temp_min_alim_c"/>
+              <div class="help">Sotto questa soglia, dopo il timer, l'alimentazione si disattiva.</div>
+            </div>
+            <div class="field">
+              <label>Isteresi alimentazione (Â°C)</label>
+              <input type="number" step="0.5" v-model.number="sp.caldaia_legna.temp_min_alim_hyst_c"/>
+              <div class="help">Evita ON/OFF rapido vicino alla soglia.</div>
+            </div>
+            <div class="field">
+              <label>Timer controllo (min)</label>
+              <input type="number" step="1" v-model.number="caldaiaLegnaStartupMin"/>
+              <div class="help">Tempo di avvio prima del controllo temperatura.</div>
+            </div>
+            <div class="field">
+              <label>SP Puffer alto (Â°C)</label>
+              <input type="number" step="0.5" v-model.number="sp.caldaia_legna.puffer_alto_sp_c"/>
+              <div class="help">Sopra questa temperatura, TA caldaia legna OFF.</div>
+            </div>
+            <div class="field">
+              <label>Isteresi TA Puffer (Â°C)</label>
+              <input type="number" step="0.5" v-model.number="sp.caldaia_legna.puffer_alto_hyst_c"/>
+              <div class="help">Isteresi per evitare ON/OFF TA vicino al setpoint.</div>
+            </div>
           </div>
 
           <div class="set-section">
@@ -1053,7 +1085,10 @@
               Impianto Riscaldamento: {{ modules.impianto ? 'ON' : 'OFF' }}
             </button>
             <button class="ghost toggle" :class="modules.gas_emergenza ? 'on' : 'off'" @click="toggleModule('gas_emergenza')">
-              Caldaia Gas Emergenza: {{ modules.gas_emergenza ? 'ON' : 'OFF' }}
+              Caldaia Gas Emergenza Riscaldamento: {{ modules.gas_emergenza ? 'ON' : 'OFF' }}
+            </button>
+            <button class="ghost toggle" :class="modules.caldaia_legna ? 'on' : 'off'" @click="toggleModule('caldaia_legna')">
+              Caldaia Legna: {{ modules.caldaia_legna ? 'ON' : 'OFF' }}
             </button>
             <button class="ghost toggle" :class="modules.solare ? 'on' : 'off'" @click="toggleModule('solare')">
               Solare: {{ modules.solare ? 'ON' : 'OFF' }}
@@ -1198,6 +1233,22 @@
                        @input="dirtyEnt.t_volano_basso = true"
                        @focus="onFocus" @blur="onBlur"/>
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_volano_basso"/> Storico</label></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>
+              <i v-if="mdiClass(ent?.t_mandata_caldaia_legna?.attributes?.icon)" :class="mdiClass(ent?.t_mandata_caldaia_legna?.attributes?.icon)"></i>
+              T Mandata Caldaia Legna
+            </label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.t_mandata_caldaia_legna?.entity_id) ? 'logic-ok' : 'logic-no'">?</span>
+                <input type="text"
+                       :class="isFilled(ent?.t_mandata_caldaia_legna?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.t_mandata_caldaia_legna.entity_id"
+                       placeholder="sensor.esp32_s3_ct_temp_mandata_caldaia_legna"
+                       @input="dirtyEnt.t_mandata_caldaia_legna = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.t_mandata_caldaia_legna"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
@@ -1652,9 +1703,22 @@ const modules = ref({
   miscelatrice: false,
   curva_climatica: true,
   pdc: false,
-  gas_emergenza: false
+  gas_emergenza: false,
+  caldaia_legna: false
 })
 const solareModeInit = ref(false)
+const caldaiaLegnaStartupMin = computed({
+  get: () => {
+    const s = Number(sp.value?.caldaia_legna?.startup_check_s || 0)
+    if (!Number.isFinite(s)) return 0
+    return Math.round(s / 60)
+  },
+  set: (v) => {
+    if (!sp.value?.caldaia_legna) return
+    const n = Number(v)
+    sp.value.caldaia_legna.startup_check_s = Number.isFinite(n) ? Math.max(0, Math.round(n * 60)) : 0
+  }
+})
 
 const actuatorDefs = [
   { key: 'r1_valve_comparto_laboratorio', label: 'R1 Valvola Comparto Laboratorio (riscaldamento)', impl: false },
@@ -1688,8 +1752,8 @@ const actuatorDefs = [
   { key: 'r28_scarico_antigelo_mandata_pdc', label: 'R28 Scarico Antigelo Mandata PDC', impl: false },
   { key: 'r29_scarico_antigelo_ritorno_pdc', label: 'R29 Scarico Antigelo Ritorno PDC', impl: false },
   { key: 'r30_alimentazione_caldaia_legna', label: 'R30 Alimentazione Caldaia Legna', impl: false },
-  { key: 'gas_boiler_power', label: '220V Caldaia Gas Emergenza', impl: true },
-  { key: 'gas_boiler_ta', label: 'TA Caldaia Gas Emergenza', impl: true }
+  { key: 'gas_boiler_power', label: '220V Caldaia Gas Emergenza Riscaldamento', impl: true },
+  { key: 'gas_boiler_ta', label: 'TA Caldaia Gas Emergenza Riscaldamento', impl: true }
 ]
 
 const isFilled = (v) => (typeof v === 'string' ? v.trim().length > 0 : false)
@@ -1904,7 +1968,12 @@ const moduleReasonsList = computed(() => {
         !d.value?.computed?.gas_emergenza?.enabled
       )
     },
-    { key: 'gas_emergenza', label: 'Caldaia Gas Emergenza', active: !!d.value?.computed?.gas_emergenza?.need },
+    {
+      key: 'caldaia_legna',
+      label: 'Caldaia Legna',
+      active: !!(d.value?.computed?.caldaia_legna?.power || d.value?.computed?.caldaia_legna?.ta)
+    },
+    { key: 'gas_emergenza', label: 'Caldaia Gas Emergenza Riscaldamento', active: !!d.value?.computed?.gas_emergenza?.need },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
   return labels

@@ -50,6 +50,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     curve_enabled = cfg.get("modules_enabled", {}).get("curva_climatica", True)
     gas_cfg = cfg.get("gas_emergenza", {})
     gas_enabled = cfg.get("modules_enabled", {}).get("gas_emergenza", False)
+    legna_cfg = cfg.get("caldaia_legna", {})
+    legna_enabled = cfg.get("modules_enabled", {}).get("caldaia_legna", False)
 
     def get_num(eid: str | None, default: float = 0.0) -> float:
         if not eid:
@@ -102,6 +104,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     t_mandata_mix = get_num(ent.get("t_mandata_miscelata"), 0.0)
     t_ritorno_mix = get_num(ent.get("t_ritorno_miscelato"), 0.0)
     export_w = get_num(ent.get("grid_export_w"), 0.0)
+    t_mandata_legna = get_num(ent.get("t_mandata_caldaia_legna"), None)
 
     if res_cfg.get("invert_export_sign"):
         export_w = -export_w
@@ -425,6 +428,26 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         else:
             gas_reason = "Gas standby: fonte principale disponibile."
 
+    legna_min = float(legna_cfg.get("temp_min_alim_c", 35.0))
+    legna_min_hyst = float(legna_cfg.get("temp_min_alim_hyst_c", 5.0))
+    legna_sp_puf = float(legna_cfg.get("puffer_alto_sp_c", 80.0))
+    legna_puf_hyst = float(legna_cfg.get("puffer_alto_hyst_c", 3.0))
+    if not legna_enabled:
+        legna_reason = "Modulo legna OFF."
+        legna_power = False
+        legna_ta = False
+    else:
+        if t_mandata_legna is None:
+            legna_reason = f"Sonda mandata assente. Min {legna_min:.1f}C"
+            legna_power = False
+        elif t_mandata_legna < legna_min:
+            legna_reason = f"Mandata bassa: {t_mandata_legna:.1f}C < {legna_min:.1f}C"
+            legna_power = False
+        else:
+            legna_reason = f"Mandata ok: {t_mandata_legna:.1f}C >= {legna_min:.1f}C"
+            legna_power = True
+        legna_ta = bool(t_puffer_alto < legna_sp_puf) if t_puffer_alto is not None else False
+
     return {
         "inputs": {
             "t_acs": t_acs,
@@ -455,7 +478,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "t_esterna": t_esterna,
             "t_mandata_miscelata": t_mandata_mix,
             "t_ritorno_miscelato": t_ritorno_mix,
-            "grid_export_w": export_w
+            "grid_export_w": export_w,
+            "t_mandata_caldaia_legna": t_mandata_legna
         },
         "computed": {
             "acs_sp": acs_sp,
@@ -522,6 +546,18 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "lab": gas_lab,
                 "scala": gas_scala
             },
+        "caldaia_legna": {
+                "enabled": legna_enabled,
+                "power": legna_power,
+                "ta": legna_ta,
+                "t_mandata": t_mandata_legna,
+                "t_puffer_alto": t_puffer_alto,
+                "min_alim": legna_min,
+                "min_alim_hyst": legna_min_hyst,
+                "sp_puffer_alto": legna_sp_puf,
+                "puffer_hyst": legna_puf_hyst,
+                "reason": legna_reason
+            },
             "module_reasons": {
                 "solare": (
                     f"{source_reason} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C"
@@ -551,6 +587,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "resistenze_volano": f"{charge_reason} | Export {export_w:.0f}W",
                 "impianto": impianto_reason,
                 "gas_emergenza": gas_reason,
+                "caldaia_legna": legna_reason,
                 "miscelatrice": mix_reason
             },
             "state": {
