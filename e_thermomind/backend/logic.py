@@ -104,12 +104,16 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     t_mandata_mix = get_num(ent.get("t_mandata_miscelata"), 0.0)
     t_ritorno_mix = get_num(ent.get("t_ritorno_miscelato"), 0.0)
     export_w = get_num(ent.get("grid_export_w"), 0.0)
+    res_power_w = get_num(ent.get("resistenze_volano_power"), 0.0)
+    if res_power_w < 0:
+        res_power_w = 0.0
     t_mandata_legna = get_num(ent.get("t_mandata_caldaia_legna"), None)
     t_ritorno_legna = get_num(ent.get("t_ritorno_caldaia_legna"), None)
     t_caldaia_legna = get_num(ent.get("t_caldaia_legna"), None)
 
     if res_cfg.get("invert_export_sign"):
         export_w = -export_w
+    export_eff_w = export_w + res_power_w
 
     acs_sp = float(acs_cfg.get("setpoint_c", 55.0))
     acs_off_h = float(acs_cfg.get("off_hyst_c", 1.0))
@@ -192,11 +196,11 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     desired_step = 0
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
         thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-        if export_w >= thr[2]:
+        if export_eff_w >= thr[2]:
             desired_step = 3
-        elif export_w >= thr[1]:
+        elif export_eff_w >= thr[1]:
             desired_step = 2
-        elif export_w >= thr[0]:
+        elif export_eff_w >= thr[0]:
             desired_step = 1
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
@@ -221,7 +225,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         )
     else:
         charge_reason = (
-            f"Export {export_w:.0f}W -> step {step}/3 (OFF delay {res_cfg.get('off_delay_s',5)}s)."
+            f"Export eff {export_eff_w:.0f}W (exp {export_w:.0f}W + res {res_power_w:.0f}W) "
+            f"-> step {step}/3 (OFF delay {res_cfg.get('off_delay_s',5)}s)."
         )
 
     _LAST["dest"] = dest
@@ -497,6 +502,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "t_mandata_miscelata": t_mandata_mix,
             "t_ritorno_miscelato": t_ritorno_mix,
             "grid_export_w": export_w,
+            "resistenze_volano_power": res_power_w,
             "t_mandata_caldaia_legna": t_mandata_legna,
             "t_ritorno_caldaia_legna": t_ritorno_legna,
             "t_caldaia_legna": t_caldaia_legna
