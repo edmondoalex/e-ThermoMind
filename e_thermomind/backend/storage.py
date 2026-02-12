@@ -138,6 +138,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   },
   "resistance": {
     "enabled": True,
+    "off_threshold_w": 0.0,
     "off_delay_s": 5,
     "thresholds_w": [1100, 2200, 3300],
     "invert_export_sign": False
@@ -347,6 +348,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(res, dict):
         if "enabled" in res:
             cfg["resistance"]["enabled"] = bool(res["enabled"])
+        if "off_threshold_w" in res:
+            cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
             cfg["resistance"]["off_delay_s"] = int(_float(res["off_delay_s"], cfg["resistance"]["off_delay_s"]))
         if "invert_export_sign" in res:
@@ -488,6 +491,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(res, dict):
         if "enabled" in res:
             cfg["resistance"]["enabled"] = bool(res["enabled"])
+        if "off_threshold_w" in res:
+            cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
             cfg["resistance"]["off_delay_s"] = int(_float(res["off_delay_s"], cfg["resistance"]["off_delay_s"]))
         if "invert_export_sign" in res:

@@ -189,29 +189,45 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold):
             volano_to_puffer = True
 
-    step = 0
+    desired_step = 0
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
         thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
         if export_w >= thr[2]:
-            step = 3
+            desired_step = 3
         elif export_w >= thr[1]:
-            step = 2
+            desired_step = 2
         elif export_w >= thr[0]:
-            step = 1
+            desired_step = 1
+
+    off_thr = float(res_cfg.get("off_threshold_w", 0.0))
+    last_step = int(_LAST.get("res_step", 0) or 0)
+    if export_w <= off_thr:
+        step = 0
+    else:
+        if desired_step >= last_step:
+            step = desired_step
+        else:
+            step = max(1, last_step - 1) if last_step > 0 else desired_step
 
     charge_buffer = "RESISTANCE" if step > 0 else "OFF"
     if vol_max_hit:
         charge_reason = f"VOLANO_MAX: {t_volano:.1f}°C >= {vol_max:.1f}°C"
     elif dest == "OFF":
         charge_reason = dest_reason
+    elif export_w <= off_thr:
+        charge_reason = (
+            f"Export {export_w:.0f}W <= OFF {off_thr:.0f}W "
+            f"(delay {res_cfg.get('off_delay_s',5)}s)."
+        )
     else:
         charge_reason = (
-            f"Export {export_w:.0f}W -> step {step}/3 (OFF delay {res_cfg.get('off_delay_s',5)}s in v0.2)."
+            f"Export {export_w:.0f}W -> step {step}/3 (OFF delay {res_cfg.get('off_delay_s',5)}s)."
         )
 
     _LAST["dest"] = dest
     _LAST["source_to_acs"] = source_to_acs
     _LAST["volano_to_puffer"] = volano_to_puffer
+    _LAST["res_step"] = step
 
     ent_cfg = cfg.get("entities", {})
     imp_cfg = cfg.get("impianto", {})
