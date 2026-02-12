@@ -1894,7 +1894,11 @@ const moduleReasonsList = computed(() => {
     { key: 'puffer_to_acs', label: 'Puffer -> ACS', active: !!flags.puffer_to_acs },
     { key: 'miscelatrice', label: 'Miscelatrice', active: mixActive },
     { key: 'curva_climatica', label: 'Curva climatica', active: !!d.value?.computed?.curva_climatica?.setpoint },
-    { key: 'impianto', label: 'Impianto Riscaldamento', active: false },
+    {
+      key: 'impianto',
+      label: 'Impianto Riscaldamento',
+      active: !!(d.value?.computed?.impianto?.richiesta && d.value?.computed?.impianto?.source && d.value?.computed?.impianto?.source !== 'OFF')
+    },
     { key: 'gas_emergenza', label: 'Caldaia Gas Emergenza', active: !!d.value?.computed?.gas_emergenza?.need },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
