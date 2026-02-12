@@ -31,6 +31,21 @@ cfg = load_config()
 ws_task: asyncio.Task | None = None
 off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
 action_log: list[str] = []
+
+def _append_action_log(line: str) -> None:
+    try:
+        log_path = Path("/config/actions.log")
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:
+        pass
+
+
+def _log_action(line: str) -> None:
+    action_log.append(line)
+    _append_action_log(line)
+
 entity_icon_map: dict[str, str] = {}
 last_dry_run_signature: str | None = None
 recent_ui_actuations: dict[str, float] = {}
@@ -408,7 +423,7 @@ async def _auto_off_after_delay(entity_id: str, module_key: str | None) -> None:
         if module_key and not cfg.get("modules_enabled", {}).get(module_key, True):
             return
         await ha.call_service(entity_id, "off")
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} AUTO-OFF {entity_id} (HA manual guard)")
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} AUTO-OFF {entity_id} (HA manual guard)")
     finally:
         pending_auto_off.pop(entity_id, None)
 
@@ -1006,7 +1021,7 @@ async def _set_climate_hvac_mode(entity_id: str | None, mode: str, reason: str |
         return
     await ha.call_service_named("climate", "set_hvac_mode", {"entity_id": entity_id, "hvac_mode": mode})
     reason_txt = f" ({reason})" if reason else ""
-    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode}{reason_txt}")
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode}{reason_txt}")
     last_hvac_cmd[entity_id] = (mode, now)
 
 
@@ -1038,7 +1053,7 @@ async def _apply_impianto_live() -> None:
         # gas emergenza attiva: non interferire con impianto
         return
     if not cfg.get("modules_enabled", {}).get("impianto", True):
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO module OFF state={cfg.get('modules_enabled', {})}")
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO module OFF state={cfg.get('modules_enabled', {})}")
         ent = cfg.get("entities", {})
         act = cfg.get("actuators", {})
         imp = cfg.get("impianto", {})
@@ -1341,6 +1356,12 @@ async def actions(limit: int = 300):
     limit = max(10, min(int(limit), 1000))
     return JSONResponse({"items": action_log[-limit:]})
 
+
+@app.get("/api/actions.txt")
+async def actions_txt(limit: int = 500):
+    limit = max(10, min(int(limit), 2000))
+    return HTMLResponse("\n".join(action_log[-limit:]), media_type="text/plain")
+
 @app.get("/api/assets")
 async def list_assets():
     assets_dir = Path("/app/static/assets")
@@ -1393,7 +1414,7 @@ async def climate_setpoint(payload: dict):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid temperature")
     await ha.call_service_named("climate", "set_temperature", {"entity_id": entity_id, "temperature": temperature})
-    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} CLIMATE {entity_id} -> {temperature:.1f}")
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} CLIMATE {entity_id} -> {temperature:.1f}")
     return JSONResponse({"ok": True})
 
 @app.get("/api/modules")
@@ -1426,9 +1447,9 @@ async def set_modules(payload: dict, request: Request):
     save_config(cfg)
     last_modules_payload = modules
     last_modules_save_ts = now
-    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE modules")
-    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES client={client} payload={modules}")
-    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE modules")
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES client={client} payload={modules}")
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
     return JSONResponse({"ok": True})
 
 @app.get("/api/history")
