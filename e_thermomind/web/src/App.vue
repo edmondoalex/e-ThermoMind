@@ -730,7 +730,7 @@
               <div class="k">Forced-off</div>
               <div class="v">
                 {{ sp?.caldaia_legna?.forced_off ? 'SI' : 'NO' }}
-                <button v-if="sp?.caldaia_legna?.forced_off" class="ghost" @click="resetLegnaForcedOff">Reset</button>
+                <button class="ghost" @click="resetLegnaForcedOff">Reset</button>
               </div>
             </div>
           </div>
