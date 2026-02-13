@@ -726,6 +726,13 @@
               <div class="k">Isteresi TA</div>
               <div class="v">{{ fmtNum(d?.computed?.caldaia_legna?.puffer_hyst) }}&deg;C</div>
             </div>
+            <div class="kpi kpi-center">
+              <div class="k">Forced-off</div>
+              <div class="v">
+                {{ sp?.caldaia_legna?.forced_off ? 'SI' : 'NO' }}
+                <button v-if="sp?.caldaia_legna?.forced_off" class="ghost" @click="resetLegnaForcedOff">Reset</button>
+              </div>
+            </div>
           </div>
           <div class="row3">
             <div class="kpi kpi-center" :class="stateClass(act?.r30_alimentazione_caldaia_legna?.state)">
@@ -2402,6 +2409,11 @@ async function save(){
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
     startPolling()
   }
+}
+async function resetLegnaForcedOff(){
+  if (!sp.value?.caldaia_legna) return
+  sp.value.caldaia_legna.forced_off = false
+  await save()
 }
 async function saveAll(){
   await save()
