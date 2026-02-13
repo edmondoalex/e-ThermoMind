@@ -31,6 +31,7 @@ cfg = load_config()
 ws_task: asyncio.Task | None = None
 off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0, "rg": 0.0}
 on_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
+off_sequence_start: float = 0.0
 action_log: list[str] = []
 
 def _append_action_log(line: str) -> None:
@@ -761,6 +762,8 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     r24 = act.get("r24_resistenza_3_volano_pdc")
     rg = act.get("generale_resistenze_volano_pdc")
     step = int(decision_data.get("computed", {}).get("resistance_step", 0))
+    export_w = float(decision_data.get("inputs", {}).get("grid_export_w") or 0.0)
+    off_thr = float(cfg.get("resistance", {}).get("off_threshold_w", 0.0))
     desired = {
         "r22": step >= 1,
         "r23": step >= 2,
@@ -770,6 +773,27 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
     on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))
     now = time.time()
+
+    global off_sequence_start
+    if export_w <= off_thr:
+        if off_sequence_start == 0.0:
+            off_sequence_start = now
+    else:
+        off_sequence_start = 0.0
+
+    def _allow_off(key: str) -> bool:
+        if export_w > off_thr:
+            return True
+        if off_sequence_start == 0.0:
+            return False
+        elapsed = now - off_sequence_start
+        if key == "r24":
+            return elapsed >= off_delay
+        if key == "r23":
+            return elapsed >= (off_delay * 2)
+        if key == "r22":
+            return elapsed >= (off_delay * 3)
+        return False
 
     for key, ent in (("r22", r22), ("r23", r23), ("r24", r24)):
         want_on = desired[key]
@@ -787,11 +811,14 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         else:
             on_deadline[key] = 0.0
             if current == "on":
-                if off_deadline[key] == 0.0:
-                    off_deadline[key] = now + off_delay
-                elif now >= off_deadline[key]:
-                    await _set_resistance(ent, False)
+                if export_w > off_thr:
                     off_deadline[key] = 0.0
+                elif _allow_off(key):
+                    if off_deadline[key] == 0.0:
+                        off_deadline[key] = now + off_delay
+                    elif now >= off_deadline[key]:
+                        await _set_resistance(ent, False)
+                        off_deadline[key] = 0.0
             else:
                 off_deadline[key] = 0.0
 
@@ -818,6 +845,8 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     computed = decision_data.setdefault("computed", {})
     reasons = computed.setdefault("module_reasons", {})
     delay_notes: list[str] = []
+    if off_sequence_start > 0.0:
+        delay_notes.append(f"off_seq {int(now - off_sequence_start)}s")
     for key in ("r22", "r23", "r24"):
         if on_deadline[key] > now:
             delay_notes.append(f"{key} ON in {int(on_deadline[key] - now)}s")

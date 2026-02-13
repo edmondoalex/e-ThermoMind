@@ -223,10 +223,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 step = min(desired_step, last_step + 1)
             else:
                 step = last_step
-        elif desired_step == last_step:
-            step = desired_step
         else:
-            step = max(1, last_step - 1) if last_step > 0 else desired_step
+            # do not decrease step while export is positive
+            step = last_step
 
     charge_buffer = "RESISTANCE" if step > 0 else "OFF"
     if vol_max_hit:
