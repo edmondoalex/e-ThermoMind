@@ -443,7 +443,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             "collettore_energy_day_kwh", "collettore_energy_total_kwh", "collettore_flow_lmin", "collettore_pwm_pct",
             "collettore_temp_esterna", "collettore_tsa1", "collettore_tse", "collettore_tsv", "collettore_twu",
             "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint",
-            "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff",
+            "delta_puffer_acs", "delta_volano_acs", "delta_volano_puffer", "delta_mandata_ritorno", "kp_eff",
+            "curva_setpoint",
             "t_mandata_caldaia_legna", "t_ritorno_caldaia_legna", "t_caldaia_legna"
         ):
             if key in hist:
