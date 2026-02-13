@@ -841,8 +841,18 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             else:
                 off_deadline["rg"] = 0.0
 
-    # annotate live delay info in decision payload
+    # reflect real step from actuators for UI
+    actual_step = 0
+    if _get_state(r24) == "on":
+        actual_step = 3
+    elif _get_state(r23) == "on":
+        actual_step = 2
+    elif _get_state(r22) == "on":
+        actual_step = 1
     computed = decision_data.setdefault("computed", {})
+    computed["resistance_step"] = actual_step if actual_step > 0 else computed.get("resistance_step", 0)
+
+    # annotate live delay info in decision payload
     reasons = computed.setdefault("module_reasons", {})
     delay_notes: list[str] = []
     if off_sequence_start > 0.0:
