@@ -112,7 +112,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "delta_to_acs_start_c": 5.0,
     "delta_to_acs_hold_c": 2.5,
     "delta_to_puffer_start_c": 5.0,
-    "delta_to_puffer_hold_c": 2.5
+    "delta_to_puffer_hold_c": 2.5,
+    "min_to_puffer_c": 55.0,
+    "hyst_to_puffer_c": 2.0
   },
   "miscelatrice": {
     "setpoint_c": 45.0,
@@ -275,6 +277,8 @@ _NUM_KEYS = {
     "delta_to_acs_hold_c",
     "delta_to_puffer_start_c",
     "delta_to_puffer_hold_c",
+    "min_to_puffer_c",
+    "hyst_to_puffer_c",
   ],
 }
 

@@ -935,6 +935,8 @@
             <div class="field"><label>Δ Hold Volano → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_acs_hold_c"/><div class="help">Differenza per mantenere attivo il flusso.</div></div>
             <div class="field"><label>Δ Start Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_start_c"/><div class="help">Differenza T_VOL - T_PUF per avviare.</div></div>
             <div class="field"><label>Δ Hold Volano → Puffer (C)</label><input type="number" step="0.5" v-model.number="sp.volano.delta_to_puffer_hold_c"/><div class="help">Differenza per mantenere attivo il flusso.</div></div>
+            <div class="field"><label>Volano min → Puffer (°C)</label><input type="number" step="0.5" v-model.number="sp.volano.min_to_puffer_c"/><div class="help">Minimo volano per poter caricare puffer.</div></div>
+            <div class="field"><label>Volano isteresi → Puffer (°C)</label><input type="number" step="0.5" v-model.number="sp.volano.hyst_to_puffer_c"/><div class="help">Isteresi minimo volano per evitare ON/OFF.</div></div>
             <div class="field">
               <label>Sequenza Volano → ACS (valvola + pompa)</label>
               <div class="row2">
@@ -2329,6 +2331,12 @@ async function load(){
   }
   if (!sp.value?.solare) {
     sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
+  }
+  if (!sp.value?.volano) {
+    sp.value.volano = { margin_c: 3, max_c: 60, max_hyst_c: 2, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2 }
+  } else {
+    if (typeof sp.value.volano.min_to_puffer_c === 'undefined') sp.value.volano.min_to_puffer_c = 55
+    if (typeof sp.value.volano.hyst_to_puffer_c === 'undefined') sp.value.volano.hyst_to_puffer_c = 2
   }
   if (!sp.value?.miscelatrice) {
     sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }

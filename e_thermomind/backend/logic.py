@@ -161,6 +161,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     delta_hold = float(vol_cfg.get("delta_to_acs_hold_c", 2.5))
     puf_delta_start = float(vol_cfg.get("delta_to_puffer_start_c", 5.0))
     puf_delta_hold = float(vol_cfg.get("delta_to_puffer_hold_c", 2.5))
+    vol_min_puf = float(vol_cfg.get("min_to_puffer_c", 55.0))
+    vol_h_puf = float(vol_cfg.get("hyst_to_puffer_c", 2.0))
     puf_to_acs_start = float(puf_cfg.get("delta_to_acs_start_c", 3.0))
     puf_to_acs_hold = float(puf_cfg.get("delta_to_acs_hold_c", 1.5))
     vol_min_acs = float(vol_cfg.get("min_to_acs_c", 50.0))
@@ -193,9 +195,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     volano_to_puffer = False
     if dest == "PUFFER" and (not vol_max_hit):
-        if t_volano >= t_puffer + puf_delta_start:
+        if (t_volano >= t_puffer + puf_delta_start) and (t_volano >= vol_min_puf + vol_h_puf):
             volano_to_puffer = True
-        elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold):
+        elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
             volano_to_puffer = True
 
     desired_step = 0
@@ -613,9 +615,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     else f"Puffer -> ACS non attivo. T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
                 ),
                 "volano_to_puffer": (
-                    f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_start:.1f}C ({t_puffer + puf_delta_start:.1f}C) | d_hold {puf_delta_hold:.1f}C"
+                    f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_start:.1f}C ({t_puffer + puf_delta_start:.1f}C) | Min {vol_min_puf:.1f}C (+{vol_h_puf:.1f}C)"
                     if volano_to_puffer
-                    else f"T_VOL {t_volano:.1f}C < T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C) | d_start {puf_delta_start:.1f}C"
+                    else f"T_VOL {t_volano:.1f}C < T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C) | Min {vol_min_puf:.1f}C (+{vol_h_puf:.1f}C)"
                 ),
                 "curva_climatica": (
                     f"T_EXT {t_esterna:.1f}C -> SP {curve_setpoint:.1f}C"
