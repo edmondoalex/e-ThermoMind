@@ -324,7 +324,7 @@
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_puffer) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('delta_volano_puffer') ? 'clickable' : ''" @click="openHistory('delta_volano_puffer','Delta Volano-Puffer')">
               <div class="k">Delta (Volano - Puffer)</div>
               <div class="v">{{ fmtDelta(d?.inputs?.t_volano, d?.inputs?.t_puffer) }}</div>
             </div>
@@ -792,7 +792,7 @@
               <div class="k">T esterna</div>
               <div class="v">{{ fmtTemp(d?.computed?.curva_climatica?.t_ext) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('curva_setpoint') ? 'clickable' : ''" @click="openHistory('curva_setpoint','Setpoint curva')">
               <div class="k">Setpoint curva</div>
               <div class="v">{{ fmtNum(d?.computed?.curva_climatica?.setpoint) }}&deg;C</div>
             </div>
@@ -1649,6 +1649,13 @@
             </div>
           </div>
           <div class="field">
+            <label>Delta Volano - Puffer</label>
+            <div class="input-row">
+              <span class="logic-dot">?</span>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_volano_puffer"/> Storico</label></div>
+            </div>
+          </div>
+          <div class="field">
             <label>Delta Mandata/Ritorno</label>
             <div class="input-row">
               <span class="logic-dot">?</span>
@@ -1660,6 +1667,13 @@
             <div class="input-row">
               <span class="logic-dot">?</span>
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.kp_eff"/> Storico</label></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Setpoint curva climatica</label>
+            <div class="input-row">
+              <span class="logic-dot">?</span>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.curva_setpoint"/> Storico</label></div>
             </div>
           </div>
 
@@ -1815,6 +1829,7 @@ const history = ref({
   collettore_tse: [],
   collettore_tsv: [],
   collettore_twu: [],
+  curva_setpoint: [],
   t_puffer_alto: [],
   t_puffer_medio: [],
   t_puffer_basso: [],
@@ -1823,6 +1838,7 @@ const history = ref({
   miscelatrice_setpoint: [],
   delta_puffer_acs: [],
   delta_volano_acs: [],
+  delta_volano_puffer: [],
   delta_mandata_ritorno: [],
   kp_eff: [],
   export_w: []
@@ -2302,7 +2318,8 @@ async function load(){
     collettore_energy_day_kwh: false, collettore_energy_total_kwh: false, collettore_flow_lmin: false, collettore_pwm_pct: false,
     collettore_temp_esterna: false, collettore_tsa1: false, collettore_tse: false, collettore_tsv: false, collettore_twu: false,
     t_mandata_miscelata: false, t_ritorno_miscelato: false, miscelatrice_setpoint: false,
-    delta_puffer_acs: false, delta_volano_acs: false, delta_mandata_ritorno: false, kp_eff: false
+    delta_puffer_acs: false, delta_volano_acs: false, delta_volano_puffer: false, delta_mandata_ritorno: false, kp_eff: false,
+    curva_setpoint: false
   }
   for (const [k, v] of Object.entries(histDefaults)) {
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
@@ -2555,9 +2572,11 @@ function updateHistoryFromDecision(decision){
   pushHistory(history.value.t_puffer_basso, decision.inputs.t_puffer_basso)
   pushHistory(history.value.t_mandata_miscelata, decision.inputs.t_mandata_miscelata)
   pushHistory(history.value.t_ritorno_miscelato, decision.inputs.t_ritorno_miscelato)
+  pushHistory(history.value.curva_setpoint, decision.computed?.curva_climatica?.setpoint)
   pushHistory(history.value.miscelatrice_setpoint, decision.computed?.miscelatrice?.setpoint)
   pushHistory(history.value.delta_puffer_acs, (decision.inputs.t_puffer - decision.inputs.t_acs))
   pushHistory(history.value.delta_volano_acs, (decision.inputs.t_volano - decision.inputs.t_acs))
+  pushHistory(history.value.delta_volano_puffer, (decision.inputs.t_volano - decision.inputs.t_puffer))
   pushHistory(history.value.delta_mandata_ritorno, (decision.inputs.t_mandata_miscelata - decision.inputs.t_ritorno_miscelato))
   pushHistory(history.value.kp_eff, decision.computed?.miscelatrice?.kp_eff)
   pushHistory(history.value.export_w, decision.inputs.grid_export_w)

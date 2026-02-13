@@ -246,8 +246,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "miscelatrice_setpoint": False,
     "delta_puffer_acs": False,
     "delta_volano_acs": False,
+    "delta_volano_puffer": False,
     "delta_mandata_ritorno": False,
-    "kp_eff": False
+    "kp_eff": False,
+    "curva_setpoint": False
   },
   "security": {
     "user_pin": ""
