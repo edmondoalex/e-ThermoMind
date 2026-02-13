@@ -67,6 +67,30 @@ gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active
 caldaia_legna_state: dict[str, Any] = {"startup_deadline": 0.0, "last_enabled": False, "forced_off": False}
 last_modules_payload: dict[str, bool] | None = None
 last_modules_save_ts: float = 0.0
+SUMMER_BLOCK_MODULES = {
+    "volano_to_acs",
+    "volano_to_puffer",
+    "resistenze_volano",
+    "impianto",
+    "gas_emergenza",
+    "miscelatrice",
+    "curva_climatica",
+}
+
+def _season_blocks_heating() -> bool:
+    season = str(cfg.get("impianto", {}).get("season_mode", "winter")).lower()
+    return season == "summer"
+
+def _apply_season_block(modules: dict[str, bool]) -> tuple[dict[str, bool], bool]:
+    if not _season_blocks_heating():
+        return modules, False
+    out = dict(modules)
+    changed = False
+    for key in SUMMER_BLOCK_MODULES:
+        if out.get(key):
+            out[key] = False
+            changed = True
+    return out, changed
 
 @app.on_event("startup")
 async def on_startup():
@@ -1515,6 +1539,11 @@ async def set_setpoints(payload: dict):
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
     cfg = apply_setpoints(cfg, payload)
+    modules = cfg.get("modules_enabled", {})
+    modules, changed = _apply_season_block(modules)
+    if changed:
+        cfg = apply_setpoints(cfg, {"modules_enabled": modules})
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES summer block (setpoints)")
     save_config(cfg)
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE setpoints")
     return JSONResponse({"ok": True})
@@ -1553,6 +1582,7 @@ async def set_modules(payload: dict, request: Request):
     modules = payload.get("modules", {})
     if not isinstance(modules, dict):
         raise HTTPException(status_code=400, detail="Invalid modules")
+    modules, changed = _apply_season_block(modules)
     global last_modules_payload, last_modules_save_ts
     client = getattr(getattr(request, 'client', None), 'host', None)
     # skip if unchanged or too frequent
@@ -1568,6 +1598,8 @@ async def set_modules(payload: dict, request: Request):
     last_modules_payload = modules
     last_modules_save_ts = now
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE modules")
+    if changed:
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES summer block applied")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES client={client} payload={modules}")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
     return JSONResponse({"ok": True})

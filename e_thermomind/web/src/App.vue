@@ -527,6 +527,13 @@
               <span>Puffer ready</span>
             </label>
             <div class="kpi kpi-center">
+              <div class="k">Stagione</div>
+              <select v-model="sp.impianto.season_mode">
+                <option value="winter">Inverno</option>
+                <option value="summer">Estate</option>
+              </select>
+            </div>
+            <div class="kpi kpi-center">
               <div class="k">Richiesta calore</div>
               <div class="v">{{ d?.computed?.impianto?.richiesta ? 'ON' : 'OFF' }}</div>
             </div>

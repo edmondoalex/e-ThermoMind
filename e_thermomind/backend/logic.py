@@ -404,7 +404,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         else:
             mix_reason = "Impianto inattivo."
 
-    if gas_enabled:
+    if season_mode == "summer":
+        impianto_reason = "Estate: riscaldamento bloccato."
+    elif gas_enabled:
         impianto_reason = "Gas emergenza attivo: impianto inattivo."
     elif blocked_cold:
         impianto_reason = "Bloccato: nessuna fonte disponibile o troppo fredda."
