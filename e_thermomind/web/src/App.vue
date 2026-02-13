@@ -258,14 +258,14 @@
         <div v-if="act" class="card inner module-panel" :class="modulePanelClass('volano_to_acs')">
           <div class="row"><strong>Volano → ACS</strong></div>
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_volano') ? 'clickable' : ''" @click="openHistory('t_volano','T_Volano')">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
                 T_Volano
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_volano) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_acs') ? 'clickable' : ''" @click="openHistory('t_acs','T_ACS')">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
                 T_ACS
@@ -310,14 +310,14 @@
         <div v-if="act" class="card inner module-panel" :class="modulePanelClass('volano_to_puffer')">
           <div class="row"><strong>Volano → Puffer</strong></div>
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_volano') ? 'clickable' : ''" @click="openHistory('t_volano','T_Volano')">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_volano?.attributes?.icon)" :class="mdiClass(ent?.t_volano?.attributes?.icon)"></i>
                 T_Volano
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_volano) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_puffer') ? 'clickable' : ''" @click="openHistory('t_puffer','T_Puffer')">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
                 T_Puffer
@@ -421,21 +421,21 @@
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_energy_day_kwh') ? 'clickable' : ''" @click="openHistory('collettore_energy_day_kwh','Energia solare (giorno)')">
               <div class="k">Energia solare (giorno)</div>
               <div class="v">{{ fmtNum(d?.inputs?.collettore_energy_day_kwh) }} kWh</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_energy_total_kwh') ? 'clickable' : ''" @click="openHistory('collettore_energy_total_kwh','Energia solare (totale)')">
               <div class="k">Energia solare (totale)</div>
               <div class="v">{{ fmtNum(d?.inputs?.collettore_energy_total_kwh) }} kWh</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_flow_lmin') ? 'clickable' : ''" @click="openHistory('collettore_flow_lmin','Portata solare')">
               <div class="k">Portata (L/min)</div>
               <div class="v">{{ fmtNum(d?.inputs?.collettore_flow_lmin) }} L/min</div>
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_pwm_pct') ? 'clickable' : ''" @click="openHistory('collettore_pwm_pct','PWM Pompa solare')">
               <div class="k">PWM Pompa</div>
               <div class="v">{{ fmtNum(d?.inputs?.collettore_pwm_pct) }}%</div>
             </div>
@@ -443,27 +443,27 @@
               <div class="k">Stato 2</div>
               <div class="v">{{ fmtText(d?.inputs?.collettore_status2) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_temp_esterna') ? 'clickable' : ''" @click="openHistory('collettore_temp_esterna','Temperatura esterna solare')">
               <div class="k">Temperatura esterna</div>
               <div class="v">{{ fmtTemp(d?.inputs?.collettore_temp_esterna) }}</div>
             </div>
           </div>
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_tsa1') ? 'clickable' : ''" @click="openHistory('collettore_tsa1','Collettore TSA1')">
               <div class="k">Collettore (TSA1)</div>
               <div class="v">{{ fmtTemp(d?.inputs?.collettore_tsa1) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_tse') ? 'clickable' : ''" @click="openHistory('collettore_tse','Ritorno solare TSE')">
               <div class="k">Ritorno solare (TSE)</div>
               <div class="v">{{ fmtTemp(d?.inputs?.collettore_tse) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_tsv') ? 'clickable' : ''" @click="openHistory('collettore_tsv','Mandata solare TSV')">
               <div class="k">Mandata solare (TSV)</div>
               <div class="v">{{ fmtTemp(d?.inputs?.collettore_tsv) }}</div>
             </div>
           </div>
           <div class="row2">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('collettore_twu') ? 'clickable' : ''" @click="openHistory('collettore_twu','Serbatoio superiore TWU')">
               <div class="k">Serbatoio superiore metà (TWU)</div>
               <div class="v">{{ fmtTemp(d?.inputs?.collettore_twu) }}</div>
             </div>
@@ -474,14 +474,14 @@
           <div class="row"><strong>Puffer → ACS</strong></div>
 
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_puffer') ? 'clickable' : ''" @click="openHistory('t_puffer','T_Puffer')">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_puffer?.attributes?.icon)" :class="mdiClass(ent?.t_puffer?.attributes?.icon)"></i>
                 T_Puffer
               </div>
               <div class="v">{{ fmtTemp(d?.inputs?.t_puffer) }}</div>
             </div>
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_acs') ? 'clickable' : ''" @click="openHistory('t_acs','T_ACS')">
               <div class="k">
                 <i v-if="mdiClass(ent?.t_acs?.attributes?.icon)" :class="mdiClass(ent?.t_acs?.attributes?.icon)"></i>
                 T_ACS
@@ -788,7 +788,7 @@
         <div v-if="d && sp?.curva_climatica" class="card inner module-panel" :class="modulePanelClass('curva_climatica')">
           <div class="row"><strong>Curva climatica mandata</strong></div>
           <div class="row3">
-            <div class="kpi kpi-center">
+            <div class="kpi kpi-center" :class="historyEnabled('t_esterna') ? 'clickable' : ''" @click="openHistory('t_esterna','T esterna')">
               <div class="k">T esterna</div>
               <div class="v">{{ fmtTemp(d?.computed?.curva_climatica?.t_ext) }}</div>
             </div>
@@ -1806,6 +1806,15 @@ const history = ref({
   t_volano_alto: [],
   t_volano_basso: [],
   t_esterna: [],
+  collettore_energy_day_kwh: [],
+  collettore_energy_total_kwh: [],
+  collettore_flow_lmin: [],
+  collettore_pwm_pct: [],
+  collettore_temp_esterna: [],
+  collettore_tsa1: [],
+  collettore_tse: [],
+  collettore_tsv: [],
+  collettore_twu: [],
   t_puffer_alto: [],
   t_puffer_medio: [],
   t_puffer_basso: [],
@@ -2532,6 +2541,15 @@ function updateHistoryFromDecision(decision){
   pushHistory(history.value.t_volano_alto, decision.inputs.t_volano_alto)
   pushHistory(history.value.t_volano_basso, decision.inputs.t_volano_basso)
   pushHistory(history.value.t_esterna, decision.inputs.t_esterna)
+  pushHistory(history.value.collettore_energy_day_kwh, decision.inputs.collettore_energy_day_kwh)
+  pushHistory(history.value.collettore_energy_total_kwh, decision.inputs.collettore_energy_total_kwh)
+  pushHistory(history.value.collettore_flow_lmin, decision.inputs.collettore_flow_lmin)
+  pushHistory(history.value.collettore_pwm_pct, decision.inputs.collettore_pwm_pct)
+  pushHistory(history.value.collettore_temp_esterna, decision.inputs.collettore_temp_esterna)
+  pushHistory(history.value.collettore_tsa1, decision.inputs.collettore_tsa1)
+  pushHistory(history.value.collettore_tse, decision.inputs.collettore_tse)
+  pushHistory(history.value.collettore_tsv, decision.inputs.collettore_tsv)
+  pushHistory(history.value.collettore_twu, decision.inputs.collettore_twu)
   pushHistory(history.value.t_puffer_alto, decision.inputs.t_puffer_alto)
   pushHistory(history.value.t_puffer_medio, decision.inputs.t_puffer_medio)
   pushHistory(history.value.t_puffer_basso, decision.inputs.t_puffer_basso)
