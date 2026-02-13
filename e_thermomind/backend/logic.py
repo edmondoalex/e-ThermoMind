@@ -235,9 +235,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     elif export_w <= off_thr:
         charge_reason = f"Export {export_w:.0f}W <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
     else:
-        charge_reason = (
-            f"Export {export_w:.0f}W -> step {step}/3 (delay {step_up_delay}s) | off_delay {off_delay}s."
-        )
+        charge_reason = f"Export {export_w:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
 
     _LAST["dest"] = dest
     _LAST["source_to_acs"] = source_to_acs
