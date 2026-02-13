@@ -428,6 +428,9 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
         for key in _NUM_KEYS["gas_emergenza"]:
             if key in gas:
                 cfg["gas_emergenza"][key] = _float(gas.get(key), cfg["gas_emergenza"].get(key, 0.0))
+    legna = raw.get("caldaia_legna", {})
+    if isinstance(legna, dict) and "forced_off" in legna:
+        cfg["caldaia_legna"]["forced_off"] = bool(legna.get("forced_off"))
 
     imp = raw.get("impianto", {})
     if isinstance(imp, dict):
@@ -562,6 +565,9 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
         for key in _NUM_KEYS["gas_emergenza"]:
             if key in gas:
                 cfg["gas_emergenza"][key] = _float(gas.get(key), cfg["gas_emergenza"][key])
+    legna = payload.get("caldaia_legna", {})
+    if isinstance(legna, dict) and "forced_off" in legna:
+        cfg["caldaia_legna"]["forced_off"] = bool(legna.get("forced_off"))
 
     imp = payload.get("impianto", {})
     if isinstance(imp, dict):
