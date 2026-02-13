@@ -410,8 +410,10 @@ def _zone_active(entity_id: str | None, cooling_blocked: set[str]) -> bool:
     if dom in ("switch", "binary_sensor", "input_boolean"):
         return state in ("on", "true", "1", "yes")
     if dom == "climate":
-        # usa solo azione reale (heating/cooling) per evitare oscillazioni
-        return hvac_action in ("heating", "cooling")
+        if state in ("off", "idle", "unavailable", "unknown"):
+            return False
+        # usa azione reale, ma solo se lo stato non è OFF
+        return hvac_action in ("heating", "cooling") or state in ("heat", "heating", "cool", "cooling")
     # default: treat truthy text as active
     return state in ("on", "true", "1", "yes", "heat", "heating")
 
