@@ -814,6 +814,22 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             else:
                 off_deadline["rg"] = 0.0
 
+    # annotate live delay info in decision payload
+    computed = decision_data.setdefault("computed", {})
+    reasons = computed.setdefault("module_reasons", {})
+    delay_notes: list[str] = []
+    for key in ("r22", "r23", "r24"):
+        if on_deadline[key] > now:
+            delay_notes.append(f"{key} ON in {int(on_deadline[key] - now)}s")
+        if off_deadline[key] > now:
+            delay_notes.append(f"{key} OFF in {int(off_deadline[key] - now)}s")
+    if off_deadline.get("rg", 0.0) > now:
+        delay_notes.append(f"RG OFF in {int(off_deadline['rg'] - now)}s")
+    if delay_notes:
+        base_reason = reasons.get("resistenze_volano", "")
+        suffix = " | Delay: " + ", ".join(delay_notes)
+        reasons["resistenze_volano"] = (base_reason + suffix) if base_reason else ("Delay: " + ", ".join(delay_notes))
+
 async def _apply_transfer_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
         return
