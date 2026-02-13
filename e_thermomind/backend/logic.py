@@ -246,6 +246,21 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         _LAST["res_step_ts"] = now_ts
     _LAST["res_step"] = step
 
+    volano_to_acs_reason = (
+        f"Dest={dest} | ACS_MAX={'SI' if acs_max_hit else 'NO'} | "
+        f"Source={source_to_acs} | T_VOL {t_volano:.1f}C | T_ACS {t_acs:.1f}C | "
+        f"d_start {delta_start:.1f}C / d_hold {delta_hold:.1f}C | "
+        f"Min {vol_min_acs:.1f}C (+{vol_h_acs:.1f}C) | "
+        f"LastSource={last_source or 'None'}"
+    )
+    volano_to_puffer_reason = (
+        f"Dest={dest} | VOL_MAX={'SI' if vol_max_hit else 'NO'} | "
+        f"T_VOL {t_volano:.1f}C | T_PUF {t_puffer:.1f}C | "
+        f"d_start {puf_delta_start:.1f}C / d_hold {puf_delta_hold:.1f}C | "
+        f"Min {vol_min_puf:.1f}C (+{vol_h_puf:.1f}C) | "
+        f"LastVolToPuf={'SI' if last_vol_to_puf else 'NO'}"
+    )
+
     ent_cfg = cfg.get("entities", {})
     imp_cfg = cfg.get("impianto", {})
     sel_eid = ent_cfg.get("hvac_riscaldamento_select")
@@ -605,9 +620,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     else f"Solare non attivo. T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C"
                 ),
                 "volano_to_acs": (
-                    f"{source_reason} | T_VOL {t_volano:.1f}C | T_ACS {t_acs:.1f}C | d_start {delta_start:.1f}C / d_hold {delta_hold:.1f}C | Min {vol_min_acs:.1f}C (+{vol_h_acs:.1f}C)"
+                    f"{volano_to_acs_reason}"
                     if source_to_acs == "VOLANO"
-                    else f"Volano -> ACS non attivo. T_VOL {t_volano:.1f}C | T_ACS {t_acs:.1f}C | d_start {delta_start:.1f}C / d_hold {delta_hold:.1f}C | Min {vol_min_acs:.1f}C (+{vol_h_acs:.1f}C)"
+                    else f"Volano -> ACS non attivo. {volano_to_acs_reason}"
                 ),
                 "puffer_to_acs": (
                     f"{source_reason} | T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
@@ -615,9 +630,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     else f"Puffer -> ACS non attivo. T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
                 ),
                 "volano_to_puffer": (
-                    f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_start:.1f}C ({t_puffer + puf_delta_start:.1f}C) | Min {vol_min_puf:.1f}C (+{vol_h_puf:.1f}C)"
+                    f"{volano_to_puffer_reason}"
                     if volano_to_puffer
-                    else f"T_VOL {t_volano:.1f}C < T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C) | Min {vol_min_puf:.1f}C (+{vol_h_puf:.1f}C)"
+                    else f"Volano -> Puffer non attivo. {volano_to_puffer_reason}"
                 ),
                 "curva_climatica": (
                     f"T_EXT {t_esterna:.1f}C -> SP {curve_setpoint:.1f}C"
