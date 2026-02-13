@@ -1810,6 +1810,8 @@ const lastUpdate = ref(null)
 const pollMs = ref(3000)
 const actions = ref([])
 const zones = ref([])
+let historySaveTimer = null
+let historyReady = false
 const history = ref({
   t_acs: [],
   t_acs_alto: [],
@@ -2300,6 +2302,7 @@ async function loadModules(){
   const r = await fetch('/api/modules'); modules.value = await r.json()
 }
 async function load(){
+  historyReady = false
   const r = await fetch('/api/setpoints'); sp.value = await r.json()
   if (!sp.value?.timers) {
     sp.value.timers = {
@@ -2356,6 +2359,7 @@ async function load(){
   if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }
+  historyReady = true
 }
 function parseCurveText(text, fallback){
   if (!text || typeof text !== 'string') return fallback
@@ -2372,6 +2376,11 @@ function applyCurveText(){
 function saveCurveDebounced(){
   if (curveSaveTimer) clearTimeout(curveSaveTimer)
   curveSaveTimer = setTimeout(() => { save() }, 300)
+}
+function saveHistoryDebounced(){
+  if (!historyReady) return
+  if (historySaveTimer) clearTimeout(historySaveTimer)
+  historySaveTimer = setTimeout(() => { save() }, 300)
 }
 async function loadActuators(){
   if (editingCount.value > 0) return
@@ -2649,6 +2658,12 @@ watch(tab, (val) => {
     startPolling()
   }
 })
+
+watch(
+  () => sp.value?.history,
+  () => { saveHistoryDebounced() },
+  { deep: true }
+)
 
 watch(
   () => sp.value?.solare?.mode,
