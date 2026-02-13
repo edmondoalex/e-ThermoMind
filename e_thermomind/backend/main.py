@@ -67,7 +67,7 @@ impianto_last_source: str | None = None
 impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
 caldaia_legna_state: dict[str, Any] = {
-    "startup_deadline": 0.0,
+    "startup_deadline": float(cfg.get("caldaia_legna", {}).get("startup_deadline_ts", 0.0) or 0.0),
     "last_enabled": False,
     "forced_off": bool(cfg.get("caldaia_legna", {}).get("forced_off", False)),
 }
@@ -1505,6 +1505,7 @@ async def _apply_caldaia_legna_live() -> None:
             caldaia_legna_state["forced_off"] = False
             if cfg.get("caldaia_legna", {}).get("forced_off", False):
                 cfg["caldaia_legna"]["forced_off"] = False
+                cfg["caldaia_legna"]["startup_deadline_ts"] = 0.0
                 save_config(cfg)
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
@@ -1520,7 +1521,15 @@ async def _apply_caldaia_legna_live() -> None:
     if not caldaia_legna_state.get("last_enabled"):
         caldaia_legna_state["last_enabled"] = True
         startup_s = float(legna_cfg.get("startup_check_s", 600.0))
-        caldaia_legna_state["startup_deadline"] = now + max(0.0, startup_s)
+        saved_deadline = float(cfg.get("caldaia_legna", {}).get("startup_deadline_ts", 0.0) or 0.0)
+        if saved_deadline > now:
+            caldaia_legna_state["startup_deadline"] = saved_deadline
+        elif saved_deadline == 0.0:
+            caldaia_legna_state["startup_deadline"] = now + max(0.0, startup_s)
+            cfg["caldaia_legna"]["startup_deadline_ts"] = caldaia_legna_state["startup_deadline"]
+            save_config(cfg)
+        else:
+            caldaia_legna_state["startup_deadline"] = saved_deadline
 
     t_mandata = _get_num(ent.get("t_mandata_caldaia_legna"))
     t_puffer_alto = _get_num(ent.get("t_puffer_alto"))
@@ -1534,6 +1543,7 @@ async def _apply_caldaia_legna_live() -> None:
         caldaia_legna_state["forced_off"] = True
         if not cfg.get("caldaia_legna", {}).get("forced_off", False):
             cfg["caldaia_legna"]["forced_off"] = True
+            cfg["caldaia_legna"]["startup_deadline_ts"] = 0.0
             save_config(cfg)
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
