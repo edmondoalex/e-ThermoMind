@@ -29,7 +29,7 @@ app = FastAPI(title="e-ThermoMind", version=APP_VERSION)
 ha = HAClient()
 cfg = load_config()
 ws_task: asyncio.Task | None = None
-off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
+off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0, "rg": 0.0}
 action_log: list[str] = []
 
 def _append_action_log(line: str) -> None:
@@ -760,7 +760,6 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     r24 = act.get("r24_resistenza_3_volano_pdc")
     rg = act.get("generale_resistenze_volano_pdc")
     step = int(decision_data.get("computed", {}).get("resistance_step", 0))
-
     desired = {
         "r22": step >= 1,
         "r23": step >= 2,
@@ -788,8 +787,23 @@ async def _apply_resistance_live(decision_data: dict) -> None:
                 off_deadline[key] = 0.0
 
     if rg:
-        want_general = step >= 1
-        await _set_resistance(rg, want_general)
+        any_desired = desired["r22"] or desired["r23"] or desired["r24"]
+        any_actual = _get_state(r22) == "on" or _get_state(r23) == "on" or _get_state(r24) == "on"
+        want_general = any_desired or any_actual
+        current_rg = _get_state(rg)
+        if want_general:
+            off_deadline["rg"] = 0.0
+            if current_rg != "on":
+                await _set_resistance(rg, True)
+        else:
+            if current_rg == "on":
+                if off_deadline["rg"] == 0.0:
+                    off_deadline["rg"] = now + off_delay
+                elif now >= off_deadline["rg"]:
+                    await _set_resistance(rg, False)
+                    off_deadline["rg"] = 0.0
+            else:
+                off_deadline["rg"] = 0.0
 
 async def _apply_transfer_live(decision_data: dict) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
