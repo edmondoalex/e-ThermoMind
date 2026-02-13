@@ -191,7 +191,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "temp_min_alim_hyst_c": 5.0,
     "startup_check_s": 600,
     "puffer_alto_sp_c": 80.0,
-    "puffer_alto_hyst_c": 3.0
+    "puffer_alto_hyst_c": 3.0,
+    "forced_off": False
   },
   "impianto": {
     "source_mode": "AUTO",

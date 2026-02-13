@@ -64,7 +64,11 @@ miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
 impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
-caldaia_legna_state: dict[str, Any] = {"startup_deadline": 0.0, "last_enabled": False, "forced_off": False}
+caldaia_legna_state: dict[str, Any] = {
+    "startup_deadline": 0.0,
+    "last_enabled": False,
+    "forced_off": bool(cfg.get("caldaia_legna", {}).get("forced_off", False)),
+}
 last_modules_payload: dict[str, bool] | None = None
 last_modules_save_ts: float = 0.0
 SUMMER_BLOCK_MODULES = {
@@ -1419,14 +1423,17 @@ async def _apply_caldaia_legna_live() -> None:
     if not enabled:
         caldaia_legna_state["last_enabled"] = False
         caldaia_legna_state["startup_deadline"] = 0.0
-        caldaia_legna_state["forced_off"] = False
+        if caldaia_legna_state.get("forced_off"):
+            caldaia_legna_state["forced_off"] = False
+            if cfg.get("caldaia_legna", {}).get("forced_off", False):
+                cfg["caldaia_legna"]["forced_off"] = False
+                save_config(cfg)
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         return
 
     if not caldaia_legna_state.get("last_enabled"):
         caldaia_legna_state["last_enabled"] = True
-        caldaia_legna_state["forced_off"] = False
         startup_s = float(legna_cfg.get("startup_check_s", 600.0))
         caldaia_legna_state["startup_deadline"] = now + max(0.0, startup_s)
 
@@ -1445,6 +1452,9 @@ async def _apply_caldaia_legna_live() -> None:
 
     if not allow_startup and (t_mandata is not None) and (t_mandata < min_alim):
         caldaia_legna_state["forced_off"] = True
+        if not cfg.get("caldaia_legna", {}).get("forced_off", False):
+            cfg["caldaia_legna"]["forced_off"] = True
+            save_config(cfg)
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         return
