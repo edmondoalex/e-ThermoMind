@@ -1509,10 +1509,13 @@ async def _apply_caldaia_legna_live() -> None:
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         return
-    if caldaia_legna_state.get("forced_off") and cfg.get("caldaia_legna", {}).get("forced_off", False):
-        caldaia_legna_state["forced_off"] = False
-        cfg["caldaia_legna"]["forced_off"] = False
-        save_config(cfg)
+
+    if caldaia_legna_state.get("forced_off"):
+        caldaia_legna_state["last_enabled"] = False
+        caldaia_legna_state["startup_deadline"] = 0.0
+        await _set_actuator(power, False)
+        await _set_actuator(ta, False)
+        return
 
     if not caldaia_legna_state.get("last_enabled"):
         caldaia_legna_state["last_enabled"] = True
@@ -1526,11 +1529,6 @@ async def _apply_caldaia_legna_live() -> None:
     sp_puf_alto = float(legna_cfg.get("puffer_alto_sp_c", 80.0))
     sp_puf_hyst = float(legna_cfg.get("puffer_alto_hyst_c", 3.0))
     allow_startup = now < float(caldaia_legna_state.get("startup_deadline") or 0.0)
-
-    if caldaia_legna_state.get("forced_off"):
-        await _set_actuator(power, False)
-        await _set_actuator(ta, False)
-        return
 
     if not allow_startup and (t_mandata is not None) and (t_mandata < min_alim):
         caldaia_legna_state["forced_off"] = True
