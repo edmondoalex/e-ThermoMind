@@ -1544,6 +1544,13 @@ async def set_setpoints(payload: dict):
     if changed:
         cfg = apply_setpoints(cfg, {"modules_enabled": modules})
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES summer block (setpoints)")
+    if caldaia_legna_state.get("forced_off"):
+        modules = cfg.get("modules_enabled", {})
+        if modules.get("caldaia_legna"):
+            modules = dict(modules)
+            modules["caldaia_legna"] = False
+            cfg = apply_setpoints(cfg, {"modules_enabled": modules})
+            action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} CALDAIA LEGNA forced-off persists (setpoints)")
     save_config(cfg)
     action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE setpoints")
     return JSONResponse({"ok": True})
