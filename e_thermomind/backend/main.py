@@ -64,7 +64,7 @@ miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
 impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
-caldaia_legna_state: dict[str, Any] = {"startup_deadline": 0.0, "last_enabled": False}
+caldaia_legna_state: dict[str, Any] = {"startup_deadline": 0.0, "last_enabled": False, "forced_off": False}
 last_modules_payload: dict[str, bool] | None = None
 last_modules_save_ts: float = 0.0
 
@@ -311,21 +311,32 @@ async def _build_snapshot() -> dict:
 def _apply_legna_timer_reason(data: dict) -> None:
     if not cfg.get("modules_enabled", {}).get("caldaia_legna", False):
         return
+    forced_off = bool(caldaia_legna_state.get("forced_off"))
     deadline = float(caldaia_legna_state.get("startup_deadline") or 0.0)
     now = time.time()
-    if deadline <= now:
-        return
-    remaining = int(max(0.0, deadline - now))
     computed = data.setdefault("computed", {})
     reasons = computed.setdefault("module_reasons", {})
     reason = reasons.get("caldaia_legna")
+    legna_block = computed.get("caldaia_legna")
+    if forced_off:
+        reason = "Timer scaduto: modulo inattivo."
+        reasons["caldaia_legna"] = reason
+        if isinstance(legna_block, dict):
+            legna_block["enabled"] = False
+            legna_block["power"] = False
+            legna_block["ta"] = False
+            legna_block["reason"] = reason
+            legna_block["timer_remaining_s"] = 0
+        return
+    if deadline <= now:
+        return
+    remaining = int(max(0.0, deadline - now))
     suffix = f"Timer spegnimento attivo: {remaining}s"
     if reason:
         reason = f"{reason} | {suffix}"
     else:
         reason = suffix
     reasons["caldaia_legna"] = reason
-    legna_block = computed.get("caldaia_legna")
     if isinstance(legna_block, dict):
         legna_block["reason"] = reason
         legna_block["timer_remaining_s"] = remaining
@@ -1323,6 +1334,9 @@ async def _apply_gas_emergenza_live() -> None:
     # In gas emergenza metti sempre i termostati in heat
     for z in zones:
         await _set_climate_hvac_mode(z, "heat", "GAS emergency")
+    for z in _collect_zones(imp):
+        if z not in zones:
+            await _set_climate_hvac_mode(z, "off", "GAS emergency (non mappato)")
     await _set_actuator(power, bool(demand_any))
     await _set_actuator(ta, bool(demand_any))
 
@@ -1332,24 +1346,32 @@ async def _apply_gas_emergenza_live() -> None:
     r11 = act.get("r11_pump_mandata_laboratorio")
     r4 = act.get("r4_valve_impianto_da_puffer")
     r5 = act.get("r5_valve_impianto_da_pdc")
+    r12 = act.get("r12_pump_mandata_piani")
+    r16 = act.get("r16_cmd_miscelatrice_alza")
+    r17 = act.get("r17_cmd_miscelatrice_abbassa")
 
     await _set_actuator(r4, False)
     await _set_actuator(r5, False)
+    await _force_pump_off("gas:pump", r12)
+    if r16:
+        await _set_actuator(r16, True)
+    if r17:
+        await _set_actuator(r17, False)
 
     if not demand_any:
         if r2:
-            await _set_actuator(r2, False)
+            await _set_actuator(r2, True)
         if r3:
-            await _set_actuator(r3, False)
+            await _set_actuator(r3, True)
         if r1:
             await _set_actuator(r1, False)
         await _set_pump_delayed("gas:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         return
 
     if r2:
-        await _set_actuator(r2, pt_active or scala_active)
+        await _set_actuator(r2, True)
     if r3:
-        await _set_actuator(r3, pt_active or scala_active or lab_active)
+        await _set_actuator(r3, True)
     if r1:
         await _set_actuator(r1, lab_active)
     await _set_pump_delayed("gas:lab_pump", r11, lab_active, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
@@ -1371,12 +1393,14 @@ async def _apply_caldaia_legna_live() -> None:
     if not enabled:
         caldaia_legna_state["last_enabled"] = False
         caldaia_legna_state["startup_deadline"] = 0.0
+        caldaia_legna_state["forced_off"] = False
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         return
 
     if not caldaia_legna_state.get("last_enabled"):
         caldaia_legna_state["last_enabled"] = True
+        caldaia_legna_state["forced_off"] = False
         startup_s = float(legna_cfg.get("startup_check_s", 600.0))
         caldaia_legna_state["startup_deadline"] = now + max(0.0, startup_s)
 
@@ -1387,6 +1411,17 @@ async def _apply_caldaia_legna_live() -> None:
     sp_puf_alto = float(legna_cfg.get("puffer_alto_sp_c", 80.0))
     sp_puf_hyst = float(legna_cfg.get("puffer_alto_hyst_c", 3.0))
     allow_startup = now < float(caldaia_legna_state.get("startup_deadline") or 0.0)
+
+    if caldaia_legna_state.get("forced_off"):
+        await _set_actuator(power, False)
+        await _set_actuator(ta, False)
+        return
+
+    if not allow_startup and (t_mandata is not None) and (t_mandata < min_alim):
+        caldaia_legna_state["forced_off"] = True
+        await _set_actuator(power, False)
+        await _set_actuator(ta, False)
+        return
 
     if t_mandata is None:
         power_on = bool(allow_startup)
