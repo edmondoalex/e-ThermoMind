@@ -1638,42 +1638,42 @@
             <label>Delta Puffer - ACS</label>
             <div class="input-row">
               <span class="logic-dot">?</span>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_puffer_acs"/> Storico</label></div>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_puffer_acs" @change="saveHistoryDebounced"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
             <label>Delta Volano - ACS</label>
             <div class="input-row">
               <span class="logic-dot">?</span>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_volano_acs"/> Storico</label></div>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_volano_acs" @change="saveHistoryDebounced"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
             <label>Delta Volano - Puffer</label>
             <div class="input-row">
               <span class="logic-dot">?</span>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_volano_puffer"/> Storico</label></div>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_volano_puffer" @change="saveHistoryDebounced"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
             <label>Delta Mandata/Ritorno</label>
             <div class="input-row">
               <span class="logic-dot">?</span>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_mandata_ritorno"/> Storico</label></div>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.delta_mandata_ritorno" @change="saveHistoryDebounced"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
             <label>Kp eff</label>
             <div class="input-row">
               <span class="logic-dot">?</span>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.kp_eff"/> Storico</label></div>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.kp_eff" @change="saveHistoryDebounced"/> Storico</label></div>
             </div>
           </div>
           <div class="field">
             <label>Setpoint curva climatica</label>
             <div class="input-row">
               <span class="logic-dot">?</span>
-              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.curva_setpoint"/> Storico</label></div>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.curva_setpoint" @change="saveHistoryDebounced"/> Storico</label></div>
             </div>
           </div>
 
