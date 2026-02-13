@@ -501,8 +501,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     legna_sp_puf = float(legna_cfg.get("puffer_alto_sp_c", 80.0))
     legna_puf_hyst = float(legna_cfg.get("puffer_alto_hyst_c", 3.0))
     legna_startup_s = int(legna_cfg.get("startup_check_s", 600))
+    legna_forced_off = bool(legna_cfg.get("forced_off", False))
     if not legna_enabled:
         legna_reason = "Modulo legna OFF."
+        legna_power = False
+        legna_ta = False
+    elif legna_forced_off:
+        legna_reason = "Timer scaduto: modulo inattivo."
         legna_power = False
         legna_ta = False
     else:

@@ -1499,6 +1499,10 @@ async def _apply_caldaia_legna_live() -> None:
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         return
+    if caldaia_legna_state.get("forced_off") and cfg.get("caldaia_legna", {}).get("forced_off", False):
+        caldaia_legna_state["forced_off"] = False
+        cfg["caldaia_legna"]["forced_off"] = False
+        save_config(cfg)
 
     if not caldaia_legna_state.get("last_enabled"):
         caldaia_legna_state["last_enabled"] = True
