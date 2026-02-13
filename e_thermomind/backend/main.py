@@ -30,6 +30,7 @@ ha = HAClient()
 cfg = load_config()
 ws_task: asyncio.Task | None = None
 off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0, "rg": 0.0}
+on_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
 action_log: list[str] = []
 
 def _append_action_log(line: str) -> None:
@@ -767,6 +768,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     }
 
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
+    on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))
     now = time.time()
 
     for key, ent in (("r22", r22), ("r23", r23), ("r24", r24)):
@@ -775,8 +777,15 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         if want_on:
             off_deadline[key] = 0.0
             if current != "on":
-                await _set_resistance(ent, True)
+                if on_deadline[key] == 0.0:
+                    on_deadline[key] = now + on_delay
+                elif now >= on_deadline[key]:
+                    await _set_resistance(ent, True)
+                    on_deadline[key] = 0.0
+            else:
+                on_deadline[key] = 0.0
         else:
+            on_deadline[key] = 0.0
             if current == "on":
                 if off_deadline[key] == 0.0:
                     off_deadline[key] = now + off_delay
