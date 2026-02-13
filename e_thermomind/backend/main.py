@@ -1562,7 +1562,6 @@ async def set_setpoints(payload: dict):
             cfg = apply_setpoints(cfg, {"modules_enabled": modules})
             action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} CALDAIA LEGNA forced-off persists (setpoints)")
     save_config(cfg)
-    action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE setpoints")
     return JSONResponse({"ok": True})
 
 @app.post("/api/climate_setpoint")
