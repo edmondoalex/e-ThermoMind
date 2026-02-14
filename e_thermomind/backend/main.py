@@ -1686,11 +1686,11 @@ async def set_modules(payload: dict, request: Request):
     client = getattr(getattr(request, 'client', None), 'host', None)
     # skip if unchanged or too frequent
     if modules == cfg.get('modules_enabled', {}):
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES skip (unchanged) client={client}")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES skip (unchanged) client={client} payload={modules}")
         return JSONResponse({"ok": True})
     now = time.time()
     if last_modules_payload == modules and (now - last_modules_save_ts) < 2.0:
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES skip (debounce) client={client}")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES skip (debounce) client={client} payload={modules}")
         return JSONResponse({"ok": True})
     # live-only module toggle: update runtime state without saving to config
     cfg["modules_enabled"] = modules

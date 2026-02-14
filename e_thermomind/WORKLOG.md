@@ -80,3 +80,8 @@
 - UI: sequenze separate Volano→ACS e Volano→Puffer con nomi logici.
 - Config: timer separati per Volano→ACS e Volano→Puffer (start/stop).
 - User: grafico rapido temperature + export.
+
+## 2026-02-14
+- Persistenza moduli: POST /api/modules ora salva modules_enabled su disco.
+- Versione add-on aggiornata a 0.6.59.
+

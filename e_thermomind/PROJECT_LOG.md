@@ -110,3 +110,8 @@ Data export: 2026-02-08 (Europe/Rome)
   - `/api/setpoints` include `gas_emergenza`;
   - persistenza flag “Storico” per Volano Alto/Basso;
   - log “SAVE …” in Ultime azioni per setpoints/entities/actuators/modules.
+
+## Aggiornamenti 2026-02-14
+- Persistenza moduli: /api/modules salva modules_enabled su disco (prima era live-only).
+- Versione add-on aggiornata a 0.6.59.
+
