@@ -1638,12 +1638,15 @@ async def set_setpoints(payload: dict):
     global cfg
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
+    prev_modules = dict(cfg.get("modules_enabled", {}))
     cfg = apply_setpoints(cfg, payload)
-    modules = cfg.get("modules_enabled", {})
-    modules, changed = _apply_season_block(modules)
+    # keep module toggles owned by /api/modules (except seasonal block)
+    modules, changed = _apply_season_block(prev_modules)
     if changed:
         cfg = apply_setpoints(cfg, {"modules_enabled": modules})
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES summer block (setpoints)")
+    else:
+        cfg["modules_enabled"] = modules
     save_config(cfg)
     return JSONResponse({"ok": True})
 

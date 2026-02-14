@@ -90,3 +90,8 @@
 - Toggle moduli: UI invia solo chiave/valore e backend fa merge per evitare overwrite da payload vecchi.
 - Versione add-on aggiornata a 0.6.61.
 
+
+## 2026-02-14
+- Setpoints: /api/setpoints non sovrascrive piu modules_enabled (restano gestiti da /api/modules, salvo blocco stagionale).
+- Versione add-on aggiornata a 0.6.62.
+
