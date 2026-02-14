@@ -1692,14 +1692,14 @@ async def set_modules(payload: dict, request: Request):
     if last_modules_payload == modules and (now - last_modules_save_ts) < 2.0:
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES skip (debounce) client={client}")
         return JSONResponse({"ok": True})
-    cfg = apply_setpoints(cfg, {"modules_enabled": modules})
-    save_config(cfg)
+    # live-only module toggle: update runtime state without saving to config
+    cfg["modules_enabled"] = modules
     last_modules_payload = modules
     last_modules_save_ts = now
-    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SAVE modules")
+    save_config(cfg)
     if changed:
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES summer block applied")
-    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES client={client} payload={modules}")
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES live client={client} payload={modules}")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
     return JSONResponse({"ok": True})
 
