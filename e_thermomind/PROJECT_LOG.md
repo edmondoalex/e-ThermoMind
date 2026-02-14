@@ -115,3 +115,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Persistenza moduli: /api/modules salva modules_enabled su disco (prima era live-only).
 - Versione add-on aggiornata a 0.6.59.
 
+
+## Aggiornamenti 2026-02-14
+- Toggle moduli: UI invia solo chiave/valore e backend fa merge per evitare overwrite da payload vecchi.
+- Versione add-on aggiornata a 0.6.61.
+

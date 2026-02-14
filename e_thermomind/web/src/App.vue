@@ -2426,11 +2426,11 @@ async function toggleModule(key){
   if (pin) {
     provided = window.prompt('PIN') || ''
   }
-  const next = { ...modules.value, [key]: !modules.value[key] }
+  const nextValue = !modules.value[key]
   const res = await fetch('/api/modules',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ modules: next, pin: provided })
+    body: JSON.stringify({ key, value: nextValue, pin: provided })
   })
   if (!res.ok) return
   await loadModules()

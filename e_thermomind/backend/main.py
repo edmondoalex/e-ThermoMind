@@ -1679,6 +1679,13 @@ async def set_modules(payload: dict, request: Request):
     if pin_required and provided != pin_required:
         raise HTTPException(status_code=403, detail="Invalid PIN")
     modules = payload.get("modules", {})
+    key = payload.get("key")
+    value = payload.get("value")
+    if key is not None:
+        # merge single key update into current state
+        current = dict(cfg.get("modules_enabled", {}))
+        current[str(key)] = bool(value)
+        modules = current
     if not isinstance(modules, dict):
         raise HTTPException(status_code=400, detail="Invalid modules")
     modules, changed = _apply_season_block(modules)

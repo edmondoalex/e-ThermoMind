@@ -85,3 +85,8 @@
 - Persistenza moduli: POST /api/modules ora salva modules_enabled su disco.
 - Versione add-on aggiornata a 0.6.59.
 
+
+## 2026-02-14
+- Toggle moduli: UI invia solo chiave/valore e backend fa merge per evitare overwrite da payload vecchi.
+- Versione add-on aggiornata a 0.6.61.
+
