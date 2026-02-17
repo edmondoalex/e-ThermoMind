@@ -95,3 +95,8 @@
 - Setpoints: /api/setpoints non sovrascrive piu modules_enabled (restano gestiti da /api/modules, salvo blocco stagionale).
 - Versione add-on aggiornata a 0.6.62.
 
+
+## 2026-02-14
+- Resistenze volano: se modulo OFF, non forza piu lo spegnimento (controllo manuale da HA).
+- Versione add-on aggiornata a 0.6.63.
+

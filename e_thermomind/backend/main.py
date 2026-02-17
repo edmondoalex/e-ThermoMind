@@ -748,13 +748,6 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         _log_dry_run(decision_data)
         return
     if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
-        act = cfg.get("actuators", {})
-        r22 = act.get("r22_resistenza_1_volano_pdc")
-        r23 = act.get("r23_resistenza_2_volano_pdc")
-        r24 = act.get("r24_resistenza_3_volano_pdc")
-        rg = act.get("generale_resistenze_volano_pdc")
-        for ent in (r22, r23, r24, rg):
-            await _set_resistance(ent, False)
         return
     act = cfg.get("actuators", {})
     r22 = act.get("r22_resistenza_1_volano_pdc")
