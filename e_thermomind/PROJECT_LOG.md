@@ -191,3 +191,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Impianto: hold puffer/volano applicato con domanda anche senza last_source (evita stop a min+ON dopo restart).
 - Versione add-on aggiornata a 0.6.76.
 
+
+## Aggiornamenti 2026-02-18
+- Impianto: inizializzazione di `demand_on` per evitare UnboundLocalError in `_apply_impianto_live`.
+- Versione add-on aggiornata a 0.6.77.
+

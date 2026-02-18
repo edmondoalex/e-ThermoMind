@@ -1320,19 +1320,10 @@ async def _apply_impianto_live() -> None:
     puf_ok_start = (t_puffer is None) or (t_puffer >= puf_min + puf_on_h)
     puf_ok_hold = (t_puffer is None) or (t_puffer > (puf_min - puf_off_h))
 
-    # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
-    if sel_state == "AUTO" or (
-        (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (vol_ok_hold and demand_on)))) or
-        (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (puf_ok_hold and demand_on))))
-    ):
-        if pdc_volano_ready and (vol_ok_start or (vol_ok_hold and demand_on)):
-            source = "PDC"
-        else:
-            source = "PUFFER" if (puffer_ready and (puf_ok_start or (puf_ok_hold and demand_on))) else None
-    else:
-        source = sel_state
-
     r5 = act.get("r5_valve_impianto_da_pdc")
+
+    # default to avoid unbound in case of future refactors
+    demand_on = False
 
     imp = cfg.get("impianto", {})
     cooling_blocked = set(imp.get("cooling_blocked", []))
@@ -1361,6 +1352,18 @@ async def _apply_impianto_live() -> None:
         demand_on = False
         impianto_heat_state["active"] = False
         impianto_heat_state["last_change"] = time.time()
+
+    # Se selector AUTO o sorgente non disponibile -> fallback con priorità
+    if sel_state == "AUTO" or (
+        (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (vol_ok_hold and demand_on)))) or
+        (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (puf_ok_hold and demand_on))))
+    ):
+        if pdc_volano_ready and (vol_ok_start or (vol_ok_hold and demand_on)):
+            source = "PDC"
+        else:
+            source = "PUFFER" if (puffer_ready and (puf_ok_start or (puf_ok_hold and demand_on))) else None
+    else:
+        source = sel_state
 
     r12 = act.get("r12_pump_mandata_piani")
     r11 = act.get("r11_pump_mandata_laboratorio")
