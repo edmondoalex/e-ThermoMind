@@ -201,3 +201,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Impianto: force OFF valvole/pompe quando inattivo (no_source/no_demand) e log motivi ON/OFF.
 - Versione add-on aggiornata a 0.6.78.
 
+
+## Aggiornamenti 2026-02-18
+- Impianto: decisione UI allineata alla logica live (isteresi ON/OFF con domanda).
+- Versione add-on aggiornata a 0.6.79.
+

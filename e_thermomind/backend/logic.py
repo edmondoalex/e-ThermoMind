@@ -305,21 +305,26 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     puf_min = float(imp_cfg.get("puffer_min_c", 35.0))
     puf_on_h = float(imp_cfg.get("puffer_on_hyst_c", imp_cfg.get("puffer_hyst_c", 2.0)))
     puf_off_h = float(imp_cfg.get("puffer_off_hyst_c", imp_cfg.get("puffer_hyst_c", 2.0)))
-    vol_ok = t_volano >= (vol_min + vol_on_h)
-    puf_ok = t_puffer >= (puf_min + puf_on_h)
+    vol_ok_start = t_volano >= (vol_min + vol_on_h)
+    vol_ok_hold = t_volano > (vol_min - vol_off_h)
+    puf_ok_start = t_puffer >= (puf_min + puf_on_h)
+    puf_ok_hold = t_puffer > (puf_min - puf_off_h)
 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
     if sel_norm == "AUTO" or (
-        (sel_norm == "PDC" and (not pdc_vol_ready or not vol_ok)) or
-        (sel_norm == "PUFFER" and (not puf_ready or not puf_ok))
+        (sel_norm == "PDC" and (not pdc_vol_ready or not (vol_ok_start or (vol_ok_hold and req_on)))) or
+        (sel_norm == "PUFFER" and (not puf_ready or not (puf_ok_start or (puf_ok_hold and req_on))))
     ):
-        if pdc_vol_ready and vol_ok:
+        if pdc_vol_ready and (vol_ok_start or (vol_ok_hold and req_on)):
             source = "PDC"
         else:
-            source = "PUFFER" if (puf_ready and puf_ok) else "OFF"
+            source = "PUFFER" if (puf_ready and (puf_ok_start or (puf_ok_hold and req_on))) else "OFF"
     else:
-        source = sel_norm if ((sel_norm == "PDC" and vol_ok) or (sel_norm == "PUFFER" and puf_ok)) else "OFF"
+        source = sel_norm if (
+            (sel_norm == "PDC" and (vol_ok_start or (vol_ok_hold and req_on))) or
+            (sel_norm == "PUFFER" and (puf_ok_start or (puf_ok_hold and req_on)))
+        ) else "OFF"
     if not req_on:
         source = "OFF"
 
@@ -583,8 +588,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "pdc_ready": pdc_vol_ready,
                 "volano_ready": vol_ready,
                 "puffer_ready": puf_ready,
-                "volano_temp_ok": vol_ok,
-                "puffer_temp_ok": puf_ok,
+                "volano_temp_ok": bool(vol_ok_start or (vol_ok_hold and req_on)),
+                "puffer_temp_ok": bool(puf_ok_start or (puf_ok_hold and req_on)),
                 "blocked_cold": blocked_cold,
                 "reason": impianto_reason,
                 "selector": sel_norm
