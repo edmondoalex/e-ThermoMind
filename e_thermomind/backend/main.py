@@ -480,11 +480,44 @@ async def _set_pump_delayed(name: str, pump_eid: str | None, want_on: bool, dela
         if f"{name}:off" not in transfer_tasks:
             transfer_tasks[f"{name}:off"] = asyncio.create_task(_delayed_actuate(f"{name}:off", pump_eid, False, delay_off))
 
-async def _force_pump_off(name: str, pump_eid: str | None) -> None:
+async def _set_actuator_force(entity_id: str | None, want_on: bool, reason: str = "") -> None:
+    if not entity_id or not ha.enabled:
+        return
+    current = _get_state(entity_id)
+    ts = time.strftime("%Y-%m-%d %H:%M:%S")
+    if want_on and current != "on":
+        recent_ui_actuations[entity_id] = time.time()
+        await ha.call_service(entity_id, "on")
+        action_log.append(f"{ts} FORCE ON {entity_id} reason={reason}")
+    if (not want_on) and current != "off":
+        recent_ui_actuations[entity_id] = time.time()
+        await ha.call_service(entity_id, "off")
+        action_log.append(f"{ts} FORCE OFF {entity_id} reason={reason}")
+
+async def _set_actuator_impianto(entity_id: str | None, want_on: bool, reason: str, force: bool = False) -> None:
+    if not entity_id or not ha.enabled:
+        return
+    if (not force) and _is_manual(entity_id):
+        action_log.append(
+            f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO SKIP manual {entity_id} "
+            f"want={'ON' if want_on else 'OFF'} reason={reason}"
+        )
+        return
+    current = _get_state(entity_id)
+    if want_on and current != "on":
+        recent_ui_actuations[entity_id] = time.time()
+        await ha.call_service(entity_id, "on")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO ON {entity_id} reason={reason}")
+    if (not want_on) and current != "off":
+        recent_ui_actuations[entity_id] = time.time()
+        await ha.call_service(entity_id, "off")
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF {entity_id} reason={reason}")
+
+async def _force_pump_off(name: str, pump_eid: str | None, reason: str = "") -> None:
     transfer_desired[name] = False
     _cancel_transfer_task(f"{name}:on")
     _cancel_transfer_task(f"{name}:off")
-    await _set_actuator(pump_eid, False)
+    await _set_actuator_force(pump_eid, False, reason or f"{name}:force_off")
 def _is_recent_ui(entity_id: str, window_s: float = 4.0) -> bool:
     ts = recent_ui_actuations.get(entity_id)
     if not ts:
@@ -1428,19 +1461,15 @@ async def _apply_impianto_live() -> None:
         )
         _watchdog("no_source")
         if r2:
-            await _set_actuator(r2, False)
+            await _set_actuator_impianto(r2, False, "no_source", force=True)
         if r3:
-            await _set_actuator(r3, False)
+            await _set_actuator_impianto(r3, False, "no_source", force=True)
         if r1:
-            await _set_actuator(r1, False)
-        if blocked_cold:
-            await _force_pump_off("impianto:pump", r12)
-            await _force_pump_off("impianto:lab_pump", r11)
-        else:
-            await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-            await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-        await _set_actuator(r4, False)
-        await _set_actuator(r5, False)
+            await _set_actuator_impianto(r1, False, "no_source", force=True)
+        await _force_pump_off("impianto:pump", r12, "no_source")
+        await _force_pump_off("impianto:lab_pump", r11, "no_source")
+        await _set_actuator_impianto(r4, False, "no_source", force=True)
+        await _set_actuator_impianto(r5, False, "no_source", force=True)
         await _set_climate_hvac_mode(clima, "off", "IMPIANTO no source")
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
@@ -1455,15 +1484,15 @@ async def _apply_impianto_live() -> None:
         )
         _watchdog("no_demand")
         if r2:
-            await _set_actuator(r2, False)
+            await _set_actuator_impianto(r2, False, "no_demand", force=True)
         if r3:
-            await _set_actuator(r3, False)
+            await _set_actuator_impianto(r3, False, "no_demand", force=True)
         if r1:
-            await _set_actuator(r1, False)
-        await _set_actuator(r4, False)
-        await _set_actuator(r5, False)
-        await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-        await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
+            await _set_actuator_impianto(r1, False, "no_demand", force=True)
+        await _set_actuator_impianto(r4, False, "no_demand", force=True)
+        await _set_actuator_impianto(r5, False, "no_demand", force=True)
+        await _force_pump_off("impianto:pump", r12, "no_demand")
+        await _force_pump_off("impianto:lab_pump", r11, "no_demand")
         await _set_climate_hvac_mode(clima, "off", "IMPIANTO no demand")
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
@@ -1474,23 +1503,23 @@ async def _apply_impianto_live() -> None:
 
     # Valvole zone (mansarda e 1P condividono R3)
     if r2:
-        await _set_actuator(r2, pt_active or scala_active)
+        await _set_actuator_impianto(r2, pt_active or scala_active, "active")
     if r3:
-        await _set_actuator(r3, p1_active or mans_active or scala_active)
+        await _set_actuator_impianto(r3, p1_active or mans_active or scala_active, "active")
     if r1:
-        await _set_actuator(r1, lab_active)
+        await _set_actuator_impianto(r1, lab_active, "active")
 
     # Pompa con ritardi
     await _set_pump_delayed("impianto:pump", r12, True, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
     await _set_pump_delayed("impianto:lab_pump", r11, lab_active, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
     if source == "PDC":
-        await _set_actuator(r5, True)
-        await _set_actuator(r4, False)
+        await _set_actuator_impianto(r5, True, "source=PDC")
+        await _set_actuator_impianto(r4, False, "source=PDC")
         await _set_climate_hvac_mode(clima, "off", "IMPIANTO source=PDC")
     else:  # PUFFER
-        await _set_actuator(r4, True)
-        await _set_actuator(r5, False)
+        await _set_actuator_impianto(r4, True, "source=PUFFER")
+        await _set_actuator_impianto(r5, False, "source=PUFFER")
         await _set_climate_hvac_mode(clima, "cool", "IMPIANTO source=PUFFER")
 
 async def _apply_gas_emergenza_live() -> None:

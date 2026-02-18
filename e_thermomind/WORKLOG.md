@@ -171,3 +171,8 @@
 - Impianto: inizializzazione di `demand_on` per evitare UnboundLocalError in `_apply_impianto_live`.
 - Versione add-on aggiornata a 0.6.77.
 
+
+## 2026-02-18
+- Impianto: force OFF valvole/pompe quando inattivo (no_source/no_demand) e log motivi ON/OFF.
+- Versione add-on aggiornata a 0.6.78.
+
