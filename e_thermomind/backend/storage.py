@@ -205,8 +205,12 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "richiesta_heat": False,
     "volano_min_c": 35.0,
     "volano_hyst_c": 2.0,
+    "volano_on_hyst_c": 2.0,
+    "volano_off_hyst_c": 2.0,
     "puffer_min_c": 35.0,
     "puffer_hyst_c": 2.0,
+    "puffer_on_hyst_c": 2.0,
+    "puffer_off_hyst_c": 2.0,
     "zones_pt": [],
     "zones_p1": [],
     "zones_mans": [],
@@ -469,7 +473,10 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
         for key in ("pdc_ready", "volano_ready", "puffer_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
-        for key in ("volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c"):
+        for key in (
+            "volano_min_c", "volano_hyst_c", "volano_on_hyst_c", "volano_off_hyst_c",
+            "puffer_min_c", "puffer_hyst_c", "puffer_on_hyst_c", "puffer_off_hyst_c"
+        ):
             if key in imp:
                 cfg["impianto"][key] = _float(imp.get(key), cfg["impianto"].get(key, 0.0))
         if "zones_pt" in imp:
@@ -488,6 +495,16 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["impianto"]["pump_start_delay_s"] = int(_float(imp.get("pump_start_delay_s"), cfg["impianto"]["pump_start_delay_s"]))
         if "pump_stop_delay_s" in imp:
             cfg["impianto"]["pump_stop_delay_s"] = int(_float(imp.get("pump_stop_delay_s"), cfg["impianto"]["pump_stop_delay_s"]))
+    # backward compat: if new hysteresis fields missing, inherit from legacy hyst_c
+    if isinstance(cfg.get("impianto"), dict):
+        if cfg["impianto"].get("volano_on_hyst_c") is None:
+            cfg["impianto"]["volano_on_hyst_c"] = cfg["impianto"].get("volano_hyst_c", 2.0)
+        if cfg["impianto"].get("volano_off_hyst_c") is None:
+            cfg["impianto"]["volano_off_hyst_c"] = cfg["impianto"].get("volano_hyst_c", 2.0)
+        if cfg["impianto"].get("puffer_on_hyst_c") is None:
+            cfg["impianto"]["puffer_on_hyst_c"] = cfg["impianto"].get("puffer_hyst_c", 2.0)
+        if cfg["impianto"].get("puffer_off_hyst_c") is None:
+            cfg["impianto"]["puffer_off_hyst_c"] = cfg["impianto"].get("puffer_hyst_c", 2.0)
 
     security = raw.get("security", {})
     if isinstance(security, dict) and isinstance(security.get("user_pin"), str):
@@ -608,7 +625,10 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
         for key in ("pdc_ready", "volano_ready", "puffer_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
-        for key in ("volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c"):
+        for key in (
+            "volano_min_c", "volano_hyst_c", "volano_on_hyst_c", "volano_off_hyst_c",
+            "puffer_min_c", "puffer_hyst_c", "puffer_on_hyst_c", "puffer_off_hyst_c"
+        ):
             if key in imp:
                 cfg["impianto"][key] = _float(imp.get(key), cfg["impianto"].get(key, 0.0))
         if "zones_pt" in imp:
@@ -627,6 +647,16 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["impianto"]["pump_start_delay_s"] = int(_float(imp.get("pump_start_delay_s"), cfg["impianto"]["pump_start_delay_s"]))
         if "pump_stop_delay_s" in imp:
             cfg["impianto"]["pump_stop_delay_s"] = int(_float(imp.get("pump_stop_delay_s"), cfg["impianto"]["pump_stop_delay_s"]))
+    # backward compat: if new hysteresis fields missing, inherit from legacy hyst_c
+    if isinstance(cfg.get("impianto"), dict):
+        if cfg["impianto"].get("volano_on_hyst_c") is None:
+            cfg["impianto"]["volano_on_hyst_c"] = cfg["impianto"].get("volano_hyst_c", 2.0)
+        if cfg["impianto"].get("volano_off_hyst_c") is None:
+            cfg["impianto"]["volano_off_hyst_c"] = cfg["impianto"].get("volano_hyst_c", 2.0)
+        if cfg["impianto"].get("puffer_on_hyst_c") is None:
+            cfg["impianto"]["puffer_on_hyst_c"] = cfg["impianto"].get("puffer_hyst_c", 2.0)
+        if cfg["impianto"].get("puffer_off_hyst_c") is None:
+            cfg["impianto"]["puffer_off_hyst_c"] = cfg["impianto"].get("puffer_hyst_c", 2.0)
 
     security = payload.get("security", {})
     if isinstance(security, dict) and isinstance(security.get("user_pin"), str):

@@ -66,6 +66,12 @@ miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
 impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
 impianto_watchdog_last_log: float = 0.0
+volano_watchdog_last_log: float = 0.0
+solar_watchdog_last_log: float = 0.0
+miscelatrice_watchdog_last_log: float = 0.0
+resistenze_watchdog_last_log: float = 0.0
+gas_watchdog_last_log: float = 0.0
+legna_watchdog_last_log: float = 0.0
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
 caldaia_legna_state: dict[str, Any] = {
     "startup_deadline": float(cfg.get("caldaia_legna", {}).get("startup_deadline_ts", 0.0) or 0.0),
@@ -745,6 +751,7 @@ async def _pulse_actuator(task_name: str, eid: str | None, duration_s: float) ->
         await _set_actuator(eid, False)
 
 async def _apply_resistance_live(decision_data: dict) -> None:
+    global resistenze_watchdog_last_log
     if cfg.get("runtime", {}).get("mode") != "live":
         _log_dry_run(decision_data)
         return
@@ -763,6 +770,22 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         "r23": step >= 2,
         "r24": step >= 3,
     }
+    try:
+        if step == 0:
+            now = time.time()
+            if now - resistenze_watchdog_last_log >= 120:
+                act_on = []
+                for key, ent_id in (("r22", r22), ("r23", r23), ("r24", r24), ("rg", rg)):
+                    if _state_is_on(ent_id):
+                        act_on.append(key)
+                if act_on:
+                    _log_action(
+                        f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG RESISTENZE "
+                        f"act_on={act_on} step=0 export={export_w:.0f}"
+                    )
+                    resistenze_watchdog_last_log = now
+    except Exception:
+        pass
 
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
     on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))
@@ -864,6 +887,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         reasons["resistenze_volano"] = (base_reason + suffix) if base_reason else ("Delay: " + ", ".join(delay_notes))
 
 async def _apply_transfer_live(decision_data: dict) -> None:
+    global volano_watchdog_last_log
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
@@ -893,6 +917,24 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     if want_vol_acs:
         want_vol_puf = False
         want_puf_acs = False
+    # watchdog log: if transfer modules ON but nothing requested and actuators still ON
+    try:
+        if (modules.get("volano_to_acs", True) or modules.get("volano_to_puffer", True) or modules.get("puffer_to_acs", True)):
+            if not (want_vol_acs or want_vol_puf or want_puf_acs):
+                now = time.time()
+                if now - volano_watchdog_last_log >= 120:
+                    act_on = []
+                    for key, ent_id in (("r6", r6), ("r7", r7), ("r13", r13), ("r14", r14)):
+                        if _state_is_on(ent_id):
+                            act_on.append(key)
+                    if act_on:
+                        _log_action(
+                            f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG VOLANO "
+                            f"act_on={act_on} want_acs={want_vol_acs} want_puf={want_vol_puf} want_puf_acs={want_puf_acs}"
+                        )
+                        volano_watchdog_last_log = now
+    except Exception:
+        pass
 
     timers = cfg.get("timers", {})
     vta_start = float(timers.get("volano_to_acs_start_s", 5))
@@ -913,6 +955,7 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     await _set_pump_only("puffer_to_acs", r14, want_puf_acs)
 
 async def _apply_solar_live(decision_data: dict) -> None:
+    global solar_watchdog_last_log
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
@@ -973,8 +1016,25 @@ async def _apply_solar_live(decision_data: dict) -> None:
         await _set_actuator(r8, False)
         await _set_actuator(r9, True)
 
+    try:
+        now = time.time()
+        if now - solar_watchdog_last_log >= 120:
+            act_on = []
+            for key, ent_id in (("r8", r8), ("r9", r9), ("r10", r10)):
+                if _state_is_on(ent_id):
+                    act_on.append(key)
+            if act_on and not solar_active and not night:
+                _log_action(
+                    f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG SOLARE "
+                    f"act_on={act_on} solar_active={solar_active} night={night} cutback={cutback}"
+                )
+                solar_watchdog_last_log = now
+    except Exception:
+        pass
+
 async def _apply_miscelatrice_live(decision_data: dict) -> None:
     global miscelatrice_task, miscelatrice_pause_until, miscelatrice_last_action, miscelatrice_shutdown_until
+    global miscelatrice_watchdog_last_log
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
@@ -1104,6 +1164,21 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     if abs(err) <= hyst:
         await _set_actuator(r16, False)
         await _set_actuator(r17, False)
+        try:
+            now = time.time()
+            if now - miscelatrice_watchdog_last_log >= 120:
+                act_on = []
+                for key, ent_id in (("r16", r16), ("r17", r17)):
+                    if _state_is_on(ent_id):
+                        act_on.append(key)
+                if act_on:
+                    _log_action(
+                        f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG MISCELATRICE "
+                        f"act_on={act_on} action=STOP"
+                    )
+                    miscelatrice_watchdog_last_log = now
+        except Exception:
+            pass
         miscelatrice_last_action = "STOP"
         return
 
@@ -1227,17 +1302,19 @@ async def _apply_impianto_live() -> None:
     t_volano = _get_num(ent.get("t_volano"))
     t_puffer = _get_num(ent.get("t_puffer"))
     vol_min = float(imp_cfg.get("volano_min_c", 35.0))
-    vol_h = float(imp_cfg.get("volano_hyst_c", 2.0))
+    vol_on_h = float(imp_cfg.get("volano_on_hyst_c", imp_cfg.get("volano_hyst_c", 2.0)))
+    vol_off_h = float(imp_cfg.get("volano_off_hyst_c", imp_cfg.get("volano_hyst_c", 2.0)))
     puf_min = float(imp_cfg.get("puffer_min_c", 35.0))
-    puf_h = float(imp_cfg.get("puffer_hyst_c", 2.0))
+    puf_on_h = float(imp_cfg.get("puffer_on_hyst_c", imp_cfg.get("puffer_hyst_c", 2.0)))
+    puf_off_h = float(imp_cfg.get("puffer_off_hyst_c", imp_cfg.get("puffer_hyst_c", 2.0)))
 
     forced_source = sel_state != "AUTO"
 
     # soglie temperatura con isteresi (start e hold)
-    vol_ok_start = (t_volano is None) or (t_volano >= vol_min + vol_h)
-    vol_ok_hold = (t_volano is None) or (t_volano > (vol_min - vol_h))
-    puf_ok_start = (t_puffer is None) or (t_puffer >= puf_min + puf_h)
-    puf_ok_hold = (t_puffer is None) or (t_puffer > (puf_min - puf_h))
+    vol_ok_start = (t_volano is None) or (t_volano >= vol_min + vol_on_h)
+    vol_ok_hold = (t_volano is None) or (t_volano > (vol_min - vol_off_h))
+    puf_ok_start = (t_puffer is None) or (t_puffer >= puf_min + puf_on_h)
+    puf_ok_hold = (t_puffer is None) or (t_puffer > (puf_min - puf_off_h))
 
     # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
     if sel_state == "AUTO" or (
@@ -1402,6 +1479,7 @@ async def _apply_impianto_live() -> None:
         await _set_climate_hvac_mode(clima, "cool", "IMPIANTO source=PUFFER")
 
 async def _apply_gas_emergenza_live() -> None:
+    global gas_watchdog_last_log
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
@@ -1444,6 +1522,21 @@ async def _apply_gas_emergenza_live() -> None:
     zones = [str(z).strip() for z in zones if str(z).strip()]
 
     if not _gas_emergenza_active():
+        try:
+            now = time.time()
+            if now - gas_watchdog_last_log >= 120:
+                act_on = []
+                for key, ent_id in (("power", power), ("ta", ta)):
+                    if _state_is_on(ent_id):
+                        act_on.append(key)
+                if act_on:
+                    _log_action(
+                        f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG GAS "
+                        f"act_on={act_on} active=False"
+                    )
+                    gas_watchdog_last_log = now
+        except Exception:
+            pass
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         # solo se impianto ? OFF possiamo spegnere i termostati gas
@@ -1512,6 +1605,7 @@ async def _apply_gas_emergenza_live() -> None:
     await _set_pump_delayed("gas:lab_pump", r11, lab_active, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
 
 async def _apply_caldaia_legna_live() -> None:
+    global legna_watchdog_last_log
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
@@ -1534,6 +1628,21 @@ async def _apply_caldaia_legna_live() -> None:
                 cfg["caldaia_legna"]["forced_off"] = False
                 cfg["caldaia_legna"]["startup_deadline_ts"] = 0.0
                 save_config(cfg)
+        try:
+            now = time.time()
+            if now - legna_watchdog_last_log >= 120:
+                act_on = []
+                for key, ent_id in (("power", power), ("ta", ta)):
+                    if _state_is_on(ent_id):
+                        act_on.append(key)
+                if act_on:
+                    _log_action(
+                        f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG LEGNA "
+                        f"act_on={act_on} enabled=False"
+                    )
+                    legna_watchdog_last_log = now
+        except Exception:
+            pass
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         return
@@ -1541,6 +1650,21 @@ async def _apply_caldaia_legna_live() -> None:
     if caldaia_legna_state.get("forced_off"):
         caldaia_legna_state["last_enabled"] = False
         caldaia_legna_state["startup_deadline"] = 0.0
+        try:
+            now = time.time()
+            if now - legna_watchdog_last_log >= 120:
+                act_on = []
+                for key, ent_id in (("power", power), ("ta", ta)):
+                    if _state_is_on(ent_id):
+                        act_on.append(key)
+                if act_on:
+                    _log_action(
+                        f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG LEGNA "
+                        f"act_on={act_on} forced_off=True"
+                    )
+                    legna_watchdog_last_log = now
+        except Exception:
+            pass
         await _set_actuator(power, False)
         await _set_actuator(ta, False)
         return
@@ -1596,6 +1720,23 @@ async def _apply_caldaia_legna_live() -> None:
     else:
         ta_on = _is_on(ta)
 
+    try:
+        if (not power_on or not ta_on):
+            now = time.time()
+            if now - legna_watchdog_last_log >= 120:
+                act_on = []
+                if _state_is_on(power) and not power_on:
+                    act_on.append("power")
+                if _state_is_on(ta) and not ta_on:
+                    act_on.append("ta")
+                if act_on:
+                    _log_action(
+                        f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG LEGNA "
+                        f"act_on={act_on} desired_power={power_on} desired_ta={ta_on}"
+                    )
+                    legna_watchdog_last_log = now
+    except Exception:
+        pass
     await _set_actuator(power, power_on)
     await _set_actuator(ta, ta_on)
 

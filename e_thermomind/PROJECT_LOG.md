@@ -135,3 +135,9 @@ Data export: 2026-02-08 (Europe/Rome)
 - Watchdog impianto: logga stati incoerenti (no source/no demand con attuatori o zone ON), senza modificare la logica.
 - Versione add-on aggiornata a 0.6.64.
 
+
+## Aggiornamenti 2026-02-18
+- Impianto: isteresi separate ON/OFF per volano e puffer (salita/discesa).
+- Watchdog (solo log) estesi a resistenze, solare, miscelatrice, volano, gas, legna.
+- Versione add-on aggiornata a 0.6.66.
+

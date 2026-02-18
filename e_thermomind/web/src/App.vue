@@ -1083,9 +1083,11 @@
               </div>
             </div>
             <div class="field"><label>Volano min (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_min_c"/><div class="help">Minimo volano per abilitare impianto riscaldamento.</div></div>
-            <div class="field"><label>Volano isteresi (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_hyst_c"/><div class="help">Isteresi volano per impianto.</div></div>
+            <div class="field"><label>Volano isteresi ON (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_on_hyst_c"/><div class="help">Isteresi salita per abilitare impianto da volano.</div></div>
+            <div class="field"><label>Volano isteresi OFF (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.volano_off_hyst_c"/><div class="help">Isteresi discesa per disabilitare impianto da volano.</div></div>
             <div class="field"><label>Puffer min (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_min_c"/><div class="help">Minimo puffer per abilitare impianto riscaldamento.</div></div>
-            <div class="field"><label>Puffer isteresi (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_hyst_c"/><div class="help">Isteresi puffer per impianto.</div></div>
+            <div class="field"><label>Puffer isteresi ON (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_on_hyst_c"/><div class="help">Isteresi salita per abilitare impianto da puffer.</div></div>
+            <div class="field"><label>Puffer isteresi OFF (°C)</label><input type="number" step="0.5" v-model.number="sp.impianto.puffer_off_hyst_c"/><div class="help">Isteresi discesa per disabilitare impianto da puffer.</div></div>
             <div class="field"><label>Ritardo avvio pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_start_delay_s"/><div class="help">Ritardo avvio pompa impianto.</div></div>
             <div class="field"><label>Ritardo stop pompa (s)</label><input type="number" step="1" v-model.number="sp.impianto.pump_stop_delay_s"/><div class="help">Ritardo stop pompa impianto.</div></div>
             <div class="field"><label>Stagione</label>
@@ -2355,7 +2357,12 @@ async function load(){
     sp.value.gas_emergenza = { zones: [], volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2 }
   }
   if (!sp.value?.impianto) {
-  sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, puffer_ready: true, richiesta_heat: false, volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
+  sp.value.impianto = { source_mode: 'AUTO', pdc_ready: false, volano_ready: false, puffer_ready: true, richiesta_heat: false, volano_min_c: 35, volano_hyst_c: 2, volano_on_hyst_c: 2, volano_off_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2, puffer_on_hyst_c: 2, puffer_off_hyst_c: 2, zones_pt: [], zones_p1: [], zones_mans: [], zones_lab: [], zone_scala: '', cooling_blocked: [], pump_start_delay_s: 9, pump_stop_delay_s: 0, season_mode: 'winter' }
+  } else {
+    if (typeof sp.value.impianto.volano_on_hyst_c === 'undefined') sp.value.impianto.volano_on_hyst_c = sp.value.impianto.volano_hyst_c ?? 2
+    if (typeof sp.value.impianto.volano_off_hyst_c === 'undefined') sp.value.impianto.volano_off_hyst_c = sp.value.impianto.volano_hyst_c ?? 2
+    if (typeof sp.value.impianto.puffer_on_hyst_c === 'undefined') sp.value.impianto.puffer_on_hyst_c = sp.value.impianto.puffer_hyst_c ?? 2
+    if (typeof sp.value.impianto.puffer_off_hyst_c === 'undefined') sp.value.impianto.puffer_off_hyst_c = sp.value.impianto.puffer_hyst_c ?? 2
   }
   curveXText.value = (sp.value.curva_climatica?.x || []).join(', ')
   curveYText.value = (sp.value.curva_climatica?.y || []).join(', ')

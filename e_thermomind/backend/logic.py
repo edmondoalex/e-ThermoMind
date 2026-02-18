@@ -300,11 +300,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         req_on = False
     sel_norm = str(sel_state or "AUTO").strip().upper()
     vol_min = float(imp_cfg.get("volano_min_c", 35.0))
-    vol_h = float(imp_cfg.get("volano_hyst_c", 2.0))
+    vol_on_h = float(imp_cfg.get("volano_on_hyst_c", imp_cfg.get("volano_hyst_c", 2.0)))
+    vol_off_h = float(imp_cfg.get("volano_off_hyst_c", imp_cfg.get("volano_hyst_c", 2.0)))
     puf_min = float(imp_cfg.get("puffer_min_c", 35.0))
-    puf_h = float(imp_cfg.get("puffer_hyst_c", 2.0))
-    vol_ok = t_volano >= (vol_min + vol_h)
-    puf_ok = t_puffer >= puf_min
+    puf_on_h = float(imp_cfg.get("puffer_on_hyst_c", imp_cfg.get("puffer_hyst_c", 2.0)))
+    puf_off_h = float(imp_cfg.get("puffer_off_hyst_c", imp_cfg.get("puffer_hyst_c", 2.0)))
+    vol_ok = t_volano >= (vol_min + vol_on_h)
+    puf_ok = t_puffer >= (puf_min + puf_on_h)
 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
