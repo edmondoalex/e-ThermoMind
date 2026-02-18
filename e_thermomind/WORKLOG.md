@@ -126,3 +126,8 @@
 - Solare: precedenza ACS attiva sempre quando T_SOL >= T_ACS+delta (fino ad ACS_MAX), indipendente da dest.
 - Versione add-on aggiornata a 0.6.68.
 
+
+## 2026-02-18
+- User: slider ACS setpoint e ACS MAX con salvataggio immediato.
+- Versione add-on aggiornata a 0.6.69.
+

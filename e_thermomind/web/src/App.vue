@@ -154,6 +154,24 @@
         <div class="card inner">
           <div class="row"><strong>Setpoint Rapidi (User)</strong></div>
           <div class="form">
+            <div class="section">ACS</div>
+            <div class="field">
+              <label>ACS setpoint (°C)</label>
+              <div class="slider-row">
+                <input type="range" min="40" max="65" step="0.5" v-model.number="sp.acs.setpoint_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.acs?.setpoint_c) }}°C</span>
+              </div>
+              <div class="help">Target acqua sanitaria. Sotto questo valore il sistema cerca una sorgente.</div>
+            </div>
+            <div class="field">
+              <label>ACS MAX (°C)</label>
+              <div class="slider-row">
+                <input type="range" min="50" max="85" step="0.5" v-model.number="sp.acs.max_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.acs?.max_c) }}°C</span>
+              </div>
+              <div class="help">Sicurezza: sopra questo valore blocca il riscaldamento ACS.</div>
+            </div>
+
             <div class="section">Volano</div>
             <div class="field">
               <label>Volano MAX (°C)</label>
