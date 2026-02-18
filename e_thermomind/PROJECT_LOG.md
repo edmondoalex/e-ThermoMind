@@ -141,3 +141,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Watchdog (solo log) estesi a resistenze, solare, miscelatrice, volano, gas, legna.
 - Versione add-on aggiornata a 0.6.66.
 
+
+## Aggiornamenti 2026-02-18
+- User: slider rapidi per setpoint Volano/Puffer/Impianto + select Stagione con salvataggio immediato.
+- Versione add-on aggiornata a 0.6.67.
+

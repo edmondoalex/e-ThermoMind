@@ -151,6 +151,73 @@
           </div>
         </div>
 
+        <div class="card inner">
+          <div class="row"><strong>Setpoint Rapidi (User)</strong></div>
+          <div class="form">
+            <div class="section">Volano</div>
+            <div class="field">
+              <label>Volano MAX (°C)</label>
+              <div class="slider-row">
+                <input type="range" min="40" max="95" step="0.5" v-model.number="sp.volano.max_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.volano?.max_c) }}°C</span>
+              </div>
+              <div class="help">Sicurezza: sopra questo valore non carica volano.</div>
+            </div>
+            <div class="field">
+              <label>Min → ACS (°C)</label>
+              <div class="slider-row">
+                <input type="range" min="35" max="75" step="0.5" v-model.number="sp.volano.min_to_acs_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.volano?.min_to_acs_c) }}°C</span>
+              </div>
+              <div class="help">Minimo volano per poter scaldare ACS.</div>
+            </div>
+
+            <div class="section">Puffer</div>
+            <div class="field">
+              <label>Setpoint (°C)</label>
+              <div class="slider-row">
+                <input type="range" min="40" max="90" step="0.5" v-model.number="sp.puffer.setpoint_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.puffer?.setpoint_c) }}°C</span>
+              </div>
+              <div class="help">Target puffer quando ACS è ok.</div>
+            </div>
+            <div class="field">
+              <label>Min → ACS (°C)</label>
+              <div class="slider-row">
+                <input type="range" min="40" max="80" step="0.5" v-model.number="sp.puffer.min_to_acs_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.puffer?.min_to_acs_c) }}°C</span>
+              </div>
+              <div class="help">Minimo puffer per poter scaldare ACS.</div>
+            </div>
+
+            <div class="section">Impianto</div>
+            <div class="field">
+              <label>Volano min (°C)</label>
+              <div class="slider-row">
+                <input type="range" min="35" max="80" step="0.5" v-model.number="sp.impianto.volano_min_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.impianto?.volano_min_c) }}°C</span>
+              </div>
+              <div class="help">Minimo volano per abilitare impianto riscaldamento.</div>
+            </div>
+            <div class="field">
+              <label>Puffer min (°C)</label>
+              <div class="slider-row">
+                <input type="range" min="35" max="80" step="0.5" v-model.number="sp.impianto.puffer_min_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.impianto?.puffer_min_c) }}°C</span>
+              </div>
+              <div class="help">Minimo puffer per abilitare impianto riscaldamento.</div>
+            </div>
+            <div class="field">
+              <label>Stagione</label>
+              <select v-model="sp.impianto.season_mode" @change="save">
+                <option value="winter">Inverno</option>
+                <option value="summer">Estate</option>
+              </select>
+              <div class="help">In estate blocca riscaldamento.</div>
+            </div>
+          </div>
+        </div>
+
 
         <div v-if="d" class="card inner module-panel" :class="modulePanelClass('miscelatrice')">
           <div class="row"><strong>Destinazione surplus:</strong> {{ d.computed.dest }}</div>
@@ -2781,6 +2848,9 @@ details.form summary{cursor:pointer;list-style:none}
 .mini-head{display:flex;align-items:center;justify-content:space-between}
 .mini-value{font-size:11px;color:#c8d7ee}
 .mini-label{font-size:11px;color:var(--muted)}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-row input[type="range"]{flex:1}
+.slider-value{min-width:72px;text-align:right;font-size:12px;color:var(--muted)}
 .chart-grid{display:grid;gap:12px}
 @media(min-width:900px){.chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chart{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(10,15,22,.6)}

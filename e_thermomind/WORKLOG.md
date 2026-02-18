@@ -116,3 +116,8 @@
 - Watchdog aggiunti per resistenze, solare, miscelatrice, volano, gas, legna (solo log, nessuna azione).
 - Versione add-on aggiornata a 0.6.66.
 
+
+## 2026-02-18
+- User: slider rapidi per setpoint Volano/Puffer/Impianto + select Stagione con salvataggio immediato.
+- Versione add-on aggiornata a 0.6.67.
+
