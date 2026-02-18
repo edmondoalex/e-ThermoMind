@@ -41,9 +41,9 @@ def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool) -> bool:
         return False
     sval = str(state or "").strip().lower()
     action = str(hvac_action or "").strip().lower()
-    if sval in ("off", "idle", "unavailable", "unknown"):
-        return False
-    return action in ("heating", "cooling") or sval in ("on", "true", "1", "yes", "heat", "heating", "cool", "cooling")
+    if action in ("heating", "cooling"):
+        return True
+    return False
 
 def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float | None = None) -> Dict[str, Any]:
     now_ts = time.time() if now is None else float(now)

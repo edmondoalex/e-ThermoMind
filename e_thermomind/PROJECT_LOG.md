@@ -176,3 +176,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Impianto: log espliciti quando viene saltato per gas emergenza e quando spegne per no_source/no_demand.
 - Versione add-on aggiornata a 0.6.73.
 
+
+## Aggiornamenti 2026-02-18
+- Zone active: ora contano solo hvac_action heating/cooling (idle non attivo).
+- Versione add-on aggiornata a 0.6.74.
+
