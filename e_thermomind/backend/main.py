@@ -447,7 +447,9 @@ def _zone_active(entity_id: str | None, cooling_blocked: set[str]) -> bool:
     if dom in ("switch", "binary_sensor", "input_boolean"):
         return state in ("on", "true", "1", "yes")
     if dom == "climate":
-        # active only when really heating/cooling
+        # active only when really heating/cooling and not OFF
+        if state in ("off", "idle", "unavailable", "unknown"):
+            return False
         return hvac_action in ("heating", "cooling")
     # default: treat truthy text as active
     return state in ("on", "true", "1", "yes", "heat", "heating")
@@ -459,6 +461,9 @@ def _gas_zone_demand(eid: str | None, cooling_blocked: set[str]) -> bool:
     dom = eid.split(".", 1)[0] if "." in eid else ""
     action = str(st.get("attributes", {}).get("hvac_action") or "").lower()
     if dom == "climate":
+        state = str(st.get("state") or "").lower()
+        if state in ("off", "idle", "unavailable", "unknown"):
+            return False
         # in gas: richiesta solo se realmente in heating
         return action == "heating"
     return _zone_active(eid, cooling_blocked)

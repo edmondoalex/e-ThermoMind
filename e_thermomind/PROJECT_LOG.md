@@ -181,3 +181,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Zone active: ora contano solo hvac_action heating/cooling (idle non attivo).
 - Versione add-on aggiornata a 0.6.74.
 
+
+## Aggiornamenti 2026-02-18
+- Zone active: off/idle non conta anche per gas emergenza (richiesta solo se state!=off e hvac_action=heating).
+- Versione add-on aggiornata a 0.6.75.
+
