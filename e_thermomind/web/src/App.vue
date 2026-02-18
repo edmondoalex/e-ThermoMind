@@ -296,6 +296,9 @@
               <span>{{ item.msg }}</span>
             </div>
           </div>
+          <div class="row" style="margin-top:8px">
+            <button class="ghost" @click="watchdogResetTs = Date.now()">Reset watchdog</button>
+          </div>
         </div>
 
         <div v-if="act" class="card inner module-panel" :class="modulePanelClass('resistenze_volano')">
@@ -2296,6 +2299,7 @@ const modulePanelClass = (key) => {
   }
 }
 
+const watchdogResetTs = ref(0)
 const watchdogActions = computed(() => {
   const items = Array.isArray(actions.value) ? actions.value : []
   const out = []
@@ -2304,6 +2308,12 @@ const watchdogActions = computed(() => {
     const s = String(line)
     const ts = s.slice(0, 19)
     const msg = s.length > 20 ? s.slice(20) : s
+    let tsMs = 0
+    try {
+      const iso = ts.replace(' ', 'T')
+      tsMs = new Date(iso).getTime() || 0
+    } catch { tsMs = 0 }
+    if (watchdogResetTs.value && tsMs && tsMs <= watchdogResetTs.value) continue
     out.push({ ts, msg })
     if (out.length >= 15) break
   }

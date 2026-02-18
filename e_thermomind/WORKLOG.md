@@ -141,3 +141,8 @@
 - UI User: badge lampeggiante ? ATTENZIONE: WATCHDOG se presenti eventi.
 - Versione add-on aggiornata a 0.6.71.
 
+
+## 2026-02-18
+- UI User: pulsante Reset watchdog per azzerare la lista visibile.
+- Versione add-on aggiornata a 0.6.72.
+
