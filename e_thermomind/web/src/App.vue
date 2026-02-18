@@ -23,6 +23,7 @@
           <span class="muted">v{{ status?.version || '-' }}</span>
           <span v-if="status?.runtime_mode === 'live'" class="muted">modo: live operativo</span>
           <span v-else class="muted">mode: {{ status?.runtime_mode || '-' }}</span>
+          <span v-if="hasWatchdog" class="badge warn-blink">▲ ATTENZIONE: WATCHDOG</span>
           <span class="badge" :class="status?.ha_connected ? 'ok' : 'off'">
             {{ status?.ha_connected ? 'Online' : 'Offline' }}
           </span>
@@ -2308,6 +2309,7 @@ const watchdogActions = computed(() => {
   }
   return out
 })
+const hasWatchdog = computed(() => watchdogActions.value.length > 0)
 
 const solarModeClass = computed(() => {
   const mode = sp.value?.solare?.mode || 'auto'
@@ -2920,6 +2922,7 @@ details.form summary{cursor:pointer;list-style:none}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:#0b1f1c;background:var(--accent)}
 .badge.off{color:#f5f7fa;background:#3b3f46}
+.badge.warn-blink{color:#0b1f1c;background:#ff6b6b;border-color:rgba(255,107,107,.6);animation:blink 1s linear infinite}
 .presence{display:inline-block;margin-right:6px}
 .presence-ok{color:#22c55e}
 .presence-no{color:#ef4444}
@@ -3041,4 +3044,5 @@ details.form summary{cursor:pointer;list-style:none}
 .badge-mini.active{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.4);color:#ffd4d4}
 .badge-mini.idle{background:rgba(148,163,184,.08)}
 @keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-36}}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:.35}}
 </style>

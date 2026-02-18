@@ -161,3 +161,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - UI User: sezione Watchdog con elenco filtrato (data + motivazione).
 - Versione add-on aggiornata a 0.6.70.
 
+
+## Aggiornamenti 2026-02-18
+- UI User: badge lampeggiante ? ATTENZIONE: WATCHDOG se presenti eventi.
+- Versione add-on aggiornata a 0.6.71.
+
