@@ -156,3 +156,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - User: slider ACS setpoint e ACS MAX con salvataggio immediato.
 - Versione add-on aggiornata a 0.6.69.
 
+
+## Aggiornamenti 2026-02-18
+- UI User: sezione Watchdog con elenco filtrato (data + motivazione).
+- Versione add-on aggiornata a 0.6.70.
+

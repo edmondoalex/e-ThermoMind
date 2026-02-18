@@ -286,6 +286,17 @@
           </div>
         </div>
 
+        <div class="card inner">
+          <div class="row"><strong>Watchdog (ultime)</strong></div>
+          <div v-if="watchdogActions.length === 0" class="muted">Nessun watchdog recente.</div>
+          <div v-else class="list">
+            <div v-for="(item, idx) in watchdogActions" :key="`wd-${idx}`" class="list-row">
+              <span class="muted">{{ item.ts }}</span>
+              <span>{{ item.msg }}</span>
+            </div>
+          </div>
+        </div>
+
         <div v-if="act" class="card inner module-panel" :class="modulePanelClass('resistenze_volano')">
           <div class="row"><strong>Resistenze volano</strong></div>
           <div class="row3">
@@ -2283,6 +2294,20 @@ const modulePanelClass = (key) => {
     'mod-active': enabled && !!moduleActiveMap.value?.[key]
   }
 }
+
+const watchdogActions = computed(() => {
+  const items = Array.isArray(actions.value) ? actions.value : []
+  const out = []
+  for (const line of items.slice().reverse()) {
+    if (!line || !String(line).includes('WATCHDOG')) continue
+    const s = String(line)
+    const ts = s.slice(0, 19)
+    const msg = s.length > 20 ? s.slice(20) : s
+    out.push({ ts, msg })
+    if (out.length >= 15) break
+  }
+  return out
+})
 
 const solarModeClass = computed(() => {
   const mode = sp.value?.solare?.mode || 'auto'
