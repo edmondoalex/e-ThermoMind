@@ -65,6 +65,7 @@ miscelatrice_last_action: str = "STOP"
 miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
 impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
+impianto_watchdog_last_log: float = 0.0
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
 caldaia_legna_state: dict[str, Any] = {
     "startup_deadline": float(cfg.get("caldaia_legna", {}).get("startup_deadline_ts", 0.0) or 0.0),
@@ -1171,6 +1172,7 @@ async def _set_input_select(entity_id: str | None, option: str) -> None:
 
 async def _apply_impianto_live() -> None:
     global impianto_last_source
+    global impianto_watchdog_last_log
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
@@ -1284,6 +1286,36 @@ async def _apply_impianto_live() -> None:
     r2 = act.get("r2_valve_comparto_mandata_imp_pt")
     r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
     r1 = act.get("r1_valve_comparto_laboratorio")
+    r31 = act.get("r31_valve_impianto_da_volano")
+
+    def _watchdog(reason: str) -> None:
+        global impianto_watchdog_last_log
+        try:
+            now = time.time()
+            if now - impianto_watchdog_last_log < 120:
+                return
+            act_on = []
+            for key, ent_id in (
+                ("r2", r2), ("r3", r3), ("r1", r1),
+                ("r4", r4), ("r5", r5), ("r31", r31),
+                ("r12", r12), ("r11", r11),
+            ):
+                if _state_is_on(ent_id):
+                    act_on.append(key)
+            zone_on = []
+            for z in _collect_zones(imp):
+                if _zone_active(z, cooling_blocked):
+                    zone_on.append(z)
+            if act_on or zone_on:
+                _log_action(
+                    f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG IMPIANTO "
+                    f"reason={reason} act_on={act_on} zones_on={zone_on} "
+                    f"source={source or 'OFF'} demand={demand_on} "
+                    f"t_vol={_get_num(ent.get('t_volano'))} t_puf={_get_num(ent.get('t_puffer'))}"
+                )
+                impianto_watchdog_last_log = now
+        except Exception:
+            pass
 
     # blocco se nessuna fonte valida o troppo fredda
     # latch: se era attiva una sorgente, mantienila finch? non scende sotto min (con isteresi)
@@ -1306,6 +1338,7 @@ async def _apply_impianto_live() -> None:
 
     blocked_cold = bool(demand_on and source is None)
     if not source:
+        _watchdog("no_source")
         if r2:
             await _set_actuator(r2, False)
         if r3:
@@ -1328,6 +1361,7 @@ async def _apply_impianto_live() -> None:
     impianto_last_source = source
 
     if not demand_on:
+        _watchdog("no_demand")
         if r2:
             await _set_actuator(r2, False)
         if r3:

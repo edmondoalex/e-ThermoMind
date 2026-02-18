@@ -130,3 +130,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Resistenze volano: se modulo OFF, non forza piu lo spegnimento (controllo manuale da HA).
 - Versione add-on aggiornata a 0.6.63.
 
+
+## Aggiornamenti 2026-02-18
+- Watchdog impianto: logga stati incoerenti (no source/no demand con attuatori o zone ON), senza modificare la logica.
+- Versione add-on aggiornata a 0.6.64.
+
