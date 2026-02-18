@@ -1254,6 +1254,7 @@ async def _apply_impianto_live() -> None:
         return
     if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
         # gas emergenza ON: non interferire con impianto
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO skip (gas_emergenza ON)")
         return
     if not cfg.get("modules_enabled", {}).get("impianto", True):
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO module OFF state={cfg.get('modules_enabled', {})}")
@@ -1415,6 +1416,10 @@ async def _apply_impianto_live() -> None:
 
     blocked_cold = bool(demand_on and source is None)
     if not source:
+        _log_action(
+            f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF no_source "
+            f"demand={demand_on} blocked={blocked_cold} act=[r1,r2,r3,r4,r5,r11,r12]"
+        )
         _watchdog("no_source")
         if r2:
             await _set_actuator(r2, False)
@@ -1438,6 +1443,10 @@ async def _apply_impianto_live() -> None:
     impianto_last_source = source
 
     if not demand_on:
+        _log_action(
+            f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF no_demand "
+            f"source={source or 'OFF'} act=[r1,r2,r3,r4,r5,r11,r12]"
+        )
         _watchdog("no_demand")
         if r2:
             await _set_actuator(r2, False)

@@ -171,3 +171,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - UI User: pulsante Reset watchdog per azzerare la lista visibile.
 - Versione add-on aggiornata a 0.6.72.
 
+
+## Aggiornamenti 2026-02-18
+- Impianto: log espliciti quando viene saltato per gas emergenza e quando spegne per no_source/no_demand.
+- Versione add-on aggiornata a 0.6.73.
+
