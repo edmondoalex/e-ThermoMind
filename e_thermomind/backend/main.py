@@ -1322,13 +1322,13 @@ async def _apply_impianto_live() -> None:
 
     # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
     if sel_state == "AUTO" or (
-        (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (impianto_last_source == "PDC" and vol_ok_hold)))) or
-        (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (impianto_last_source == "PUFFER" and puf_ok_hold))))
+        (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (vol_ok_hold and demand_on)))) or
+        (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (puf_ok_hold and demand_on))))
     ):
-        if pdc_volano_ready and (vol_ok_start or (impianto_last_source == "PDC" and vol_ok_hold)):
+        if pdc_volano_ready and (vol_ok_start or (vol_ok_hold and demand_on)):
             source = "PDC"
         else:
-            source = "PUFFER" if (puffer_ready and (puf_ok_start or (impianto_last_source == "PUFFER" and puf_ok_hold))) else None
+            source = "PUFFER" if (puffer_ready and (puf_ok_start or (puf_ok_hold and demand_on))) else None
     else:
         source = sel_state
 

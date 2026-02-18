@@ -161,3 +161,8 @@
 - Zone active: off/idle non conta anche per gas emergenza (richiesta solo se state!=off e hvac_action=heating).
 - Versione add-on aggiornata a 0.6.75.
 
+
+## 2026-02-18
+- Impianto: hold puffer/volano applicato con domanda anche senza last_source (evita stop a min+ON dopo restart).
+- Versione add-on aggiornata a 0.6.76.
+
