@@ -1073,25 +1073,6 @@
           </div>
 
           <div class="set-section">
-            <div class="section-title">MQTT</div>
-            <div class="field checkbox">
-              <label><input type="checkbox" v-model="sp.mqtt.enabled" @change="save"/> enabled</label>
-            </div>
-            <div class="field"><label>host*</label><input type="text" v-model="sp.mqtt.host" @change="save"/></div>
-            <div class="field"><label>port*</label><input type="number" min="1" step="1" v-model.number="sp.mqtt.port" @change="save"/></div>
-            <div class="field"><label>username</label><input type="text" v-model="sp.mqtt.username" @change="save"/></div>
-            <div class="field"><label>password</label><input type="password" v-model="sp.mqtt.password" @change="save"/></div>
-            <div class="field"><label>base_topic*</label><input type="text" v-model="sp.mqtt.base_topic" @change="save"/></div>
-            <div class="field"><label>discovery_prefix*</label><input type="text" v-model="sp.mqtt.discovery_prefix" @change="save"/></div>
-            <div class="field"><label>client_id*</label><input type="text" v-model="sp.mqtt.client_id" @change="save"/></div>
-            <div class="actions">
-              <button class="ghost" @click="republishMqtt">MQTT: ripubblica discovery</button>
-              <button class="ghost danger" @click="clearMqtt">MQTT: reset discovery</button>
-              <span class="muted" v-if="mqttAdminStatus">{{ mqttAdminStatus }}</span>
-            </div>
-          </div>
-
-          <div class="set-section">
             <div class="section-title">ACS</div>
             <div class="field"><label>ACS setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.acs.setpoint_c"/><div class="help">Target acqua sanitaria. Sotto questo valore il sistema cerca una sorgente.</div></div>
             <div class="field"><label>ACS MAX (C)</label><input type="number" step="0.5" v-model.number="sp.acs.max_c"/><div class="help">Sicurezza: sopra questo valore blocca il riscaldamento ACS.</div></div>
@@ -1993,7 +1974,6 @@ const pollMs = ref(3000)
 const actions = ref([])
 const zones = ref([])
 const schedulerStatus = ref(null)
-const mqttAdminStatus = ref('')
 let historySaveTimer = null
 let historyReady = false
 const schedulerDays = [
@@ -2544,9 +2524,6 @@ async function load(){
   if (typeof sp.value.runtime.timezone === 'undefined' || sp.value.runtime.timezone === null) {
     sp.value.runtime.timezone = 'Europe/Rome'
   }
-  if (!sp.value?.mqtt) {
-    sp.value.mqtt = { enabled: false, host: 'core-mosquitto', port: 1883, username: '', password: '', base_topic: 'thermomind', discovery_prefix: 'homeassistant', client_id: 'thermomind-addon' }
-  }
   for (const [k, v] of Object.entries(histDefaults)) {
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
   }
@@ -2595,21 +2572,6 @@ async function load(){
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }
   historyReady = true
-}
-
-async function republishMqtt(){
-  const r = await fetch('/api/mqtt/republish', { method: 'POST' })
-  if (!r.ok) { mqttAdminStatus.value = 'Republish fallito'; return }
-  const data = await r.json()
-  mqttAdminStatus.value = data?.ok ? `Discovery MQTT ripubblicata (${data.published || 0})` : 'Republish fallito'
-}
-
-async function clearMqtt(){
-  if (!confirm('Cancellare discovery/stati MQTT? Le entita verranno rimosse da HA.')) return
-  const r = await fetch('/api/mqtt/clear', { method: 'POST' })
-  if (!r.ok) { mqttAdminStatus.value = 'Clear fallito'; return }
-  const data = await r.json()
-  mqttAdminStatus.value = `Clear MQTT ok (${data.cleared || 0} topic)`
 }
 function parseCurveText(text, fallback){
   if (!text || typeof text !== 'string') return fallback

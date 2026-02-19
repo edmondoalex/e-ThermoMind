@@ -133,6 +133,17 @@ def _apply_season_block(modules: dict[str, bool]) -> tuple[dict[str, bool], bool
             changed = True
     return out, changed
 
+def _load_options_mqtt() -> dict[str, Any]:
+    opts_path = Path("/data/options.json")
+    if not opts_path.exists():
+        return {}
+    try:
+        raw = json.loads(opts_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    mqtt = raw.get("mqtt", {})
+    return mqtt if isinstance(mqtt, dict) else {}
+
 def _mqtt_cfg() -> dict[str, Any]:
     base = {
         "enabled": False,
@@ -144,7 +155,7 @@ def _mqtt_cfg() -> dict[str, Any]:
         "discovery_prefix": "homeassistant",
         "client_id": "thermomind-addon",
     }
-    raw = cfg.get("mqtt", {})
+    raw = _load_options_mqtt() or cfg.get("mqtt", {})
     if isinstance(raw, dict):
         base.update(raw)
     base["base_topic"] = str(base.get("base_topic") or "thermomind").strip()
@@ -2390,7 +2401,6 @@ async def get_setpoints():
         "solare": cfg.get("solare", {}),
         "timers": cfg.get("timers", {}),
         "runtime": cfg.get("runtime", {}),
-        "mqtt": cfg.get("mqtt", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),
         "gas_emergenza": cfg.get("gas_emergenza", {}),
         "caldaia_legna": cfg.get("caldaia_legna", {}),

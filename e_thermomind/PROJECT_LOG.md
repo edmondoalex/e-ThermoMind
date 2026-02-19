@@ -280,3 +280,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - UI: header ridotto e allineato allo stile richiesto.
 - Versione add-on aggiornata a 0.6.94.
 
+## Aggiornamenti 2026-02-19
+- MQTT: configurazione spostata in config dell’add-on (options.json); UI rimossa.
+- Versione add-on aggiornata a 0.6.95.
+
