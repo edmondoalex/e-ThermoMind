@@ -227,3 +227,8 @@
 - UI: supporto hash `/#/user|admin|scheduler` per accesso diretto.
 - Versione add-on aggiornata a 0.6.88.
 
+
+## 2026-02-19
+- UI: apertura tab da hash subito all'avvio (senza refresh).
+- Versione add-on aggiornata a 0.6.90.
+

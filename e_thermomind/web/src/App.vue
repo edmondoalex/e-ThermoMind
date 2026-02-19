@@ -1955,7 +1955,13 @@
 <script setup>
 import schemaImg from './assets/centrale-termica.png'
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
-const tab = ref('user')
+const initialTab = (() => {
+  const h = (window.location.hash || '').toLowerCase()
+  if (h.includes('scheduler')) return 'scheduler'
+  if (h.includes('admin')) return 'admin'
+  return 'user'
+})()
+const tab = ref(initialTab)
 const d = ref(null)
 const sp = ref(null)
 const ent = ref(null)
@@ -2899,14 +2905,14 @@ function onBlur(){
   if (editingCount.value === 0) startPolling()
 }
 onMounted(async()=>{ 
-  await loadAll(); 
-  startPolling();
-  connectWS();
-  solareModeInit.value = true
   const hash = (window.location.hash || '').toLowerCase()
   if (hash.includes('scheduler')) tab.value = 'scheduler'
   if (hash.includes('admin')) tab.value = 'admin'
   if (hash.includes('user')) tab.value = 'user'
+  await loadAll(); 
+  startPolling();
+  connectWS();
+  solareModeInit.value = true
   window.addEventListener('hashchange', () => {
     const h = (window.location.hash || '').toLowerCase()
     if (h.includes('scheduler')) tab.value = 'scheduler'
