@@ -272,3 +272,11 @@ Data export: 2026-02-08 (Europe/Rome)
 - Gas emergenza: aggiunto R21 GAS MISC OFF (chiusa solo con gas attivo, altrimenti aperta).
 - Versione add-on aggiornata a 0.6.93.
 
+
+## Aggiornamenti 2026-02-19
+- MQTT: configurazione in Admin + discovery (setpoint screenshot, moduli ON/OFF e stato attivo) con comandi R/W.
+- Endpoint MQTT: `/api/mqtt/status`, `/api/mqtt/republish`, `/api/mqtt/clear`.
+- UI: pulsanti Admin per ripubblica/reset MQTT.
+- UI: header ridotto e allineato allo stile richiesto.
+- Versione add-on aggiornata a 0.6.94.
+

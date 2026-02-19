@@ -1,7 +1,7 @@
 name: e-ThermoMind
 slug: e_thermomind
 description: "PLC termico: orchestrazione ACS/Puffer/Volano/Solare con UI Admin/User (Vue)"
-version: "0.6.93"
+version: "0.6.94"
 arch: [amd64, aarch64, armv7]
 init: false
 startup: services
@@ -22,8 +22,26 @@ options:
   pdc_enabled: false
   ha_url: "http://homeassistant:8123"
   ha_token: ""
+  mqtt:
+    enabled: false
+    host: "core-mosquitto"
+    port: 1883
+    username: ""
+    password: ""
+    base_topic: "thermomind"
+    discovery_prefix: "homeassistant"
+    client_id: "thermomind-addon"
 schema:
   log_level: list(trace|debug|info|warning|error)
   pdc_enabled: bool
   ha_url: str
   ha_token: str
+  mqtt:
+    enabled: bool
+    host: str
+    port: port
+    username: str?
+    password: password?
+    base_topic: str
+    discovery_prefix: str
+    client_id: str

@@ -1073,6 +1073,25 @@
           </div>
 
           <div class="set-section">
+            <div class="section-title">MQTT</div>
+            <div class="field checkbox">
+              <label><input type="checkbox" v-model="sp.mqtt.enabled" @change="save"/> enabled</label>
+            </div>
+            <div class="field"><label>host*</label><input type="text" v-model="sp.mqtt.host" @change="save"/></div>
+            <div class="field"><label>port*</label><input type="number" min="1" step="1" v-model.number="sp.mqtt.port" @change="save"/></div>
+            <div class="field"><label>username</label><input type="text" v-model="sp.mqtt.username" @change="save"/></div>
+            <div class="field"><label>password</label><input type="password" v-model="sp.mqtt.password" @change="save"/></div>
+            <div class="field"><label>base_topic*</label><input type="text" v-model="sp.mqtt.base_topic" @change="save"/></div>
+            <div class="field"><label>discovery_prefix*</label><input type="text" v-model="sp.mqtt.discovery_prefix" @change="save"/></div>
+            <div class="field"><label>client_id*</label><input type="text" v-model="sp.mqtt.client_id" @change="save"/></div>
+            <div class="actions">
+              <button class="ghost" @click="republishMqtt">MQTT: ripubblica discovery</button>
+              <button class="ghost danger" @click="clearMqtt">MQTT: reset discovery</button>
+              <span class="muted" v-if="mqttAdminStatus">{{ mqttAdminStatus }}</span>
+            </div>
+          </div>
+
+          <div class="set-section">
             <div class="section-title">ACS</div>
             <div class="field"><label>ACS setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.acs.setpoint_c"/><div class="help">Target acqua sanitaria. Sotto questo valore il sistema cerca una sorgente.</div></div>
             <div class="field"><label>ACS MAX (C)</label><input type="number" step="0.5" v-model.number="sp.acs.max_c"/><div class="help">Sicurezza: sopra questo valore blocca il riscaldamento ACS.</div></div>
@@ -1974,6 +1993,7 @@ const pollMs = ref(3000)
 const actions = ref([])
 const zones = ref([])
 const schedulerStatus = ref(null)
+const mqttAdminStatus = ref('')
 let historySaveTimer = null
 let historyReady = false
 const schedulerDays = [
@@ -2524,6 +2544,9 @@ async function load(){
   if (typeof sp.value.runtime.timezone === 'undefined' || sp.value.runtime.timezone === null) {
     sp.value.runtime.timezone = 'Europe/Rome'
   }
+  if (!sp.value?.mqtt) {
+    sp.value.mqtt = { enabled: false, host: 'core-mosquitto', port: 1883, username: '', password: '', base_topic: 'thermomind', discovery_prefix: 'homeassistant', client_id: 'thermomind-addon' }
+  }
   for (const [k, v] of Object.entries(histDefaults)) {
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
   }
@@ -2572,6 +2595,21 @@ async function load(){
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
   }
   historyReady = true
+}
+
+async function republishMqtt(){
+  const r = await fetch('/api/mqtt/republish', { method: 'POST' })
+  if (!r.ok) { mqttAdminStatus.value = 'Republish fallito'; return }
+  const data = await r.json()
+  mqttAdminStatus.value = data?.ok ? `Discovery MQTT ripubblicata (${data.published || 0})` : 'Republish fallito'
+}
+
+async function clearMqtt(){
+  if (!confirm('Cancellare discovery/stati MQTT? Le entita verranno rimosse da HA.')) return
+  const r = await fetch('/api/mqtt/clear', { method: 'POST' })
+  if (!r.ok) { mqttAdminStatus.value = 'Clear fallito'; return }
+  const data = await r.json()
+  mqttAdminStatus.value = `Clear MQTT ok (${data.cleared || 0} topic)`
 }
 function parseCurveText(text, fallback){
   if (!text || typeof text !== 'string') return fallback
@@ -2964,9 +3002,10 @@ watch(
 :root{--bg:#070a0f;--card:#0b101a;--muted:#9fb0c7;--text:#e8f1ff;--accent:#57e3d6;--accent-2:#7aa7ff;--border:rgba(255,255,255,.08)}
 *{box-sizing:border-box} body{margin:0;font-family:"Space Grotesk","IBM Plex Sans","Trebuchet MS",sans-serif;background:radial-gradient(1200px 500px at 20% -10%, rgba(122,167,255,.08), transparent),radial-gradient(900px 500px at 80% 0%, rgba(87,227,214,.06), transparent),var(--bg);color:var(--text)}
 .wrap{min-height:100vh;display:flex;flex-direction:column}
-.top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,15,22,.85);backdrop-filter:blur(14px)}
-.brand{font-weight:800;letter-spacing:.3px}
-.tabs button{background:rgba(14,20,30,.9);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:12px;margin-left:8px;cursor:pointer}
+.top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,15,22,.85);backdrop-filter:blur(14px);gap:12px}
+.brand{font-weight:800;letter-spacing:.3px;font-size:16px}
+.tabs{display:flex;align-items:center;gap:8px}
+.tabs button{background:rgba(14,20,30,.9);color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:10px;cursor:pointer;font-size:12px}
 .tabs button.active{border-color:var(--accent);color:#dffaf3;background:rgba(20,38,45,.95)}
 .main{padding:18px;max-width:1100px;margin:0 auto;width:100%}
 .card{background:linear-gradient(180deg, rgba(11,16,26,.98), rgba(9,14,22,.98));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.38)}
@@ -2987,6 +3026,7 @@ watch(
 .actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
 button{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
 button.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+button.ghost.danger{border-color:rgba(239,68,68,.55);color:#ffd4d4}
 hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .form{display:grid;gap:10px;margin-top:10px}
 .section{margin:6px 0 2px 0;font-size:14px;color:var(--text)}
@@ -2998,7 +3038,7 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 .upload input{display:none}
 details.form{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(0,0,0,.08)}
 details.form summary{cursor:pointer;list-style:none}
-.top-actions{display:flex;gap:8px;align-items:center}
+.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .scheduler{display:flex;flex-direction:column;gap:14px}
 .scheduler-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .scheduler-day{background:rgba(12,18,26,.7);border:1px solid var(--border);border-radius:14px;padding:12px}
@@ -3010,15 +3050,13 @@ details.form summary{cursor:pointer;list-style:none}
 .timeline-bar{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,#39d6a1,#5ff1c4);opacity:.85}
 .small-note{font-size:12px;color:var(--muted)}
 .badge.subtle{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:999px}
-.action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 14px;border-radius:999px;font-weight:700;cursor:pointer}
+.action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:6px 12px;border-radius:999px;font-weight:700;cursor:pointer;font-size:12px}
 .action-btn.upload{display:inline-flex;align-items:center;gap:6px}
 @media(max-width:640px){
-  .top{flex-wrap:wrap;gap:10px;padding:12px 14px}
-  .brand{flex:1 1 100%;font-size:18px}
-  .top-actions{flex:1 1 100%;flex-wrap:wrap}
-  .top-actions .action-btn{flex:1 1 46%;min-width:140px;text-align:center}
-  .tabs{margin-left:auto}
-  .tabs button{padding:6px 10px}
+  .top{flex-wrap:wrap;gap:10px;padding:10px 12px}
+  .brand{flex:1 1 100%;font-size:16px}
+  .top-actions{flex:1 1 100%}
+  .top-actions .action-btn{flex:1 1 46%;min-width:120px;text-align:center}
 }
 watch(tab, (val) => {
   const next = `#/${val}`

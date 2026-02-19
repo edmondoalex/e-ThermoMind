@@ -167,6 +167,16 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "ui_poll_ms": 3000,
     "timezone": "Europe/Rome"
   },
+  "mqtt": {
+    "enabled": False,
+    "host": "core-mosquitto",
+    "port": 1883,
+    "username": "",
+    "password": "",
+    "base_topic": "thermomind",
+    "discovery_prefix": "homeassistant",
+    "client_id": "thermomind-addon"
+  },
   "scheduler": {
     "gas": {
       "enabled": False,
@@ -438,6 +448,25 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
         if isinstance(runtime.get("timezone"), str):
             cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
 
+    mqtt = raw.get("mqtt", {})
+    if isinstance(mqtt, dict):
+        if "enabled" in mqtt:
+            cfg["mqtt"]["enabled"] = bool(mqtt.get("enabled"))
+        if isinstance(mqtt.get("host"), str):
+            cfg["mqtt"]["host"] = mqtt.get("host", cfg["mqtt"]["host"]).strip()
+        if "port" in mqtt:
+            cfg["mqtt"]["port"] = int(_float(mqtt.get("port"), cfg["mqtt"]["port"]))
+        if isinstance(mqtt.get("username"), str):
+            cfg["mqtt"]["username"] = mqtt.get("username", cfg["mqtt"]["username"])
+        if isinstance(mqtt.get("password"), str):
+            cfg["mqtt"]["password"] = mqtt.get("password", cfg["mqtt"]["password"])
+        if isinstance(mqtt.get("base_topic"), str):
+            cfg["mqtt"]["base_topic"] = mqtt.get("base_topic", cfg["mqtt"]["base_topic"]).strip()
+        if isinstance(mqtt.get("discovery_prefix"), str):
+            cfg["mqtt"]["discovery_prefix"] = mqtt.get("discovery_prefix", cfg["mqtt"]["discovery_prefix"]).strip()
+        if isinstance(mqtt.get("client_id"), str):
+            cfg["mqtt"]["client_id"] = mqtt.get("client_id", cfg["mqtt"]["client_id"]).strip()
+
     sched = raw.get("scheduler", {})
     if isinstance(sched, dict):
         gas = sched.get("gas", {})
@@ -614,6 +643,25 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["runtime"]["mode"] = runtime["mode"]
         if isinstance(runtime.get("timezone"), str):
             cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
+
+    mqtt = payload.get("mqtt", {})
+    if isinstance(mqtt, dict):
+        if "enabled" in mqtt:
+            cfg["mqtt"]["enabled"] = bool(mqtt.get("enabled"))
+        if isinstance(mqtt.get("host"), str):
+            cfg["mqtt"]["host"] = mqtt.get("host", cfg["mqtt"]["host"]).strip()
+        if "port" in mqtt:
+            cfg["mqtt"]["port"] = int(_float(mqtt.get("port"), cfg["mqtt"]["port"]))
+        if isinstance(mqtt.get("username"), str):
+            cfg["mqtt"]["username"] = mqtt.get("username", cfg["mqtt"]["username"])
+        if isinstance(mqtt.get("password"), str):
+            cfg["mqtt"]["password"] = mqtt.get("password", cfg["mqtt"]["password"])
+        if isinstance(mqtt.get("base_topic"), str):
+            cfg["mqtt"]["base_topic"] = mqtt.get("base_topic", cfg["mqtt"]["base_topic"]).strip()
+        if isinstance(mqtt.get("discovery_prefix"), str):
+            cfg["mqtt"]["discovery_prefix"] = mqtt.get("discovery_prefix", cfg["mqtt"]["discovery_prefix"]).strip()
+        if isinstance(mqtt.get("client_id"), str):
+            cfg["mqtt"]["client_id"] = mqtt.get("client_id", cfg["mqtt"]["client_id"]).strip()
 
     sched = payload.get("scheduler", {})
     if isinstance(sched, dict):

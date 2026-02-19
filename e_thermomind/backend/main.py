@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from .storage import load_config, save_config, normalize_config, apply_setpoints, apply_entities, apply_actuators
 from .ha_client import HAClient
 from .logic import compute_decision
+from .mqtt_client import MqttClient, MqttStatus
 
 def _read_app_version() -> str:
     path = Path("/app/config.yaml")
@@ -31,6 +32,14 @@ app = FastAPI(title="e-ThermoMind", version=APP_VERSION)
 ha = HAClient()
 cfg = load_config()
 ws_task: asyncio.Task | None = None
+mqtt_client: MqttClient | None = None
+mqtt_publish_task: asyncio.Task | None = None
+mqtt_last_values: dict[str, str] = {}
+mqtt_discovery_topics: list[str] = []
+mqtt_state_topics: list[str] = []
+mqtt_last_config_key: str | None = None
+mqtt_status_cache: dict[str, Any] = {"connected": False, "last_error": None}
+MQTT_PUBLISH_INTERVAL_S = 10
 off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0, "rg": 0.0}
 on_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
 off_sequence_start: float = 0.0
@@ -124,6 +133,338 @@ def _apply_season_block(modules: dict[str, bool]) -> tuple[dict[str, bool], bool
             changed = True
     return out, changed
 
+def _mqtt_cfg() -> dict[str, Any]:
+    base = {
+        "enabled": False,
+        "host": "core-mosquitto",
+        "port": 1883,
+        "username": "",
+        "password": "",
+        "base_topic": "thermomind",
+        "discovery_prefix": "homeassistant",
+        "client_id": "thermomind-addon",
+    }
+    raw = cfg.get("mqtt", {})
+    if isinstance(raw, dict):
+        base.update(raw)
+    base["base_topic"] = str(base.get("base_topic") or "thermomind").strip()
+    base["discovery_prefix"] = str(base.get("discovery_prefix") or "homeassistant").strip()
+    base["client_id"] = str(base.get("client_id") or "thermomind-addon").strip()
+    base["host"] = str(base.get("host") or "core-mosquitto").strip()
+    try:
+        base["port"] = int(base.get("port") or 1883)
+    except Exception:
+        base["port"] = 1883
+    return base
+
+def _mqtt_enabled() -> bool:
+    return bool(_mqtt_cfg().get("enabled"))
+
+def _mqtt_device_info() -> dict[str, Any]:
+    return {
+        "identifiers": ["e-thermomind-addon"],
+        "name": "e-ThermoMind",
+        "manufacturer": "EA SAS",
+        "model": "e-ThermoMind Add-on",
+        "sw_version": APP_VERSION,
+    }
+
+def _mqtt_setpoint_defs() -> list[dict[str, Any]]:
+    return [
+        {"key": "acs_setpoint", "name": "ACS setpoint", "section": "acs", "field": "setpoint_c", "min": 40, "max": 65, "step": 0.5},
+        {"key": "acs_max", "name": "ACS MAX", "section": "acs", "field": "max_c", "min": 50, "max": 85, "step": 0.5},
+        {"key": "volano_max", "name": "Volano MAX", "section": "volano", "field": "max_c", "min": 40, "max": 95, "step": 0.5},
+        {"key": "volano_min_to_acs", "name": "Volano min -> ACS", "section": "volano", "field": "min_to_acs_c", "min": 35, "max": 75, "step": 0.5},
+        {"key": "puffer_setpoint", "name": "Puffer setpoint", "section": "puffer", "field": "setpoint_c", "min": 40, "max": 90, "step": 0.5},
+        {"key": "puffer_min_to_acs", "name": "Puffer min -> ACS", "section": "puffer", "field": "min_to_acs_c", "min": 40, "max": 80, "step": 0.5},
+        {"key": "impianto_volano_min", "name": "Impianto volano min", "section": "impianto", "field": "volano_min_c", "min": 35, "max": 80, "step": 0.5},
+        {"key": "impianto_puffer_min", "name": "Impianto puffer min", "section": "impianto", "field": "puffer_min_c", "min": 35, "max": 80, "step": 0.5},
+    ]
+
+def _mqtt_module_defs() -> list[dict[str, str]]:
+    return [
+        {"key": "resistenze_volano", "name": "Modulo Resistenze Volano"},
+        {"key": "volano_to_acs", "name": "Modulo Volano -> ACS"},
+        {"key": "volano_to_puffer", "name": "Modulo Volano -> Puffer"},
+        {"key": "puffer_to_acs", "name": "Modulo Puffer -> ACS"},
+        {"key": "solare", "name": "Modulo Solare"},
+        {"key": "miscelatrice", "name": "Modulo Miscelatrice"},
+        {"key": "curva_climatica", "name": "Modulo Curva Climatica"},
+        {"key": "pdc", "name": "Modulo PDC"},
+        {"key": "impianto", "name": "Modulo Impianto Riscaldamento"},
+        {"key": "gas_emergenza", "name": "Modulo Caldaia Gas Emergenza"},
+        {"key": "caldaia_legna", "name": "Modulo Caldaia Legna"},
+    ]
+
+def _mqtt_topic(*parts: str) -> str:
+    base = _mqtt_cfg().get("base_topic") or "thermomind"
+    segs = [base] + [p.strip("/") for p in parts if p]
+    return "/".join(segs)
+
+def _mqtt_publish(topic: str, payload, retain: bool = True) -> None:
+    if not mqtt_client:
+        return
+    try:
+        mqtt_client.publish(topic, payload, retain=retain)
+    except Exception:
+        pass
+
+def _mqtt_publish_value(topic: str, value, retain: bool = True, force: bool = False) -> None:
+    data = json.dumps(value, ensure_ascii=False) if isinstance(value, (dict, list)) else str(value)
+    if (not force) and mqtt_last_values.get(topic) == data:
+        return
+    mqtt_last_values[topic] = data
+    _mqtt_publish(topic, data, retain=retain)
+
+def _mqtt_active_map(decision: dict) -> dict[str, bool]:
+    computed = decision.get("computed", {}) if isinstance(decision, dict) else {}
+    flags = computed.get("flags", {}) if isinstance(computed, dict) else {}
+    step = int(computed.get("resistance_step") or 0)
+    mix_active = bool((computed.get("impianto") or {}).get("miscelatrice"))
+    imp_block = computed.get("impianto") or {}
+    imp_active = bool(
+        imp_block.get("richiesta")
+        and imp_block.get("source")
+        and imp_block.get("source") != "OFF"
+        and not (computed.get("gas_emergenza") or {}).get("enabled")
+    )
+    return {
+        "solare": bool(flags.get("solare_to_acs")),
+        "volano_to_acs": bool(flags.get("volano_to_acs")),
+        "volano_to_puffer": bool(flags.get("volano_to_puffer")),
+        "puffer_to_acs": bool(flags.get("puffer_to_acs")),
+        "miscelatrice": mix_active,
+        "curva_climatica": bool((computed.get("curva_climatica") or {}).get("setpoint")),
+        "impianto": imp_active,
+        "caldaia_legna": bool((computed.get("caldaia_legna") or {}).get("power") or (computed.get("caldaia_legna") or {}).get("ta")),
+        "gas_emergenza": bool((computed.get("gas_emergenza") or {}).get("need")),
+        "resistenze_volano": step > 0,
+        "pdc": bool((computed.get("pdc") or {}).get("active")),
+    }
+
+def _mqtt_publish_discovery() -> int:
+    if not mqtt_client or not _mqtt_enabled():
+        return 0
+    cfg_mqtt = _mqtt_cfg()
+    prefix = cfg_mqtt.get("discovery_prefix") or "homeassistant"
+    base_topic = cfg_mqtt.get("base_topic") or "thermomind"
+    mqtt_discovery_topics.clear()
+    mqtt_state_topics.clear()
+
+    # availability
+    _mqtt_publish(f"{base_topic}/availability", "online", retain=True)
+
+    device = _mqtt_device_info()
+
+    # setpoints (number)
+    for sp_def in _mqtt_setpoint_defs():
+        obj = sp_def["key"]
+        name = sp_def["name"]
+        state_topic = _mqtt_topic("setpoints", obj)
+        cmd_topic = _mqtt_topic("setpoints", obj, "set")
+        disc_topic = f"{prefix}/number/thermomind/{obj}/config"
+        payload = {
+            "name": name,
+            "unique_id": f"thermomind_{obj}",
+            "state_topic": state_topic,
+            "command_topic": cmd_topic,
+            "availability_topic": f"{base_topic}/availability",
+            "device": device,
+            "unit_of_measurement": "°C",
+            "device_class": "temperature",
+            "state_class": "measurement",
+            "min": sp_def["min"],
+            "max": sp_def["max"],
+            "step": sp_def["step"],
+        }
+        _mqtt_publish(disc_topic, payload, retain=True)
+        mqtt_discovery_topics.append(disc_topic)
+        mqtt_state_topics.append(state_topic)
+
+    # season select
+    season_obj = "impianto_season"
+    season_state = _mqtt_topic("setpoints", season_obj)
+    season_cmd = _mqtt_topic("setpoints", season_obj, "set")
+    season_disc = f"{prefix}/select/thermomind/{season_obj}/config"
+    _mqtt_publish(
+        season_disc,
+        {
+            "name": "Impianto stagione",
+            "unique_id": "thermomind_impianto_season",
+            "state_topic": season_state,
+            "command_topic": season_cmd,
+            "availability_topic": f"{base_topic}/availability",
+            "device": device,
+            "options": ["winter", "summer"],
+        },
+        retain=True,
+    )
+    mqtt_discovery_topics.append(season_disc)
+    mqtt_state_topics.append(season_state)
+
+    # modules enabled (switch) + active (binary_sensor)
+    for mod in _mqtt_module_defs():
+        key = mod["key"]
+        label = mod["name"]
+        state_topic = _mqtt_topic("modules", key, "enabled")
+        cmd_topic = _mqtt_topic("modules", key, "set")
+        disc_topic = f"{prefix}/switch/thermomind/{key}/config"
+        payload = {
+            "name": label,
+            "unique_id": f"thermomind_{key}_enabled",
+            "state_topic": state_topic,
+            "command_topic": cmd_topic,
+            "payload_on": "ON",
+            "payload_off": "OFF",
+            "state_on": "ON",
+            "state_off": "OFF",
+            "availability_topic": f"{base_topic}/availability",
+            "device": device,
+        }
+        _mqtt_publish(disc_topic, payload, retain=True)
+        mqtt_discovery_topics.append(disc_topic)
+        mqtt_state_topics.append(state_topic)
+
+        active_topic = _mqtt_topic("modules", key, "active")
+        active_disc = f"{prefix}/binary_sensor/thermomind/{key}_active/config"
+        _mqtt_publish(
+            active_disc,
+            {
+                "name": f"{label} Attivo",
+                "unique_id": f"thermomind_{key}_active",
+                "state_topic": active_topic,
+                "payload_on": "ON",
+                "payload_off": "OFF",
+                "device_class": "running",
+                "availability_topic": f"{base_topic}/availability",
+                "device": device,
+            },
+            retain=True,
+        )
+        mqtt_discovery_topics.append(active_disc)
+        mqtt_state_topics.append(active_topic)
+
+    _mqtt_publish_states(force=True)
+    return len(mqtt_discovery_topics)
+
+def _mqtt_publish_states(force: bool = False) -> None:
+    if not mqtt_client or not _mqtt_enabled():
+        return
+    decision = compute_decision(cfg, ha.states)
+    active_map = _mqtt_active_map(decision)
+
+    for sp_def in _mqtt_setpoint_defs():
+        section = sp_def["section"]
+        field = sp_def["field"]
+        val = (cfg.get(section, {}) or {}).get(field)
+        _mqtt_publish_value(_mqtt_topic("setpoints", sp_def["key"]), val, retain=True, force=force)
+
+    season_val = (cfg.get("impianto", {}) or {}).get("season_mode", "winter")
+    _mqtt_publish_value(_mqtt_topic("setpoints", "impianto_season"), season_val, retain=True, force=force)
+
+    mods = cfg.get("modules_enabled", {}) or {}
+    for mod in _mqtt_module_defs():
+        key = mod["key"]
+        enabled = bool(mods.get(key))
+        _mqtt_publish_value(_mqtt_topic("modules", key, "enabled"), "ON" if enabled else "OFF", retain=True, force=force)
+        active = bool(active_map.get(key))
+        _mqtt_publish_value(_mqtt_topic("modules", key, "active"), "ON" if active else "OFF", retain=True, force=force)
+
+def _mqtt_clear_discovery() -> int:
+    if not mqtt_client:
+        return 0
+    cleared = 0
+    for topic in mqtt_discovery_topics + mqtt_state_topics:
+        _mqtt_publish(topic, "", retain=True)
+        cleared += 1
+    return cleared
+
+def _mqtt_handle_message(topic: str, payload: str) -> None:
+    global cfg
+    cfg_mqtt = _mqtt_cfg()
+    base = cfg_mqtt.get("base_topic") or "thermomind"
+    if not topic.startswith(base + "/"):
+        return
+    rel = topic[len(base) + 1:]
+    parts = rel.split("/")
+    if len(parts) < 2:
+        return
+    if parts[0] == "setpoints" and parts[-1] == "set":
+        key = parts[1]
+        if key == "impianto_season":
+            val = str(payload).strip().lower()
+            if val in ("winter", "summer"):
+                cfg = apply_setpoints(cfg, {"impianto": {"season_mode": val}})
+                save_config(cfg)
+                _mqtt_publish_states(force=True)
+            return
+        for sp_def in _mqtt_setpoint_defs():
+            if sp_def["key"] == key:
+                try:
+                    num = float(str(payload).strip())
+                except Exception:
+                    return
+                cfg = apply_setpoints(cfg, {sp_def["section"]: {sp_def["field"]: num}})
+                save_config(cfg)
+                _mqtt_publish_states(force=True)
+                return
+        return
+    if parts[0] == "modules" and parts[-1] == "set":
+        key = parts[1]
+        val = str(payload).strip().lower()
+        on = val in ("on", "1", "true", "yes")
+        current = dict(cfg.get("modules_enabled", {}))
+        if key in current:
+            current[key] = bool(on)
+            current, _ = _apply_season_block(current)
+            cfg["modules_enabled"] = current
+            save_config(cfg)
+            _mqtt_publish_states(force=True)
+        return
+
+async def _mqtt_publish_loop() -> None:
+    while True:
+        try:
+            _mqtt_publish_states()
+        except Exception:
+            pass
+        await asyncio.sleep(MQTT_PUBLISH_INTERVAL_S)
+
+async def _mqtt_reconfigure() -> None:
+    global mqtt_client, mqtt_publish_task, mqtt_last_config_key
+    cfg_mqtt = _mqtt_cfg()
+    key = json.dumps(cfg_mqtt, sort_keys=True)
+    if mqtt_last_config_key == key and mqtt_client:
+        return
+    mqtt_last_config_key = key
+    if mqtt_publish_task:
+        mqtt_publish_task.cancel()
+        mqtt_publish_task = None
+    if mqtt_client:
+        try:
+            mqtt_client.disconnect()
+        except Exception:
+            pass
+        mqtt_client = None
+    if not cfg_mqtt.get("enabled"):
+        return
+    mqtt_client = MqttClient(
+        host=cfg_mqtt.get("host"),
+        port=int(cfg_mqtt.get("port") or 1883),
+        username=cfg_mqtt.get("username") or None,
+        password=cfg_mqtt.get("password") or None,
+        client_id=cfg_mqtt.get("client_id") or "thermomind-addon",
+    )
+    mqtt_client.set_message_handler(_mqtt_handle_message)
+    mqtt_client.connect()
+    try:
+        mqtt_client.subscribe(_mqtt_topic("setpoints", "+", "set"))
+        mqtt_client.subscribe(_mqtt_topic("modules", "+", "set"))
+    except Exception:
+        pass
+    _mqtt_publish_discovery()
+    mqtt_publish_task = asyncio.create_task(_mqtt_publish_loop())
+
 @app.on_event("startup")
 async def on_startup():
     global cfg
@@ -139,12 +480,24 @@ async def on_startup():
     if ha.enabled:
         ws_task = asyncio.create_task(ha.run())
         asyncio.create_task(_refresh_entity_registry_loop())
+    await _mqtt_reconfigure()
 
 @app.on_event("shutdown")
 async def on_shutdown():
     global ws_task
     if ws_task:
         ws_task.cancel()
+    if mqtt_publish_task:
+        mqtt_publish_task.cancel()
+    if mqtt_client:
+        try:
+            _mqtt_publish(_mqtt_topic("availability"), "offline", retain=True)
+        except Exception:
+            pass
+        try:
+            mqtt_client.disconnect()
+        except Exception:
+            pass
     await ha.close()
 
 async def _refresh_entity_registry_loop():
@@ -183,6 +536,8 @@ async def set_config(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
     cfg = normalize_config(payload)
     save_config(cfg)
+    await _mqtt_reconfigure()
+    _mqtt_publish_discovery()
     return JSONResponse({"ok": True})
 
 @app.get("/api/decision")
@@ -1972,6 +2327,25 @@ async def status():
         "runtime_mode": cfg.get("runtime", {}).get("mode", "dry-run"),
     })
 
+@app.get("/api/mqtt/status")
+async def mqtt_status():
+    if not mqtt_client:
+        return JSONResponse({"connected": False, "last_error": "mqtt disabled"})
+    st = mqtt_client.status()
+    return JSONResponse({"connected": bool(st.connected), "last_error": st.last_error})
+
+@app.post("/api/mqtt/republish")
+async def mqtt_republish():
+    if not _mqtt_enabled():
+        return JSONResponse({"ok": False, "error": "mqtt disabled"})
+    count = _mqtt_publish_discovery()
+    return JSONResponse({"ok": True, "published": count})
+
+@app.post("/api/mqtt/clear")
+async def mqtt_clear():
+    cleared = _mqtt_clear_discovery()
+    return JSONResponse({"ok": True, "cleared": cleared})
+
 @app.websocket("/ws")
 async def ws_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -2016,6 +2390,7 @@ async def get_setpoints():
         "solare": cfg.get("solare", {}),
         "timers": cfg.get("timers", {}),
         "runtime": cfg.get("runtime", {}),
+        "mqtt": cfg.get("mqtt", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),
         "gas_emergenza": cfg.get("gas_emergenza", {}),
         "caldaia_legna": cfg.get("caldaia_legna", {}),
@@ -2040,6 +2415,8 @@ async def set_setpoints(payload: dict):
     else:
         cfg["modules_enabled"] = modules
     save_config(cfg)
+    await _mqtt_reconfigure()
+    _mqtt_publish_states(force=True)
     return JSONResponse({"ok": True})
 
 @app.post("/api/climate_setpoint")
@@ -2103,6 +2480,7 @@ async def set_modules(payload: dict, request: Request):
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES summer block applied")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES live client={client} payload={modules}")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
+    _mqtt_publish_states(force=True)
     return JSONResponse({"ok": True})
 
 @app.get("/api/history")
