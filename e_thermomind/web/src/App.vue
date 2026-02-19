@@ -1065,6 +1065,11 @@
               <input type="number" min="500" step="500" v-model.number="sp.runtime.ui_poll_ms"/>
               <div class="help">Intervallo aggiornamento UI. Non influisce sulla logica interna.</div>
             </div>
+            <div class="field">
+              <label>Timezone server</label>
+              <input type="text" v-model="sp.runtime.timezone" @change="save"/>
+              <div class="help">Esempio: Europe/Rome. Usata dallo scheduler.</div>
+            </div>
           </div>
 
           <div class="set-section">
@@ -2508,6 +2513,10 @@ async function load(){
     t_mandata_miscelata: false, t_ritorno_miscelato: false, miscelatrice_setpoint: false,
     delta_puffer_acs: false, delta_volano_acs: false, delta_volano_puffer: false, delta_mandata_ritorno: false, kp_eff: false,
     curva_setpoint: false
+  }
+  if (!sp.value?.runtime) sp.value.runtime = { mode: 'dry-run', ui_poll_ms: 3000, timezone: 'Europe/Rome' }
+  if (typeof sp.value.runtime.timezone === 'undefined' || sp.value.runtime.timezone === null) {
+    sp.value.runtime.timezone = 'Europe/Rome'
   }
   for (const [k, v] of Object.entries(histDefaults)) {
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v

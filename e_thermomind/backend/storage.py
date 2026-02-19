@@ -164,7 +164,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   },
   "runtime": {
     "mode": "dry-run",
-    "ui_poll_ms": 3000
+    "ui_poll_ms": 3000,
+    "timezone": "Europe/Rome"
   },
   "scheduler": {
     "gas": {
@@ -434,6 +435,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["runtime"]["mode"] = runtime["mode"]
         if "ui_poll_ms" in runtime:
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
+        if isinstance(runtime.get("timezone"), str):
+            cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
 
     sched = raw.get("scheduler", {})
     if isinstance(sched, dict):
@@ -609,6 +612,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
         if isinstance(runtime.get("mode"), str):
             cfg["runtime"]["mode"] = runtime["mode"]
+        if isinstance(runtime.get("timezone"), str):
+            cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
 
     sched = payload.get("scheduler", {})
     if isinstance(sched, dict):

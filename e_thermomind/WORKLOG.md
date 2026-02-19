@@ -217,3 +217,8 @@
 - Fix: riparate funzioni scheduler e import datetime/ZoneInfo (crash avvio).
 - Versione add-on aggiornata a 0.6.86.
 
+
+## 2026-02-19
+- Runtime: aggiunto timezone configurabile per scheduler (default Europe/Rome).
+- Versione add-on aggiornata a 0.6.87.
+
