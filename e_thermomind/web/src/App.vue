@@ -3,6 +3,7 @@
     <header class="top">
       <div class="brand">e-ThermoMind</div>
       <div class="top-actions">
+        <button class="action-btn" @click="refresh">Aggiorna</button>
         <button class="action-btn" @click="saveAll">Salva tutto</button>
         <button class="action-btn" @click="exportConfig">Esporta config</button>
         <label class="action-btn upload">
@@ -13,6 +14,7 @@
       <nav class="tabs">
         <button :class="{active: tab==='user'}" @click="tab='user'">User</button>
         <button :class="{active: tab==='admin'}" @click="tab='admin'">Admin</button>
+        <button :class="{active: tab==='scheduler'}" @click="tab='scheduler'">Scheduler</button>
       </nav>
     </header>
 
@@ -990,6 +992,41 @@
         </div>
       </section>
 
+      <section v-else-if="tab==='scheduler'" class="card">
+        <h2>Scheduler</h2>
+        <p class="muted">Programmatore settimanale ON/OFF per gas emergenza. Le fasce sono persistenti e vuote di default.</p>
+        <div v-if="sp && sp.scheduler && sp.scheduler.gas" class="scheduler">
+          <div class="row">
+            <label class="inline">
+              <input type="checkbox" v-model="sp.scheduler.gas.enabled" @change="save"/>
+              <span>Abilita scheduler gas</span>
+            </label>
+          </div>
+          <div class="scheduler-grid">
+            <div v-for="day in schedulerDays" :key="`day-${day.key}`" class="scheduler-day">
+              <div class="day-head">
+                <strong>{{ day.label }}</strong>
+                <div class="day-actions">
+                  <button class="ghost small" @click="copyDayToAll(day.key)">Copia su tutti</button>
+                  <button class="ghost small" @click="addRange(day.key)">+ Fascia</button>
+                </div>
+              </div>
+              <div v-if="(sp.scheduler.gas.weekly[day.key] || []).length === 0" class="muted">Nessuna fascia.</div>
+              <div v-for="(r, idx) in sp.scheduler.gas.weekly[day.key]" :key="`rng-${day.key}-${idx}`" class="list-row">
+                <input class="time" type="time" v-model="r.start" @change="save"/>
+                <span class="muted">→</span>
+                <input class="time" type="time" v-model="r.end" @change="save"/>
+                <button class="ghost small" @click="removeRange(day.key, idx)">Rimuovi</button>
+              </div>
+              <div class="timeline">
+                <div v-for="(seg, i) in dayBars(day.key)" :key="`bar-${day.key}-${i}`" class="timeline-bar" :style="{ left: seg.left + '%', width: seg.width + '%' }"></div>
+              </div>
+            </div>
+          </div>
+          <div class="muted small-note">Nota: se spegni manualmente il gas, non viene riacceso finché non parte una nuova fascia.</div>
+        </div>
+      </section>
+
       <section v-else class="card">
         <h2>Admin (v0.2)</h2>
         <p class="muted">Setpoint interni e mapping e-manager.</p>
@@ -1923,6 +1960,15 @@ const actions = ref([])
 const zones = ref([])
 let historySaveTimer = null
 let historyReady = false
+const schedulerDays = [
+  { key: 'mon', label: 'Lun' },
+  { key: 'tue', label: 'Mar' },
+  { key: 'wed', label: 'Mer' },
+  { key: 'thu', label: 'Gio' },
+  { key: 'fri', label: 'Ven' },
+  { key: 'sat', label: 'Sab' },
+  { key: 'sun', label: 'Dom' }
+]
 const history = ref({
   t_acs: [],
   t_acs_alto: [],
@@ -2486,6 +2532,7 @@ async function load(){
     if (typeof sp.value.impianto.puffer_on_hyst_c === 'undefined') sp.value.impianto.puffer_on_hyst_c = sp.value.impianto.puffer_hyst_c ?? 2
     if (typeof sp.value.impianto.puffer_off_hyst_c === 'undefined') sp.value.impianto.puffer_off_hyst_c = sp.value.impianto.puffer_hyst_c ?? 2
   }
+  ensureScheduler()
   curveXText.value = (sp.value.curva_climatica?.x || []).join(', ')
   curveYText.value = (sp.value.curva_climatica?.y || []).join(', ')
   // normalize lists (allow CSV from older configs)
@@ -2548,6 +2595,64 @@ async function saveAll(){
   await save()
   await saveEntities()
   await saveActuators()
+}
+function ensureScheduler(){
+  if (!sp.value) return
+  if (!sp.value.scheduler) sp.value.scheduler = {}
+  if (!sp.value.scheduler.gas) {
+    sp.value.scheduler.gas = { enabled: false, last_active: false, weekly: {} }
+  }
+  if (!sp.value.scheduler.gas.weekly) sp.value.scheduler.gas.weekly = {}
+  for (const d of schedulerDays) {
+    if (!Array.isArray(sp.value.scheduler.gas.weekly[d.key])) {
+      sp.value.scheduler.gas.weekly[d.key] = []
+    }
+  }
+}
+function addRange(dayKey){
+  ensureScheduler()
+  sp.value.scheduler.gas.weekly[dayKey].push({ start: '', end: '' })
+  save()
+}
+function removeRange(dayKey, idx){
+  ensureScheduler()
+  sp.value.scheduler.gas.weekly[dayKey].splice(idx, 1)
+  save()
+}
+function copyDayToAll(dayKey){
+  ensureScheduler()
+  const src = sp.value.scheduler.gas.weekly[dayKey] || []
+  for (const d of schedulerDays) {
+    sp.value.scheduler.gas.weekly[d.key] = JSON.parse(JSON.stringify(src))
+  }
+  save()
+}
+function timeToMin(val){
+  if (!val || typeof val !== 'string') return null
+  const parts = val.split(':')
+  if (parts.length !== 2) return null
+  const hh = Number(parts[0])
+  const mm = Number(parts[1])
+  if (Number.isNaN(hh) || Number.isNaN(mm)) return null
+  if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return null
+  return hh * 60 + mm
+}
+function dayBars(dayKey){
+  if (!sp.value?.scheduler?.gas?.weekly) return []
+  const ranges = sp.value.scheduler.gas.weekly[dayKey] || []
+  const bars = []
+  for (const r of ranges) {
+    const start = timeToMin(r.start)
+    const end = timeToMin(r.end)
+    if (start === null || end === null || start === end) continue
+    if (start < end) {
+      bars.push({ left: (start / 1440) * 100, width: ((end - start) / 1440) * 100 })
+    } else {
+      bars.push({ left: (start / 1440) * 100, width: ((1440 - start) / 1440) * 100 })
+      bars.push({ left: 0, width: (end / 1440) * 100 })
+    }
+  }
+  return bars
 }
 async function toggleModule(key){
   const pin = sp.value?.security?.user_pin || ''
@@ -2830,8 +2935,8 @@ watch(
 .wrap{min-height:100vh;display:flex;flex-direction:column}
 .top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,15,22,.85);backdrop-filter:blur(14px)}
 .brand{font-weight:800;letter-spacing:.3px}
-.tabs button{background:transparent;color:var(--text);border:1px solid var(--border);padding:8px 12px;border-radius:12px;margin-left:8px;cursor:pointer}
-.tabs button.active{border-color:var(--accent);color:var(--accent)}
+.tabs button{background:rgba(14,20,30,.9);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:12px;margin-left:8px;cursor:pointer}
+.tabs button.active{border-color:var(--accent);color:#dffaf3;background:rgba(20,38,45,.95)}
 .main{padding:18px;max-width:1100px;margin:0 auto;width:100%}
 .card{background:linear-gradient(180deg, rgba(11,16,26,.98), rgba(9,14,22,.98));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.38)}
 .card.inner{margin-top:14px}
@@ -2863,7 +2968,17 @@ hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 details.form{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(0,0,0,.08)}
 details.form summary{cursor:pointer;list-style:none}
 .top-actions{display:flex;gap:8px;align-items:center}
-.action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 12px;border-radius:14px;font-weight:700;cursor:pointer}
+.scheduler{display:flex;flex-direction:column;gap:14px}
+.scheduler-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.scheduler-day{background:rgba(12,18,26,.7);border:1px solid var(--border);border-radius:14px;padding:12px}
+.day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.day-actions{display:flex;gap:6px}
+.ghost.small{padding:6px 10px;border-radius:10px}
+.time{background:#0c141b;border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:10px}
+.timeline{position:relative;height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px}
+.timeline-bar{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,#39d6a1,#5ff1c4);opacity:.85}
+.small-note{font-size:12px;color:var(--muted)}
+.action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 14px;border-radius:999px;font-weight:700;cursor:pointer}
 .action-btn.upload{display:inline-flex;align-items:center;gap:6px}
 @media(max-width:640px){
   .top{flex-wrap:wrap;gap:10px;padding:12px 14px}

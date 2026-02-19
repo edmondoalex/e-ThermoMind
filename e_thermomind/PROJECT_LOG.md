@@ -221,3 +221,9 @@ Data export: 2026-02-08 (Europe/Rome)
 - Log: de-dup azioni ripetute (stesso messaggio entro 5s aggiorna timestamp).
 - Versione add-on aggiornata a 0.6.82.
 
+
+## Aggiornamenti 2026-02-19
+- Scheduler: pagina settimanale gas ON, timeline e persistenza.
+- UI: header allineato allo stile richiesto.
+- Versione add-on aggiornata a 0.6.83.
+

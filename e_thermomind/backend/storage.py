@@ -166,6 +166,21 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "mode": "dry-run",
     "ui_poll_ms": 3000
   },
+  "scheduler": {
+    "gas": {
+      "enabled": False,
+      "last_active": False,
+      "weekly": {
+        "mon": [],
+        "tue": [],
+        "wed": [],
+        "thu": [],
+        "fri": [],
+        "sat": [],
+        "sun": []
+      }
+    }
+  },
   "modules_enabled": {
     "resistenze_volano": True,
     "volano_to_acs": False,
@@ -420,6 +435,28 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
         if "ui_poll_ms" in runtime:
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
 
+    sched = raw.get("scheduler", {})
+    if isinstance(sched, dict):
+        gas = sched.get("gas", {})
+        if isinstance(gas, dict):
+            if "enabled" in gas:
+                cfg["scheduler"]["gas"]["enabled"] = bool(gas.get("enabled"))
+            if "last_active" in gas:
+                cfg["scheduler"]["gas"]["last_active"] = bool(gas.get("last_active"))
+            weekly = gas.get("weekly", {})
+            if isinstance(weekly, dict):
+                for day in cfg["scheduler"]["gas"]["weekly"].keys():
+                    ranges = weekly.get(day)
+                    if isinstance(ranges, list):
+                        out = []
+                        for r in ranges:
+                            if isinstance(r, dict):
+                                start = str(r.get("start") or "").strip()
+                                end = str(r.get("end") or "").strip()
+                                out.append({"start": start, "end": end})
+                        cfg["scheduler"]["gas"]["weekly"][day] = out
+
+
     modules = raw.get("modules_enabled", {})
     if isinstance(modules, dict):
         for key in cfg["modules_enabled"].keys():
@@ -572,6 +609,28 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
         if isinstance(runtime.get("mode"), str):
             cfg["runtime"]["mode"] = runtime["mode"]
+
+    sched = payload.get("scheduler", {})
+    if isinstance(sched, dict):
+        gas = sched.get("gas", {})
+        if isinstance(gas, dict):
+            if "enabled" in gas:
+                cfg["scheduler"]["gas"]["enabled"] = bool(gas.get("enabled"))
+            if "last_active" in gas:
+                cfg["scheduler"]["gas"]["last_active"] = bool(gas.get("last_active"))
+            weekly = gas.get("weekly", {})
+            if isinstance(weekly, dict):
+                for day in cfg["scheduler"]["gas"]["weekly"].keys():
+                    ranges = weekly.get(day)
+                    if isinstance(ranges, list):
+                        out = []
+                        for r in ranges:
+                            if isinstance(r, dict):
+                                start = str(r.get("start") or "").strip()
+                                end = str(r.get("end") or "").strip()
+                                out.append({"start": start, "end": end})
+                        cfg["scheduler"]["gas"]["weekly"][day] = out
+
 
     modules = payload.get("modules_enabled", {})
     if isinstance(modules, dict):

@@ -212,6 +212,39 @@ def _get_state(entity_id: str | None) -> str | None:
         return None
     return ha.states.get(entity_id, {}).get("state")
 def _get_num(entity_id: str | None) -> float | None:
+
+
+def _parse_hhmm(val: str | None) -> int | None:
+    if not val or not isinstance(val, str):
+        return None
+    try:
+        parts = val.strip().split(':')
+        if len(parts) != 2:
+            return None
+        hh = int(parts[0])
+        mm = int(parts[1])
+        if hh < 0 or hh > 23 or mm < 0 or mm > 59:
+            return None
+        return hh * 60 + mm
+    except Exception:
+        return None
+
+def _is_time_in_ranges(now_min: int, ranges: list[dict]) -> bool:
+    for r in ranges or []:
+        start = _parse_hhmm(r.get('start')) if isinstance(r, dict) else None
+        end = _parse_hhmm(r.get('end')) if isinstance(r, dict) else None
+        if start is None or end is None:
+            continue
+        if start == end:
+            continue
+        if start < end:
+            if start <= now_min < end:
+                return True
+        else:
+            # overnight (e.g., 22:00-06:00)
+            if now_min >= start or now_min < end:
+                return True
+    return False
     if not entity_id:
         return None
     raw = ha.states.get(entity_id, {}).get("state")
@@ -1308,11 +1341,39 @@ async def _apply_impianto_live() -> None:
     if not ha.enabled:
         return
     gas_enabled = cfg.get("modules_enabled", {}).get("gas_emergenza", False)
+
     if gas_enabled:
         # gas emergenza ON: non interferire con impianto
         gas_emergenza_prev_enabled = True
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO skip (gas_emergenza ON)")
         return
+
+    # Scheduler gas: solo evento di accensione (non forza OFF)
+    sched = cfg.get("scheduler", {}).get("gas", {})
+    if isinstance(sched, dict) and sched.get("enabled"):
+        tz_name = (cfg.get("runtime", {}) or {}).get("timezone") or ""
+        try:
+            if tz_name:
+                now_dt = datetime.now(ZoneInfo(tz_name))
+            else:
+                now_dt = datetime.now()
+        except Exception:
+            now_dt = datetime.now()
+        day_key = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][now_dt.weekday()]
+        ranges = (sched.get("weekly") or {}).get(day_key) or []
+        now_min = now_dt.hour * 60 + now_dt.minute
+        sched_active = _is_time_in_ranges(now_min, ranges)
+        last_active = bool(sched.get("last_active"))
+        if sched_active and not last_active:
+            cfg["scheduler"]["gas"]["last_active"] = True
+            save_config(cfg)
+            if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+                cfg["modules_enabled"]["gas_emergenza"] = True
+                save_config(cfg)
+                _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} SCHED GAS ON (start)")
+        if (not sched_active) and last_active:
+            cfg["scheduler"]["gas"]["last_active"] = False
+            save_config(cfg)
     if gas_emergenza_prev_enabled:
         gas_emergenza_prev_enabled = False
         gas_emergenza_start_only = True
@@ -1871,6 +1932,7 @@ async def get_setpoints():
         "gas_emergenza": cfg.get("gas_emergenza", {}),
         "caldaia_legna": cfg.get("caldaia_legna", {}),
         "impianto": cfg.get("impianto", {}),
+        "scheduler": cfg.get("scheduler", {}),
         "history": cfg.get("history", {}),
         "security": cfg.get("security", {}),
     })
