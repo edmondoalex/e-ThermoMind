@@ -186,3 +186,8 @@
 - Impianto: dopo GAS OFF riparte solo con isteresi ON (start_only finché la sorgente è valida).
 - Versione add-on aggiornata a 0.6.80.
 
+
+## 2026-02-18
+- UI: badge watchdog non lampeggia più per permettere la lettura.
+- Versione add-on aggiornata a 0.6.81.
+

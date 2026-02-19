@@ -2932,7 +2932,7 @@ details.form summary{cursor:pointer;list-style:none}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:#0b1f1c;background:var(--accent)}
 .badge.off{color:#f5f7fa;background:#3b3f46}
-.badge.warn-blink{color:#0b1f1c;background:#ff6b6b;border-color:rgba(255,107,107,.6);animation:blink 1s linear infinite}
+.badge.warn-blink{color:#0b1f1c;background:#ff6b6b;border-color:rgba(255,107,107,.6);animation:none}
 .presence{display:inline-block;margin-right:6px}
 .presence-ok{color:#22c55e}
 .presence-no{color:#ef4444}
