@@ -1800,18 +1800,22 @@ async def _apply_gas_emergenza_live() -> None:
 
     if not demand_any:
         if r2:
-            await _set_actuator(r2, True)
+            await _set_actuator(r2, False)
         if r3:
-            await _set_actuator(r3, True)
+            await _set_actuator(r3, False)
         if r1:
             await _set_actuator(r1, False)
         await _set_pump_delayed("gas:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
         return
 
+    # Regola gas: se PT attivo -> apri R2 e R3. Se solo 1P/MANS attivo -> non aprire nulla.
+    open_r2 = bool(pt_active or scala_active)
+    open_r3 = bool(pt_active or scala_active)
+
     if r2:
-        await _set_actuator(r2, True)
+        await _set_actuator(r2, open_r2)
     if r3:
-        await _set_actuator(r3, True)
+        await _set_actuator(r3, open_r3)
     if r1:
         await _set_actuator(r1, lab_active)
     await _set_pump_delayed("gas:lab_pump", r11, lab_active, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))

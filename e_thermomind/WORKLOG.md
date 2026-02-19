@@ -232,3 +232,13 @@
 - UI: apertura tab da hash subito all'avvio (senza refresh).
 - Versione add-on aggiornata a 0.6.90.
 
+
+## 2026-02-19
+- Gas emergenza: valvole PT/M+1P aprono solo con zone attive.
+- Versione add-on aggiornata a 0.6.91.
+
+
+## 2026-02-19
+- Gas emergenza: PT attivo apre R2+R3; 1P/Mansarda da sole non aprono valvole.
+- Versione add-on aggiornata a 0.6.92.
+
