@@ -997,6 +997,10 @@
         <p class="muted">Programmatore settimanale ON/OFF per gas emergenza. Le fasce sono persistenti e vuote di default.</p>
         <div v-if="sp && sp.scheduler && sp.scheduler.gas" class="scheduler">
           <div class="row">
+            <div class="badge subtle">Ora scheduler: {{ schedulerStatus?.now || '-' }} ({{ schedulerStatus?.day || '-' }})</div>
+            <div class="badge subtle">Prossimo start: {{ schedulerStatus?.next_start || '-' }}</div>
+          </div>
+          <div class="row">
             <label class="inline">
               <input type="checkbox" v-model="sp.scheduler.gas.enabled" @change="save"/>
               <span>Abilita scheduler gas</span>
@@ -1958,6 +1962,7 @@ const lastUpdate = ref(null)
 const pollMs = ref(3000)
 const actions = ref([])
 const zones = ref([])
+const schedulerStatus = ref(null)
 let historySaveTimer = null
 let historyReady = false
 const schedulerDays = [
@@ -2470,6 +2475,7 @@ async function refresh(){
   if (tab.value === 'admin' || editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
   zones.value = d.value?.zones || []
+  schedulerStatus.value = d.value?.scheduler_status || null
   updateHistoryFromDecision(d.value)
   const s = await fetch('/api/status'); status.value = await s.json()
   const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
@@ -2978,6 +2984,7 @@ details.form summary{cursor:pointer;list-style:none}
 .timeline{position:relative;height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px}
 .timeline-bar{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,#39d6a1,#5ff1c4);opacity:.85}
 .small-note{font-size:12px;color:var(--muted)}
+.badge.subtle{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:999px}
 .action-btn{background:linear-gradient(135deg, var(--accent), #6cf1c9);border:none;color:#062524;padding:10px 14px;border-radius:999px;font-weight:700;cursor:pointer}
 .action-btn.upload{display:inline-flex;align-items:center;gap:6px}
 @media(max-width:640px){

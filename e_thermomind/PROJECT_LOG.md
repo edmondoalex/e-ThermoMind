@@ -232,3 +232,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Fix: ripristinata funzione `_get_num` dopo inserimento scheduler (crash avvio).
 - Versione add-on aggiornata a 0.6.84.
 
+
+## Aggiornamenti 2026-02-19
+- Scheduler: mostrata ora server e prossimo start in UI.
+- Versione add-on aggiornata a 0.6.85.
+

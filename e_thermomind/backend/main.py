@@ -186,6 +186,31 @@ async def set_config(payload: dict):
 @app.get("/api/decision")
 async def decision():
     data = compute_decision(cfg, ha.states)
+    # scheduler status (ora server + prossimo start)
+    sched = cfg.get("scheduler", {}).get("gas", {})
+    tz_name = (cfg.get("runtime", {}) or {}).get("timezone") or ""
+    try:
+        if tz_name:
+            now_dt = datetime.now(ZoneInfo(tz_name))
+        else:
+            now_dt = datetime.now()
+    except Exception:
+        now_dt = datetime.now()
+    now_min = now_dt.hour * 60 + now_dt.minute
+    day_key = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][now_dt.weekday()]
+    ranges = (sched.get("weekly") or {}).get(day_key) or []
+    next_min = _next_start_min(now_min, ranges)
+    next_label = None
+    if next_min is not None:
+        hh = int(next_min // 60)
+        mm = int(next_min % 60)
+        next_label = f"{hh:02d}:{mm:02d}"
+    data["scheduler_status"] = {
+        "now": now_dt.strftime('%H:%M'),
+        "day": day_key,
+        "next_start": next_label,
+        "enabled": bool(sched.get("enabled"))
+    }
     await _apply_resistance_live(data)
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
@@ -238,6 +263,26 @@ def _parse_hhmm(val: str | None) -> int | None:
         return None
 
 def _is_time_in_ranges(now_min: int, ranges: list[dict]) -> bool:
+
+
+def _next_start_min(now_min: int, ranges: list[dict]) -> int | None:
+    best = None
+    for r in ranges or []:
+        start = _parse_hhmm(r.get('start')) if isinstance(r, dict) else None
+        end = _parse_hhmm(r.get('end')) if isinstance(r, dict) else None
+        if start is None or end is None or start == end:
+            continue
+        # normalize overnight as start only
+        if start >= 0:
+            if start >= now_min:
+                cand = start
+            else:
+                cand = start + 1440
+            if best is None or cand < best:
+                best = cand
+    if best is None:
+        return None
+    return best % 1440
     for r in ranges or []:
         start = _parse_hhmm(r.get('start')) if isinstance(r, dict) else None
         end = _parse_hhmm(r.get('end')) if isinstance(r, dict) else None
@@ -358,6 +403,31 @@ def _collect_zones(imp: dict) -> list[str]:
 
 async def _build_snapshot() -> dict:
     data = compute_decision(cfg, ha.states)
+    # scheduler status (ora server + prossimo start)
+    sched = cfg.get("scheduler", {}).get("gas", {})
+    tz_name = (cfg.get("runtime", {}) or {}).get("timezone") or ""
+    try:
+        if tz_name:
+            now_dt = datetime.now(ZoneInfo(tz_name))
+        else:
+            now_dt = datetime.now()
+    except Exception:
+        now_dt = datetime.now()
+    now_min = now_dt.hour * 60 + now_dt.minute
+    day_key = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][now_dt.weekday()]
+    ranges = (sched.get("weekly") or {}).get(day_key) or []
+    next_min = _next_start_min(now_min, ranges)
+    next_label = None
+    if next_min is not None:
+        hh = int(next_min // 60)
+        mm = int(next_min % 60)
+        next_label = f"{hh:02d}:{mm:02d}"
+    data["scheduler_status"] = {
+        "now": now_dt.strftime('%H:%M'),
+        "day": day_key,
+        "next_start": next_label,
+        "enabled": bool(sched.get("enabled"))
+    }
     await _apply_resistance_live(data)
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
