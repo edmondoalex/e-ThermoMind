@@ -267,3 +267,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Gas emergenza: PT attivo apre R2+R3; 1P/Mansarda da sole non aprono valvole.
 - Versione add-on aggiornata a 0.6.92.
 
+
+## Aggiornamenti 2026-02-19
+- Gas emergenza: aggiunto R21 GAS MISC OFF (chiusa solo con gas attivo, altrimenti aperta).
+- Versione add-on aggiornata a 0.6.93.
+

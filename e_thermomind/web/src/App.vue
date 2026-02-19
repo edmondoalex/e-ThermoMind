@@ -2078,7 +2078,7 @@ const actuatorDefs = [
   { key: 'r18_valve_ritorno_solare_basso', label: 'R18 Valvola Ritorno Solare Basso', impl: true },
   { key: 'r19_valve_ritorno_solare_alto', label: 'R19 Valvola Ritorno Solare Alto', impl: true },
   { key: 'r20_ta_caldaia_legna', label: 'R20 TA Caldaia Legna', impl: false },
-  { key: 'r21_libero', label: 'R21 Libero', impl: false },
+  { key: 'r21_libero', label: 'R21 GAS MISC OFF', impl: false },
   { key: 'r22_resistenza_1_volano_pdc', label: 'R22 Resistenza 1 Volano PDC', impl: true },
   { key: 'r23_resistenza_2_volano_pdc', label: 'R23 Resistenza 2 Volano PDC', impl: true },
   { key: 'r24_resistenza_3_volano_pdc', label: 'R24 Resistenza 3 Volano PDC', impl: true },

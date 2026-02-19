@@ -1703,6 +1703,13 @@ async def _apply_gas_emergenza_live() -> None:
 
     power = act.get("gas_boiler_power")
     ta = act.get("gas_boiler_ta")
+    r21 = act.get("r21_libero")
+
+    # R21 GAS MISC OFF: aperta in normale, chiusa solo durante gas emergenza attivo
+    if _gas_emergenza_active():
+        await _set_actuator_force(r21, False, "gas_emergenza active")
+    else:
+        await _set_actuator_force(r21, True, "gas_emergenza inactive")
 
     if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
         await _set_actuator(power, False)
