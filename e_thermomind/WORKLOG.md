@@ -181,3 +181,8 @@
 - Impianto: decisione UI allineata alla logica live (isteresi ON/OFF con domanda).
 - Versione add-on aggiornata a 0.6.79.
 
+
+## 2026-02-18
+- Impianto: dopo GAS OFF riparte solo con isteresi ON (start_only finché la sorgente è valida).
+- Versione add-on aggiornata a 0.6.80.
+

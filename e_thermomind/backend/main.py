@@ -64,6 +64,8 @@ miscelatrice_pause_until: float = 0.0
 miscelatrice_last_action: str = "STOP"
 miscelatrice_shutdown_until: float = 0.0
 impianto_last_source: str | None = None
+gas_emergenza_prev_enabled: bool = False
+gas_emergenza_start_only: bool = False
 impianto_heat_state: dict[str, float | bool] = {"active": False, "last_change": 0.0}
 impianto_watchdog_last_log: float = 0.0
 volano_watchdog_last_log: float = 0.0
@@ -1284,14 +1286,22 @@ async def _set_input_select(entity_id: str | None, option: str) -> None:
 async def _apply_impianto_live() -> None:
     global impianto_last_source
     global impianto_watchdog_last_log
+    global gas_emergenza_prev_enabled
+    global gas_emergenza_start_only
     if cfg.get("runtime", {}).get("mode") != "live":
         return
     if not ha.enabled:
         return
-    if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+    gas_enabled = cfg.get("modules_enabled", {}).get("gas_emergenza", False)
+    if gas_enabled:
         # gas emergenza ON: non interferire con impianto
+        gas_emergenza_prev_enabled = True
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO skip (gas_emergenza ON)")
         return
+    if gas_emergenza_prev_enabled:
+        gas_emergenza_prev_enabled = False
+        gas_emergenza_start_only = True
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO gas_emergenza OFF -> start_only")
     if not cfg.get("modules_enabled", {}).get("impianto", True):
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO module OFF state={cfg.get('modules_enabled', {})}")
         ent = cfg.get("entities", {})
@@ -1386,17 +1396,22 @@ async def _apply_impianto_live() -> None:
         impianto_heat_state["active"] = False
         impianto_heat_state["last_change"] = time.time()
 
-    # Se selector AUTO o sorgente non disponibile -> fallback con priorità
+    # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
+    allow_hold = demand_on and (not gas_emergenza_start_only)
     if sel_state == "AUTO" or (
-        (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (vol_ok_hold and demand_on)))) or
-        (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (puf_ok_hold and demand_on))))
+        (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (vol_ok_hold and allow_hold)))) or
+        (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (puf_ok_hold and allow_hold))))
     ):
-        if pdc_volano_ready and (vol_ok_start or (vol_ok_hold and demand_on)):
+        if pdc_volano_ready and (vol_ok_start or (vol_ok_hold and allow_hold)):
             source = "PDC"
         else:
-            source = "PUFFER" if (puffer_ready and (puf_ok_start or (puf_ok_hold and demand_on))) else None
+            source = "PUFFER" if (puffer_ready and (puf_ok_start or (puf_ok_hold and allow_hold))) else None
     else:
         source = sel_state
+
+    if gas_emergenza_start_only and source:
+        gas_emergenza_start_only = False
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO start_only cleared (source={source})")
 
     r12 = act.get("r12_pump_mandata_piani")
     r11 = act.get("r11_pump_mandata_laboratorio")
@@ -1436,7 +1451,7 @@ async def _apply_impianto_live() -> None:
 
     # blocco se nessuna fonte valida o troppo fredda
     # latch: se era attiva una sorgente, mantienila finch? non scende sotto min (con isteresi)
-    if demand_on and source is None and impianto_last_source:
+    if (not gas_emergenza_start_only) and demand_on and source is None and impianto_last_source:
         if impianto_last_source == "PDC" and pdc_volano_ready:
             if vol_ok_hold:
                 source = "PDC"
