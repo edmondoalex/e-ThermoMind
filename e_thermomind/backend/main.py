@@ -33,6 +33,8 @@ off_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0, "rg": 0.0}
 on_deadline: dict[str, float] = {"r22": 0.0, "r23": 0.0, "r24": 0.0}
 off_sequence_start: float = 0.0
 action_log: list[str] = []
+last_action_signature: str | None = None
+last_action_ts: float = 0.0
 
 def _append_action_log(line: str) -> None:
     try:
@@ -45,6 +47,19 @@ def _append_action_log(line: str) -> None:
 
 
 def _log_action(line: str) -> None:
+    global last_action_signature, last_action_ts
+    # De-dup: if same message repeats within 5s, replace last entry with new timestamp
+    now = time.time()
+    sig = line
+    if len(line) > 20 and line[4] == '-' and line[7] == '-' and line[10] == ' ' and line[13] == ':' and line[16] == ':':
+        sig = line[20:]
+    if last_action_signature == sig and action_log:
+        if now - last_action_ts < 5:
+            action_log[-1] = f"{time.strftime('%Y-%m-%d %H:%M:%S')} {sig}"
+            last_action_ts = now
+            return
+    last_action_signature = sig
+    last_action_ts = now
     action_log.append(line)
     _append_action_log(line)
 

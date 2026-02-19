@@ -191,3 +191,8 @@
 - UI: badge watchdog non lampeggia più per permettere la lettura.
 - Versione add-on aggiornata a 0.6.81.
 
+
+## 2026-02-19
+- Log: de-dup azioni ripetute (stesso messaggio entro 5s aggiorna timestamp).
+- Versione add-on aggiornata a 0.6.82.
+
