@@ -2,6 +2,8 @@ import asyncio
 import json
 import logging
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import Any
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
@@ -263,26 +265,6 @@ def _parse_hhmm(val: str | None) -> int | None:
         return None
 
 def _is_time_in_ranges(now_min: int, ranges: list[dict]) -> bool:
-
-
-def _next_start_min(now_min: int, ranges: list[dict]) -> int | None:
-    best = None
-    for r in ranges or []:
-        start = _parse_hhmm(r.get('start')) if isinstance(r, dict) else None
-        end = _parse_hhmm(r.get('end')) if isinstance(r, dict) else None
-        if start is None or end is None or start == end:
-            continue
-        # normalize overnight as start only
-        if start >= 0:
-            if start >= now_min:
-                cand = start
-            else:
-                cand = start + 1440
-            if best is None or cand < best:
-                best = cand
-    if best is None:
-        return None
-    return best % 1440
     for r in ranges or []:
         start = _parse_hhmm(r.get('start')) if isinstance(r, dict) else None
         end = _parse_hhmm(r.get('end')) if isinstance(r, dict) else None
@@ -298,6 +280,23 @@ def _next_start_min(now_min: int, ranges: list[dict]) -> int | None:
             if now_min >= start or now_min < end:
                 return True
     return False
+
+def _next_start_min(now_min: int, ranges: list[dict]) -> int | None:
+    best = None
+    for r in ranges or []:
+        start = _parse_hhmm(r.get('start')) if isinstance(r, dict) else None
+        end = _parse_hhmm(r.get('end')) if isinstance(r, dict) else None
+        if start is None or end is None or start == end:
+            continue
+        if start >= now_min:
+            cand = start
+        else:
+            cand = start + 1440
+        if best is None or cand < best:
+            best = cand
+    if best is None:
+        return None
+    return best % 1440
     if not entity_id:
         return None
     raw = ha.states.get(entity_id, {}).get("state")

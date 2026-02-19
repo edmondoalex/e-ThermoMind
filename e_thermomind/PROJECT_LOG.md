@@ -237,3 +237,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Scheduler: mostrata ora server e prossimo start in UI.
 - Versione add-on aggiornata a 0.6.85.
 
+
+## Aggiornamenti 2026-02-19
+- Fix: riparate funzioni scheduler e import datetime/ZoneInfo (crash avvio).
+- Versione add-on aggiornata a 0.6.86.
+
