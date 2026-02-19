@@ -212,7 +212,15 @@ def _get_state(entity_id: str | None) -> str | None:
         return None
     return ha.states.get(entity_id, {}).get("state")
 def _get_num(entity_id: str | None) -> float | None:
-
+    if not entity_id:
+        return None
+    raw = ha.states.get(entity_id, {}).get("state")
+    if raw is None:
+        return None
+    try:
+        return float(raw)
+    except Exception:
+        return None
 
 def _parse_hhmm(val: str | None) -> int | None:
     if not val or not isinstance(val, str):
