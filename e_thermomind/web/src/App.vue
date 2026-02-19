@@ -2903,6 +2903,16 @@ onMounted(async()=>{
   startPolling();
   connectWS();
   solareModeInit.value = true
+  const hash = (window.location.hash || '').toLowerCase()
+  if (hash.includes('scheduler')) tab.value = 'scheduler'
+  if (hash.includes('admin')) tab.value = 'admin'
+  if (hash.includes('user')) tab.value = 'user'
+  window.addEventListener('hashchange', () => {
+    const h = (window.location.hash || '').toLowerCase()
+    if (h.includes('scheduler')) tab.value = 'scheduler'
+    else if (h.includes('admin')) tab.value = 'admin'
+    else if (h.includes('user')) tab.value = 'user'
+  })
   focusInHandler = (e) => {
     const tag = e.target?.tagName
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') onFocus()
@@ -3004,6 +3014,10 @@ details.form summary{cursor:pointer;list-style:none}
   .tabs{margin-left:auto}
   .tabs button{padding:6px 10px}
 }
+watch(tab, (val) => {
+  const next = `#/${val}`
+  if (window.location.hash !== next) window.location.hash = next
+})
 .setpoint-grid{column-count:1;column-gap:12px}
 .setpoint-grid .section{column-span:all}
 .setpoint-grid .set-section{display:inline-block;width:100%;margin:0 0 10px;break-inside:avoid}

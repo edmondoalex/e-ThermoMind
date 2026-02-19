@@ -222,3 +222,8 @@
 - Runtime: aggiunto timezone configurabile per scheduler (default Europe/Rome).
 - Versione add-on aggiornata a 0.6.87.
 
+
+## 2026-02-19
+- UI: supporto hash `/#/user|admin|scheduler` per accesso diretto.
+- Versione add-on aggiornata a 0.6.88.
+
