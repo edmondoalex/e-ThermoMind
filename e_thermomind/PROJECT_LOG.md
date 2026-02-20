@@ -385,3 +385,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Impianto: evita flip-flop termostati; HEAT solo in no_demand, OFF in no_source.
 - Versione add-on aggiornata a 0.7.19.
+
+## Aggiornamenti 2026-02-20
+- UI: aggiunte descrizioni sintetiche per la logica dei moduli.
+- Versione add-on aggiornata a 0.7.20.

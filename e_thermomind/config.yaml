@@ -1,7 +1,7 @@
 name: e-ThermoMind
 slug: e_thermomind
 description: "PLC termico: orchestrazione ACS/Puffer/Volano/Solare con UI Admin/User (Vue)"
-version: "0.7.19"
+version: "0.7.20"
 arch: [amd64, aarch64, armv7]
 init: false
 startup: services

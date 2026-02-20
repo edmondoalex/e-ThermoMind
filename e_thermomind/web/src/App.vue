@@ -265,6 +265,7 @@
                     </span>
                   </div>
                 </div>
+                <div v-if="item.summary" class="muted">{{ item.summary }}</div>
                 <div class="muted">{{ item.reason }}</div>
                 <div v-if="item.key === 'impianto'" class="module-extra">
                   <div class="muted">
@@ -2381,7 +2382,8 @@ const moduleReasonsList = computed(() => {
     .map(item => ({
       ...item,
       enabled: modules.value?.[item.key] !== false,
-      reason: mr[item.key]
+      reason: mr[item.key],
+      summary: d.value?.computed?.module_summaries?.[item.key] || ''
     }))
 })
 const moduleActiveMap = computed(() => {

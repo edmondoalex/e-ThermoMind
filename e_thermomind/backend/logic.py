@@ -721,6 +721,18 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "caldaia_legna": legna_reason,
                 "miscelatrice": mix_reason
             },
+            "module_summaries": {
+                "solare": "Regola: attivo se T_SOL >= T_ACS + d_on (o d_hold se già attivo).",
+                "volano_to_acs": "Regola: Dest=ACS e T_VOL >= T_ACS+Δ e T_VOL >= Min.",
+                "volano_to_puffer": "Regola: Dest=PUFFER e T_VOL >= T_PUF+Δ e T_VOL >= Min.",
+                "puffer_to_acs": "Regola: Dest=ACS e T_PUF >= T_ACS+Δ e T_PUF >= Min.",
+                "miscelatrice": "Regola: mantiene ΔT mandata/ritorno verso setpoint con impulsi.",
+                "curva_climatica": "Regola: SP da curva in base a T_EXT.",
+                "impianto": "Regola: serve richiesta zone + fonte valida.",
+                "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
+                "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
+                "resistenze_volano": "Regola: step da min(FV,total); stop se batteria scarica/export basso."
+            },
             "state": {
                 "last_dest": _LAST.get("dest"),
                 "last_source_to_acs": _LAST.get("source_to_acs")
