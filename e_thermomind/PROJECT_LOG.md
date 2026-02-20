@@ -288,3 +288,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Impianto: richiesta calore ora deriva dalle zone quando sono configurate (non dal sensore richiesta_heat).
 - Versione add-on aggiornata a 0.6.96.
 
+## Aggiornamenti 2026-02-20
+- UI: Caldaia legna mostra stato startup (timer) e colore rosso solo quando attiva.
+- Versione add-on aggiornata a 0.6.97.
+

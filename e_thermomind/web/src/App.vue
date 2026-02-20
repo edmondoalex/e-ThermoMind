@@ -2288,6 +2288,7 @@ const moduleReasonsList = computed(() => {
   const flags = d.value?.computed?.flags || {}
   const step = Number(d.value?.computed?.resistance_step || 0)
   const mixActive = String(d.value?.computed?.miscelatrice?.action || 'STOP').toUpperCase() !== 'STOP'
+  const legnaTimer = Number(d.value?.computed?.caldaia_legna?.timer_remaining_s || 0)
   const labels = [
     { key: 'solare', label: 'Solare', active: !!flags.solare_to_acs },
     { key: 'volano_to_acs', label: 'Volano -> ACS', active: !!flags.volano_to_acs },
@@ -2307,8 +2308,8 @@ const moduleReasonsList = computed(() => {
     },
     {
       key: 'caldaia_legna',
-      label: 'Caldaia Legna',
-      active: !!(d.value?.computed?.caldaia_legna?.power || d.value?.computed?.caldaia_legna?.ta)
+      label: legnaTimer > 0 ? `Caldaia Legna (startup ${legnaTimer}s)` : 'Caldaia Legna',
+      active: !!(d.value?.computed?.caldaia_legna?.power || d.value?.computed?.caldaia_legna?.ta || legnaTimer > 0)
     },
     { key: 'gas_emergenza', label: 'Caldaia Gas Emergenza Riscaldamento', active: !!d.value?.computed?.gas_emergenza?.need },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
@@ -2325,6 +2326,7 @@ const moduleActiveMap = computed(() => {
   const flags = d.value?.computed?.flags || {}
   const step = Number(d.value?.computed?.resistance_step || 0)
   const mixActive = !!d.value?.computed?.impianto?.miscelatrice
+  const legnaTimer = Number(d.value?.computed?.caldaia_legna?.timer_remaining_s || 0)
   const impActive = !!(
     d.value?.computed?.impianto?.richiesta &&
     d.value?.computed?.impianto?.source &&
@@ -2339,7 +2341,7 @@ const moduleActiveMap = computed(() => {
     miscelatrice: mixActive,
     curva_climatica: !!d.value?.computed?.curva_climatica?.setpoint,
     impianto: impActive,
-    caldaia_legna: !!(d.value?.computed?.caldaia_legna?.power || d.value?.computed?.caldaia_legna?.ta),
+    caldaia_legna: !!(d.value?.computed?.caldaia_legna?.power || d.value?.computed?.caldaia_legna?.ta || legnaTimer > 0),
     gas_emergenza: !!d.value?.computed?.gas_emergenza?.need,
     resistenze_volano: step > 0,
     pdc: !!d.value?.computed?.pdc?.active
@@ -2347,10 +2349,18 @@ const moduleActiveMap = computed(() => {
 })
 const moduleClass = (key) => {
   const enabled = !!modules.value?.[key]
+  const isActive = !!moduleActiveMap.value?.[key]
+  if (key === 'caldaia_legna') {
+    return {
+      on: enabled && isActive,
+      off: !enabled || !isActive,
+      active: enabled && isActive
+    }
+  }
   return {
     on: enabled,
     off: !enabled,
-    active: enabled && !!moduleActiveMap.value?.[key]
+    active: enabled && isActive
   }
 }
 const modulePanelClass = (key) => {
