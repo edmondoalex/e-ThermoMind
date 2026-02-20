@@ -225,11 +225,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-            if available_w >= thr[2]:
+            # Step is driven by "possibile" (residual budget), to avoid battery usage.
+            if extra_safe_w >= thr[2]:
                 desired_step = 3
-            elif available_w >= thr[1]:
+            elif extra_safe_w >= thr[1]:
                 desired_step = 2
-            elif available_w >= thr[0]:
+            elif extra_safe_w >= thr[0]:
                 desired_step = 1
             if extra_safe_total_w > 0.0 and export_w <= extra_safe_total_w:
                 max_step_total = 0

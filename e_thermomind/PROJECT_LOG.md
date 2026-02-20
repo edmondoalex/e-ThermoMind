@@ -356,3 +356,11 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: spegnimento immediato anche lato attuatori quando batteria scarica.
 - Versione add-on aggiornata a 0.7.12.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: step guidato da `extra_safe_w` (possibile), con cap su `extra_safe_total_w`.
+- Versione add-on aggiornata a 0.7.13.
+
+## Aggiornamenti 2026-02-20
+- Fix avvio: spostato `global off_sequence_start` prima dell'uso.
+- Versione add-on aggiornata a 0.7.14.

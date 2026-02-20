@@ -1286,6 +1286,7 @@ async def _pulse_actuator(task_name: str, eid: str | None, duration_s: float) ->
 
 async def _apply_resistance_live(decision_data: dict) -> None:
     global resistenze_watchdog_last_log
+    global off_sequence_start
     if cfg.get("runtime", {}).get("mode") != "live":
         _log_dry_run(decision_data)
         return
@@ -1299,6 +1300,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     step = int(decision_data.get("computed", {}).get("resistance_step", 0))
     export_w = float(decision_data.get("inputs", {}).get("grid_export_w") or 0.0)
     extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
+    battery_out_w = float(decision_data.get("inputs", {}).get("battery_output_w") or 0.0)
     available_w = export_w
     computed_available = decision_data.get("computed", {}).get("available_power_w")
     if computed_available is not None:
@@ -1343,8 +1345,6 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
     on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))
     now = time.time()
-
-    global off_sequence_start
     if off_gate_w <= off_thr:
         if off_sequence_start == 0.0:
             off_sequence_start = now
