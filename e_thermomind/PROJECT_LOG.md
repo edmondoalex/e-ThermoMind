@@ -377,3 +377,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Impianto: aggiunta opzione `auto_heat_keep_on` (default true) per non spegnere i termostati quando il modulo è inattivo.
 - Versione add-on aggiornata a 0.7.17.
+
+## Aggiornamenti 2026-02-20
+- Impianto: termostati restano in HEAT solo quando non c'è domanda (no_demand). In caso di no_source vengono spenti.
+- Versione add-on aggiornata a 0.7.18.
