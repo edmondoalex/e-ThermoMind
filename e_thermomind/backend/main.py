@@ -1065,7 +1065,11 @@ async def _on_state_changed(entity_id: str, new_state: dict) -> None:
 def _log_dry_run(decision_data: dict) -> None:
     global last_dry_run_signature
     step = int(decision_data.get("computed", {}).get("resistance_step", 0))
-    export_w = decision_data.get("inputs", {}).get("grid_export_w")
+    export_w = float(decision_data.get("inputs", {}).get("grid_export_w") or 0.0)
+    extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
+    available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
+    extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
+    available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
     dest = decision_data.get("computed", {}).get("dest")
     source = decision_data.get("computed", {}).get("source_to_acs")
     act = cfg.get("actuators", {})
@@ -1108,6 +1112,8 @@ def _log_dry_run(decision_data: dict) -> None:
         "dest": dest,
         "source": source,
         "export_w": export_w,
+        "extra_safe_w": extra_safe_w,
+        "available_w": available_w,
         "step": step,
         "modules": module_states,
         "want": want
@@ -1117,7 +1123,7 @@ def _log_dry_run(decision_data: dict) -> None:
     last_dry_run_signature = signature
     action_log.append(
         f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN dest={dest} source={source} "
-        f"export={export_w}W step={step}"
+        f"avail={available_w:.0f}W export={export_w:.0f}W safe={extra_safe_w:.0f}W step={step}"
     )
     action_log.append(
         f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN would set "
@@ -1310,7 +1316,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
                 if act_on:
                     _log_action(
                         f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG RESISTENZE "
-                        f"act_on={act_on} step=0 export={export_w:.0f}"
+                        f"act_on={act_on} step=0 avail={available_w:.0f} export={export_w:.0f} safe={extra_safe_w:.0f}"
                     )
                     resistenze_watchdog_last_log = now
     except Exception:
@@ -1321,14 +1327,14 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     now = time.time()
 
     global off_sequence_start
-    if export_w <= off_thr:
+    if available_w <= off_thr:
         if off_sequence_start == 0.0:
             off_sequence_start = now
     else:
         off_sequence_start = 0.0
 
     def _allow_off(key: str) -> bool:
-        if export_w > off_thr:
+        if available_w > off_thr:
             return True
         if off_sequence_start == 0.0:
             return False
@@ -1357,7 +1363,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         else:
             on_deadline[key] = 0.0
             if current == "on":
-                if export_w > off_thr:
+                if available_w > off_thr:
                     off_deadline[key] = 0.0
                 elif _allow_off(key):
                     if off_deadline[key] == 0.0:

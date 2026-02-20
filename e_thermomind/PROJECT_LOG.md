@@ -308,3 +308,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - UI: caldaia legna mostra verde quando modulo ON ma inattivo (rosso solo se attivo).
 - Versione add-on aggiornata a 0.7.1.
 
+## Aggiornamenti 2026-02-20
+- Resistenze: aggiunto input `extra_safe_w` e potenza disponibile `available_power_w` (usa il max tra export e safe).
+- UI Admin: campo entitÃ  per `extra_safe_w` + storico.
+- Versione add-on aggiornata a 0.7.2.
+
