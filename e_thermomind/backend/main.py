@@ -1072,6 +1072,8 @@ def _log_dry_run(decision_data: dict) -> None:
     available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
     extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
     available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
+    extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
+    available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
     dest = decision_data.get("computed", {}).get("dest")
     source = decision_data.get("computed", {}).get("source_to_acs")
     act = cfg.get("actuators", {})

@@ -317,3 +317,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Fix: calcolo `available_w` nelle resistenze (evita errore NameError).
 - Versione add-on aggiornata a 0.7.3.
+
+## Aggiornamenti 2026-02-20
+- Fix: definizione `available_w`/`extra_safe_w` in _apply_resistance_live.
+- Versione add-on aggiornata a 0.7.4.
