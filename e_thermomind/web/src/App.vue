@@ -1794,6 +1794,19 @@
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.battery_output_w"/> Storico</label></div>
             </div>
           </div>
+          <div class="field">
+            <label>FV produzione (W)</label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.pv_power_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.pv_power_w?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.pv_power_w.entity_id"
+                       placeholder="sensor.zcs_easas_1_activepower_pv_ext"
+                       @input="dirtyEnt.pv_power_w = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.pv_power_w"/> Storico</label></div>
+            </div>
+          </div>
 
           <div class="subsection">Miscelatrice</div>
           <div class="field">
@@ -2064,7 +2077,8 @@ const history = ref({
   export_w: [],
   extra_safe_w: [],
   extra_safe_total_w: [],
-  battery_output_w: []
+  battery_output_w: [],
+  pv_power_w: []
 })
 const curveXText = ref('')
 const curveYText = ref('')
@@ -2917,6 +2931,7 @@ function updateHistoryFromDecision(decision){
   pushHistory(history.value.extra_safe_w, decision.inputs.extra_safe_w)
   pushHistory(history.value.extra_safe_total_w, decision.inputs.extra_safe_total_w)
   pushHistory(history.value.battery_output_w, decision.inputs.battery_output_w)
+  pushHistory(history.value.pv_power_w, decision.inputs.pv_power_w)
 }
 function sparkPoints(values){
   const w = 300

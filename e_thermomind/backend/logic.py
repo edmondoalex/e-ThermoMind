@@ -119,6 +119,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     battery_output_w = get_num(ent.get("battery_output_w"), 0.0)
     if battery_output_w < 0:
         battery_output_w = 0.0
+    pv_power_w = get_num(ent.get("pv_power_w"), 0.0)
+    if pv_power_w < 0:
+        pv_power_w = 0.0
     res_power_w = get_num(ent.get("resistenze_volano_power"), 0.0)
     if res_power_w < 0:
         res_power_w = 0.0
@@ -221,16 +224,16 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             desired_step = 0
         elif export_w <= float(res_cfg.get("off_threshold_w", 0.0)):
             desired_step = 0
-        elif extra_safe_w <= 0.0:
+        elif pv_power_w <= 0.0:
             desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-            # Step is driven by "possibile" (residual budget), to avoid battery usage.
-            if extra_safe_w >= thr[2]:
+            # Step is driven by PV production.
+            if pv_power_w >= thr[2]:
                 desired_step = 3
-            elif extra_safe_w >= thr[1]:
+            elif pv_power_w >= thr[1]:
                 desired_step = 2
-            elif extra_safe_w >= thr[0]:
+            elif pv_power_w >= thr[0]:
                 desired_step = 1
             if extra_safe_total_w > 0.0 and export_w <= extra_safe_total_w:
                 max_step_total = 0
@@ -265,10 +268,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     charge_buffer = "RESISTANCE" if step > 0 else "OFF"
     power_note = f"Export {export_w:.0f}W"
-    if extra_safe_total_w > 0.0 or extra_safe_w > 0.0:
+    if extra_safe_total_w > 0.0 or extra_safe_w > 0.0 or pv_power_w > 0.0:
         power_note = (
             f"Avail {available_w:.0f}W (Export {export_w:.0f}W | "
-            f"Tot {extra_safe_total_w:.0f}W | Poss {extra_safe_w:.0f}W)"
+            f"Tot {extra_safe_total_w:.0f}W | Poss {extra_safe_w:.0f}W | FV {pv_power_w:.0f}W)"
         )
     if vol_max_hit:
         charge_reason = f"VOLANO_MAX: {t_volano:.1f}°C >= {vol_max:.1f}°C"
@@ -608,6 +611,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "extra_safe_w": extra_safe_w,
             "extra_safe_total_w": extra_safe_total_w,
             "battery_output_w": battery_output_w,
+            "pv_power_w": pv_power_w,
             "resistenze_volano_power": res_power_w,
             "t_mandata_caldaia_legna": t_mandata_legna,
             "t_ritorno_caldaia_legna": t_ritorno_legna,

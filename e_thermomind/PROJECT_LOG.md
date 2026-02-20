@@ -364,3 +364,8 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Fix avvio: spostato `global off_sequence_start` prima dell'uso.
 - Versione add-on aggiornata a 0.7.14.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: step guidato da produzione FV (`pv_power_w`).
+- UI Admin: aggiunta entità `pv_power_w`.
+- Versione add-on aggiornata a 0.7.15.
