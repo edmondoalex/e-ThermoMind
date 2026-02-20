@@ -373,3 +373,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: step guidato da `min(FV, total)`.
 - Versione add-on aggiornata a 0.7.16.
+
+## Aggiornamenti 2026-02-20
+- Impianto: aggiunta opzione `auto_heat_keep_on` (default true) per non spegnere i termostati quando il modulo è inattivo.
+- Versione add-on aggiornata a 0.7.17.

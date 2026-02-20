@@ -251,7 +251,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "pump_stop_delay_s": 0,
     "season_mode": "winter",
     "auto_heat_min_on_s": 60,
-    "auto_heat_min_off_s": 60
+    "auto_heat_min_off_s": 60,
+    "auto_heat_keep_on": True
   },
   "history": {
     "t_acs": False,
@@ -524,6 +525,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
         for key in ("pdc_ready", "volano_ready", "puffer_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
+        if "auto_heat_keep_on" in imp:
+            cfg["impianto"]["auto_heat_keep_on"] = bool(imp.get("auto_heat_keep_on"))
 
     hist = raw.get("history", {})
     if isinstance(hist, dict):
@@ -551,6 +554,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
         for key in ("pdc_ready", "volano_ready", "puffer_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
+        if "auto_heat_keep_on" in imp:
+            cfg["impianto"]["auto_heat_keep_on"] = bool(imp.get("auto_heat_keep_on"))
         for key in (
             "volano_min_c", "volano_hyst_c", "volano_on_hyst_c", "volano_off_hyst_c",
             "puffer_min_c", "puffer_hyst_c", "puffer_on_hyst_c", "puffer_off_hyst_c"

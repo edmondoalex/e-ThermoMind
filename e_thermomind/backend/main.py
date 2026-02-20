@@ -2007,9 +2007,13 @@ async def _apply_impianto_live() -> None:
     if season == "winter":
         auto_heat = bool(source)
 
+    keep_on = bool(imp.get("auto_heat_keep_on", True))
     heat_reason = f"IMPIANTO auto_heat={'ON' if auto_heat else 'OFF'} source={source or 'OFF'}"
     for z in _collect_zones(imp):
-        await _set_climate_hvac_mode(z, "heat" if auto_heat else "off", heat_reason)
+        if auto_heat:
+            await _set_climate_hvac_mode(z, "heat", heat_reason)
+        else:
+            await _set_climate_hvac_mode(z, "heat" if keep_on else "off", heat_reason)
 
     blocked_cold = bool(demand_on and source is None)
     if not source:
@@ -2028,7 +2032,8 @@ async def _apply_impianto_live() -> None:
         await _force_pump_off("impianto:lab_pump", r11, "no_source")
         await _set_actuator_impianto(r4, False, "no_source", force=True)
         await _set_actuator_impianto(r5, False, "no_source", force=True)
-        await _set_climate_hvac_mode(clima, "off", "IMPIANTO no source")
+        if not keep_on:
+            await _set_climate_hvac_mode(clima, "off", "IMPIANTO no source")
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
         return
@@ -2051,7 +2056,8 @@ async def _apply_impianto_live() -> None:
         await _set_actuator_impianto(r5, False, "no_demand", force=True)
         await _force_pump_off("impianto:pump", r12, "no_demand")
         await _force_pump_off("impianto:lab_pump", r11, "no_demand")
-        await _set_climate_hvac_mode(clima, "off", "IMPIANTO no demand")
+        if not keep_on:
+            await _set_climate_hvac_mode(clima, "off", "IMPIANTO no demand")
         await _set_actuator(off_centralina, True)
         # miscelatrice gestita solo dal suo modulo
         return
