@@ -325,3 +325,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Fix build UI: rimosso codice JS finito nel blocco CSS di App.vue.
 - Versione add-on aggiornata a 0.7.5.
+
+## Aggiornamenti 2026-02-20
+- Fix: fallback `available_w` sempre inizializzato in _apply_resistance_live.
+- Versione add-on aggiornata a 0.7.6.

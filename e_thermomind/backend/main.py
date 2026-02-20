@@ -1068,12 +1068,6 @@ def _log_dry_run(decision_data: dict) -> None:
     export_w = float(decision_data.get("inputs", {}).get("grid_export_w") or 0.0)
     extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
     available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
-    extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
-    available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
-    extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
-    available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
-    extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
-    available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
     dest = decision_data.get("computed", {}).get("dest")
     source = decision_data.get("computed", {}).get("source_to_acs")
     act = cfg.get("actuators", {})
@@ -1303,6 +1297,11 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     rg = act.get("generale_resistenze_volano_pdc")
     step = int(decision_data.get("computed", {}).get("resistance_step", 0))
     export_w = float(decision_data.get("inputs", {}).get("grid_export_w") or 0.0)
+    extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
+    available_w = export_w
+    computed_available = decision_data.get("computed", {}).get("available_power_w")
+    if computed_available is not None:
+        available_w = float(computed_available)
     off_thr = float(cfg.get("resistance", {}).get("off_threshold_w", 0.0))
     desired = {
         "r22": step >= 1,
