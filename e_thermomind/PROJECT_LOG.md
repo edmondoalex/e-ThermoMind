@@ -284,3 +284,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - MQTT: configurazione spostata in config dell’add-on (options.json); UI rimossa.
 - Versione add-on aggiornata a 0.6.95.
 
+## Aggiornamenti 2026-02-20
+- Impianto: richiesta calore ora deriva dalle zone quando sono configurate (non dal sensore richiesta_heat).
+- Versione add-on aggiornata a 0.6.96.
+

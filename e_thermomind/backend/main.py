@@ -1904,12 +1904,12 @@ async def _apply_impianto_live() -> None:
 
     any_active = pt_active or p1_active or mans_active or lab_active or scala_active
 
-    # Se non ci sono zone configurate, usa richiesta_on
+    # Se ci sono zone configurate, la richiesta viene dalle zone (non dal sensore richiesta_heat)
     zones_configured = (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
-    if richiesta is not None:
-        demand_on = bool(richiesta_on)
+    if zones_configured:
+        demand_on = bool(any_active)
     else:
-        demand_on = (any_active if zones_configured else bool(richiesta_on))
+        demand_on = bool(richiesta_on)
     if season == "summer":
         demand_on = False
         impianto_heat_state["active"] = False

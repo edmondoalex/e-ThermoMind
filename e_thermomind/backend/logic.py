@@ -287,14 +287,16 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     zone_scala = imp_cfg.get("zone_scala") or ""
     zones_configured = bool(zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
     cooling_blocked = set(imp_cfg.get("cooling_blocked", []))
+    def _is_zone_on(eid: str) -> bool:
+        st = ha_states.get(eid, {})
+        return _zone_active(st.get("state"), st.get("attributes", {}).get("hvac_action"), eid in cooling_blocked)
+    any_active = any(_is_zone_on(z) for z in (zones_pt + zones_p1 + zones_mans + zones_lab + ([zone_scala] if zone_scala else [])))
     if req_eid:
         req_on = _is_on_state(req_state)
     else:
-        def _is_zone_on(eid: str) -> bool:
-            st = ha_states.get(eid, {})
-            return _zone_active(st.get("state"), st.get("attributes", {}).get("hvac_action"), eid in cooling_blocked)
-        any_active = any(_is_zone_on(z) for z in (zones_pt + zones_p1 + zones_mans + zones_lab + ([zone_scala] if zone_scala else [])))
         req_on = any_active if zones_configured else bool(imp_cfg.get("richiesta_heat"))
+    if zones_configured:
+        req_on = any_active
     season_mode = str(imp_cfg.get("season_mode", "winter")).lower()
     if season_mode == "summer":
         req_on = False
