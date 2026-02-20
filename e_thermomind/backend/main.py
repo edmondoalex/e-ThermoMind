@@ -1067,6 +1067,7 @@ def _log_dry_run(decision_data: dict) -> None:
     step = int(decision_data.get("computed", {}).get("resistance_step", 0))
     export_w = float(decision_data.get("inputs", {}).get("grid_export_w") or 0.0)
     extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
+    battery_out_w = float(decision_data.get("inputs", {}).get("battery_output_w") or 0.0)
     available_w = float(decision_data.get("computed", {}).get("available_power_w") or export_w)
     dest = decision_data.get("computed", {}).get("dest")
     source = decision_data.get("computed", {}).get("source_to_acs")
@@ -1303,6 +1304,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     if computed_available is not None:
         available_w = float(computed_available)
     off_thr = float(cfg.get("resistance", {}).get("off_threshold_w", 0.0))
+    battery_block_w = float(cfg.get("resistance", {}).get("battery_block_w", 100.0))
     off_gate_w = export_w
     desired = {
         "r22": step >= 1,
@@ -1320,11 +1322,23 @@ async def _apply_resistance_live(decision_data: dict) -> None:
                 if act_on:
                     _log_action(
                         f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG RESISTENZE "
-                        f"act_on={act_on} step=0 avail={available_w:.0f} export={export_w:.0f} safe={extra_safe_w:.0f}"
+                        f"act_on={act_on} step=0 avail={available_w:.0f} export={export_w:.0f} "
+                        f"safe={extra_safe_w:.0f} battery_out={battery_out_w:.0f}"
                     )
                     resistenze_watchdog_last_log = now
     except Exception:
         pass
+
+    if battery_out_w > battery_block_w:
+        for ent in (r22, r23, r24, rg):
+            if _state_is_on(ent):
+                await _set_resistance(ent, False)
+        off_sequence_start = 0.0
+        for key in off_deadline:
+            off_deadline[key] = 0.0
+        for key in on_deadline:
+            on_deadline[key] = 0.0
+        return
 
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
     on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))

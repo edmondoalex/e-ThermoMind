@@ -352,3 +352,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: batteria scarica (battery_output_w > 100W) forza step=0 immediato.
 - Versione add-on aggiornata a 0.7.11.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: spegnimento immediato anche lato attuatori quando batteria scarica.
+- Versione add-on aggiornata a 0.7.12.
