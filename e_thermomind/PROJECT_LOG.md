@@ -313,3 +313,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - UI Admin: campo entitÃ  per `extra_safe_w` + storico.
 - Versione add-on aggiornata a 0.7.2.
 
+
+## Aggiornamenti 2026-02-20
+- Fix: calcolo `available_w` nelle resistenze (evita errore NameError).
+- Versione add-on aggiornata a 0.7.3.
