@@ -2278,6 +2278,13 @@ async def _apply_caldaia_legna_live() -> None:
     sp_puf_alto = float(legna_cfg.get("puffer_alto_sp_c", 80.0))
     sp_puf_hyst = float(legna_cfg.get("puffer_alto_hyst_c", 3.0))
     allow_startup = now < float(caldaia_legna_state.get("startup_deadline") or 0.0)
+    if allow_startup and (t_mandata is not None) and (t_mandata >= min_alim):
+        # stop startup countdown early once mandata reaches target
+        caldaia_legna_state["startup_deadline"] = 0.0
+        if isinstance(cfg.get("caldaia_legna"), dict):
+            cfg["caldaia_legna"]["startup_deadline_ts"] = 0.0
+            save_config(cfg)
+        allow_startup = False
 
     if not allow_startup and (t_mandata is not None) and (t_mandata < min_alim):
         caldaia_legna_state["forced_off"] = True

@@ -300,3 +300,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - UI: pulsante caldaia legna etichettato "Reset timer".
 - Versione add-on aggiornata a 0.6.99.
 
+## Aggiornamenti 2026-02-20
+- Caldaia legna: se T mandata supera il minimo, lo startup timer si azzera subito.
+- Versione add-on aggiornata a 0.7.0.
+
