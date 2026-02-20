@@ -1752,7 +1752,7 @@
           <div class="field">
             <label>
               <i v-if="mdiClass(ent?.extra_safe_w?.attributes?.icon)" :class="mdiClass(ent?.extra_safe_w?.attributes?.icon)"></i>
-              Extra safe (W)
+              Extra safe possibile (W)
             </label>
             <div class="input-row">
               <span class="logic-dot" :class="isFilled(ent?.extra_safe_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
@@ -1763,6 +1763,22 @@
                        @input="dirtyEnt.extra_safe_w = true"
                        @focus="onFocus" @blur="onBlur"/>
               <div class="history-inline"><label><input type="checkbox" v-model="sp.history.extra_safe_w"/> Storico</label></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>
+              <i v-if="mdiClass(ent?.extra_safe_total_w?.attributes?.icon)" :class="mdiClass(ent?.extra_safe_total_w?.attributes?.icon)"></i>
+              Extra safe totale (W)
+            </label>
+            <div class="input-row">
+              <span class="logic-dot" :class="isFilled(ent?.extra_safe_total_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.extra_safe_total_w?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.extra_safe_total_w.entity_id"
+                       placeholder="sensor.e_energymind_zcs_easas_1_extra_safe_totale_ora"
+                       @input="dirtyEnt.extra_safe_total_w = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              <div class="history-inline"><label><input type="checkbox" v-model="sp.history.extra_safe_total_w"/> Storico</label></div>
             </div>
           </div>
 
@@ -2033,7 +2049,8 @@ const history = ref({
   delta_mandata_ritorno: [],
   kp_eff: [],
   export_w: [],
-  extra_safe_w: []
+  extra_safe_w: [],
+  extra_safe_total_w: []
 })
 const curveXText = ref('')
 const curveYText = ref('')
@@ -2884,6 +2901,7 @@ function updateHistoryFromDecision(decision){
   pushHistory(history.value.kp_eff, decision.computed?.miscelatrice?.kp_eff)
   pushHistory(history.value.export_w, decision.inputs.grid_export_w)
   pushHistory(history.value.extra_safe_w, decision.inputs.extra_safe_w)
+  pushHistory(history.value.extra_safe_total_w, decision.inputs.extra_safe_total_w)
 }
 function sparkPoints(values){
   const w = 300

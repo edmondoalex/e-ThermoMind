@@ -113,6 +113,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     extra_safe_w = get_num(ent.get("extra_safe_w"), 0.0)
     if extra_safe_w < 0:
         extra_safe_w = 0.0
+    extra_safe_total_w = get_num(ent.get("extra_safe_total_w"), 0.0)
+    if extra_safe_total_w < 0:
+        extra_safe_total_w = 0.0
     res_power_w = get_num(ent.get("resistenze_volano_power"), 0.0)
     if res_power_w < 0:
         res_power_w = 0.0
@@ -123,8 +126,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if res_cfg.get("invert_export_sign"):
         export_w = -export_w
     available_w = export_w
-    if extra_safe_w > available_w:
-        available_w = extra_safe_w
+    if extra_safe_total_w > available_w:
+        available_w = extra_safe_total_w
     if available_w < 0:
         available_w = 0.0
 
@@ -210,40 +213,50 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     desired_step = 0
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
-        thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-        if available_w >= thr[2]:
-            desired_step = 3
-        elif available_w >= thr[1]:
-            desired_step = 2
-        elif available_w >= thr[0]:
-            desired_step = 1
+        if export_w <= float(res_cfg.get("off_threshold_w", 0.0)):
+            desired_step = 0
+        elif extra_safe_w <= 0.0:
+            desired_step = 0
+        else:
+            thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
+            if available_w >= thr[2]:
+                desired_step = 3
+            elif available_w >= thr[1]:
+                desired_step = 2
+            elif available_w >= thr[0]:
+                desired_step = 1
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
     step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))
     off_delay = int(_f(res_cfg.get("off_delay_s", 5), 5))
+    step_down_delay = int(_f(res_cfg.get("step_down_delay_s", off_delay), off_delay))
     last_step = int(_LAST.get("res_step", 0) or 0)
     last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
-    if available_w <= off_thr:
-        step = 0
-    else:
-        if desired_step > last_step:
-            if now_ts - last_step_ts >= step_up_delay:
-                step = min(desired_step, last_step + 1)
-            else:
-                step = last_step
+    if desired_step > last_step:
+        if now_ts - last_step_ts >= step_up_delay:
+            step = min(desired_step, last_step + 1)
         else:
-            # do not decrease step while export is positive
             step = last_step
+    elif desired_step < last_step:
+        if now_ts - last_step_ts >= step_down_delay:
+            step = max(desired_step, last_step - 1)
+        else:
+            step = last_step
+    else:
+        step = last_step
 
     charge_buffer = "RESISTANCE" if step > 0 else "OFF"
     power_note = f"Export {export_w:.0f}W"
-    if extra_safe_w > export_w:
-        power_note = f"Avail {available_w:.0f}W (Export {export_w:.0f}W | Safe {extra_safe_w:.0f}W)"
+    if extra_safe_total_w > 0.0 or extra_safe_w > 0.0:
+        power_note = (
+            f"Avail {available_w:.0f}W (Export {export_w:.0f}W | "
+            f"Tot {extra_safe_total_w:.0f}W | Poss {extra_safe_w:.0f}W)"
+        )
     if vol_max_hit:
         charge_reason = f"VOLANO_MAX: {t_volano:.1f}°C >= {vol_max:.1f}°C"
     elif dest == "OFF":
         charge_reason = dest_reason
-    elif available_w <= off_thr:
+    elif export_w <= off_thr or extra_safe_w <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
     else:
         charge_reason = f"{power_note} | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
@@ -573,6 +586,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "t_ritorno_miscelato": t_ritorno_mix,
             "grid_export_w": export_w,
             "extra_safe_w": extra_safe_w,
+            "extra_safe_total_w": extra_safe_total_w,
             "resistenze_volano_power": res_power_w,
             "t_mandata_caldaia_legna": t_mandata_legna,
             "t_ritorno_caldaia_legna": t_ritorno_legna,

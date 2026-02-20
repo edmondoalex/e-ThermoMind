@@ -1303,6 +1303,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     if computed_available is not None:
         available_w = float(computed_available)
     off_thr = float(cfg.get("resistance", {}).get("off_threshold_w", 0.0))
+    off_gate_w = export_w
     desired = {
         "r22": step >= 1,
         "r23": step >= 2,
@@ -1330,14 +1331,14 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     now = time.time()
 
     global off_sequence_start
-    if available_w <= off_thr:
+    if off_gate_w <= off_thr:
         if off_sequence_start == 0.0:
             off_sequence_start = now
     else:
         off_sequence_start = 0.0
 
     def _allow_off(key: str) -> bool:
-        if available_w > off_thr:
+        if off_gate_w > off_thr:
             return True
         if off_sequence_start == 0.0:
             return False
@@ -1366,7 +1367,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         else:
             on_deadline[key] = 0.0
             if current == "on":
-                if available_w > off_thr:
+                if off_gate_w > off_thr:
                     off_deadline[key] = 0.0
                 elif _allow_off(key):
                     if off_deadline[key] == 0.0:

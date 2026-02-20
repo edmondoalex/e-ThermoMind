@@ -329,3 +329,9 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Fix: fallback `available_w` sempre inizializzato in _apply_resistance_live.
 - Versione add-on aggiornata a 0.7.6.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: aggiunto input `extra_safe_total_w` e logica step con safe_possibile + export.
+- Resistenze: step-down con delay anche in import.
+- UI Admin: campo entità per `extra_safe_total_w`.
+- Versione add-on aggiornata a 0.7.7.
