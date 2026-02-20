@@ -369,3 +369,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Resistenze: step guidato da produzione FV (`pv_power_w`).
 - UI Admin: aggiunta entità `pv_power_w`.
 - Versione add-on aggiornata a 0.7.15.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: step guidato da `min(FV, total)`.
+- Versione add-on aggiornata a 0.7.16.

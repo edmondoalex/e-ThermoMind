@@ -228,22 +228,16 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-            # Step is driven by PV production.
-            if pv_power_w >= thr[2]:
+            effective_power_w = pv_power_w
+            if extra_safe_total_w > 0.0:
+                effective_power_w = min(effective_power_w, extra_safe_total_w)
+            # Step is driven by FV, capped by total.
+            if effective_power_w >= thr[2]:
                 desired_step = 3
-            elif pv_power_w >= thr[1]:
+            elif effective_power_w >= thr[1]:
                 desired_step = 2
-            elif pv_power_w >= thr[0]:
+            elif effective_power_w >= thr[0]:
                 desired_step = 1
-            if extra_safe_total_w > 0.0 and export_w <= extra_safe_total_w:
-                max_step_total = 0
-                if extra_safe_total_w >= thr[2]:
-                    max_step_total = 3
-                elif extra_safe_total_w >= thr[1]:
-                    max_step_total = 2
-                elif extra_safe_total_w >= thr[0]:
-                    max_step_total = 1
-                desired_step = min(desired_step, max_step_total)
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
     step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))
