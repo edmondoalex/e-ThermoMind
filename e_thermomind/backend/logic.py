@@ -225,7 +225,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 desired_step = 2
             elif available_w >= thr[0]:
                 desired_step = 1
-            if extra_safe_total_w > 0.0:
+            if extra_safe_total_w > 0.0 and export_w <= extra_safe_total_w:
                 max_step_total = 0
                 if extra_safe_total_w >= thr[2]:
                     max_step_total = 3

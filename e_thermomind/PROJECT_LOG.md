@@ -339,3 +339,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: limite step in base a `extra_safe_total_w` (cap totale).
 - Versione add-on aggiornata a 0.7.8.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: se export > totale, vince export (cap totale solo se export <= totale).
+- Versione add-on aggiornata a 0.7.9.
