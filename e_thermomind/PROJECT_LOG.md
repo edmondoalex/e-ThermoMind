@@ -304,3 +304,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Caldaia legna: se T mandata supera il minimo, lo startup timer si azzera subito.
 - Versione add-on aggiornata a 0.7.0.
 
+## Aggiornamenti 2026-02-20
+- UI: caldaia legna mostra verde quando modulo ON ma inattivo (rosso solo se attivo).
+- Versione add-on aggiornata a 0.7.1.
+

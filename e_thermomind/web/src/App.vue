@@ -2350,13 +2350,6 @@ const moduleActiveMap = computed(() => {
 const moduleClass = (key) => {
   const enabled = !!modules.value?.[key]
   const isActive = !!moduleActiveMap.value?.[key]
-  if (key === 'caldaia_legna') {
-    return {
-      on: enabled && isActive,
-      off: !enabled || !isActive,
-      active: enabled && isActive
-    }
-  }
   return {
     on: enabled,
     off: !enabled,
