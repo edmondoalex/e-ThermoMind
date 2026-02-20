@@ -296,3 +296,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Caldaia legna: reset startup ora riavvia il countdown (imposta deadline).
 - Versione add-on aggiornata a 0.6.98.
 
+## Aggiornamenti 2026-02-20
+- UI: pulsante caldaia legna etichettato "Reset timer".
+- Versione add-on aggiornata a 0.6.99.
+

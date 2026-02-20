@@ -832,7 +832,7 @@
               <div class="k">Forced-off</div>
               <div class="v">
                 {{ sp?.caldaia_legna?.forced_off ? 'SI' : 'NO' }}
-                <button class="ghost" @click="resetLegnaForcedOff">Reset</button>
+                <button class="ghost" @click="resetLegnaForcedOff">Reset timer</button>
               </div>
             </div>
           </div>
@@ -2618,9 +2618,8 @@ async function save(){
   }
 }
 async function resetLegnaForcedOff(){
-  if (!sp.value?.caldaia_legna) return
-  sp.value.caldaia_legna.forced_off = false
-  await save()
+  await fetch('/api/legna/reset_startup', { method: 'POST' })
+  await refresh()
 }
 async function saveAll(){
   await save()
