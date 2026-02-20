@@ -247,7 +247,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     step_down_delay = int(_f(res_cfg.get("step_down_delay_s", off_delay), off_delay))
     last_step = int(_LAST.get("res_step", 0) or 0)
     last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
-    if desired_step > last_step:
+    if battery_output_w > battery_block_w:
+        step = 0
+    elif desired_step > last_step:
         if now_ts - last_step_ts >= step_up_delay:
             step = min(desired_step, last_step + 1)
         else:

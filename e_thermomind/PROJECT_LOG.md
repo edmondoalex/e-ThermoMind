@@ -348,3 +348,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Resistenze: blocco step quando batteria scarica (battery_output_w > 100W) con step-down delay.
 - UI Admin: aggiunta entità `battery_output_w`.
 - Versione add-on aggiornata a 0.7.10.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: batteria scarica (battery_output_w > 100W) forza step=0 immediato.
+- Versione add-on aggiornata a 0.7.11.
