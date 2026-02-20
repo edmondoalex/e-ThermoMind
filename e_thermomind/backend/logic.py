@@ -225,6 +225,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 desired_step = 2
             elif available_w >= thr[0]:
                 desired_step = 1
+            if extra_safe_total_w > 0.0:
+                max_step_total = 0
+                if extra_safe_total_w >= thr[2]:
+                    max_step_total = 3
+                elif extra_safe_total_w >= thr[1]:
+                    max_step_total = 2
+                elif extra_safe_total_w >= thr[0]:
+                    max_step_total = 1
+                desired_step = min(desired_step, max_step_total)
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
     step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))

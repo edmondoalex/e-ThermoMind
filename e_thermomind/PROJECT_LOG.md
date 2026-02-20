@@ -335,3 +335,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Resistenze: step-down con delay anche in import.
 - UI Admin: campo entità per `extra_safe_total_w`.
 - Versione add-on aggiornata a 0.7.7.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: limite step in base a `extra_safe_total_w` (cap totale).
+- Versione add-on aggiornata a 0.7.8.
