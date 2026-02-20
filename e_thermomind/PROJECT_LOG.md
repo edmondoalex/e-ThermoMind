@@ -321,3 +321,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Fix: definizione `available_w`/`extra_safe_w` in _apply_resistance_live.
 - Versione add-on aggiornata a 0.7.4.
+
+## Aggiornamenti 2026-02-20
+- Fix build UI: rimosso codice JS finito nel blocco CSS di App.vue.
+- Versione add-on aggiornata a 0.7.5.

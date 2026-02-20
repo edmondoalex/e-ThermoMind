@@ -2978,6 +2978,11 @@ watch(
     await save()
   }
 )
+
+watch(tab, (val) => {
+  const next = `#/${val}`
+  if (window.location.hash !== next) window.location.hash = next
+})
 </script>
 
 <style>
@@ -3040,10 +3045,6 @@ details.form summary{cursor:pointer;list-style:none}
   .top-actions{flex:1 1 100%}
   .top-actions .action-btn{flex:1 1 46%;min-width:120px;text-align:center}
 }
-watch(tab, (val) => {
-  const next = `#/${val}`
-  if (window.location.hash !== next) window.location.hash = next
-})
 .setpoint-grid{column-count:1;column-gap:12px}
 .setpoint-grid .section{column-span:all}
 .setpoint-grid .set-section{display:inline-block;width:100%;margin:0 0 10px;break-inside:avoid}
