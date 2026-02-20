@@ -2650,3 +2650,18 @@ async def actuate(payload: dict):
                 await ha.call_service(other, "off")
     ok = await ha.call_service(entity_id, action)
     return JSONResponse({"ok": bool(ok)})
+
+@app.post("/api/legna/reset_startup")
+async def reset_legna_startup():
+    global cfg
+    now = time.time()
+    startup_s = float(cfg.get("caldaia_legna", {}).get("startup_check_s", 600.0))
+    caldaia_legna_state["forced_off"] = False
+    caldaia_legna_state["startup_deadline"] = now + max(0.0, startup_s)
+    caldaia_legna_state["last_enabled"] = False
+    if isinstance(cfg.get("caldaia_legna"), dict):
+        cfg["caldaia_legna"]["forced_off"] = False
+        cfg["caldaia_legna"]["startup_deadline_ts"] = caldaia_legna_state["startup_deadline"]
+        save_config(cfg)
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} LEGNA reset startup")
+    return JSONResponse({"ok": True})

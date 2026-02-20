@@ -292,3 +292,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - UI: Caldaia legna mostra stato startup (timer) e colore rosso solo quando attiva.
 - Versione add-on aggiornata a 0.6.97.
 
+## Aggiornamenti 2026-02-20
+- Caldaia legna: reset startup ora riavvia il countdown (imposta deadline).
+- Versione add-on aggiornata a 0.6.98.
+
