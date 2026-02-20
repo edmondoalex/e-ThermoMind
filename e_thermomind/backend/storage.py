@@ -38,6 +38,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "grid_export_w": None,
     "extra_safe_w": None,
     "extra_safe_total_w": None,
+    "battery_output_w": None,
     "resistenze_volano_power": None,
     "resistenze_volano_energy": None,
     "hvac_riscaldamento_select": None,
@@ -281,6 +282,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_caldaia_legna": True,
     "extra_safe_w": False,
     "extra_safe_total_w": False,
+    "battery_output_w": False,
     "miscelatrice_setpoint": False,
     "delta_puffer_acs": False,
     "delta_volano_acs": False,
@@ -535,7 +537,7 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             "delta_puffer_acs", "delta_volano_acs", "delta_volano_puffer", "delta_mandata_ritorno", "kp_eff",
             "curva_setpoint",
             "t_mandata_caldaia_legna", "t_ritorno_caldaia_legna", "t_caldaia_legna",
-            "extra_safe_w", "extra_safe_total_w"
+            "extra_safe_w", "extra_safe_total_w", "battery_output_w"
         ):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])
@@ -731,7 +733,7 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             "t_mandata_miscelata", "t_ritorno_miscelato", "miscelatrice_setpoint",
             "delta_puffer_acs", "delta_volano_acs", "delta_mandata_ritorno", "kp_eff",
             "t_mandata_caldaia_legna", "t_ritorno_caldaia_legna", "t_caldaia_legna",
-            "extra_safe_w", "extra_safe_total_w"
+            "extra_safe_w", "extra_safe_total_w", "battery_output_w"
         ):
             if key in hist:
                 cfg["history"][key] = bool(hist[key])

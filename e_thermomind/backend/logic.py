@@ -116,6 +116,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     extra_safe_total_w = get_num(ent.get("extra_safe_total_w"), 0.0)
     if extra_safe_total_w < 0:
         extra_safe_total_w = 0.0
+    battery_output_w = get_num(ent.get("battery_output_w"), 0.0)
+    if battery_output_w < 0:
+        battery_output_w = 0.0
     res_power_w = get_num(ent.get("resistenze_volano_power"), 0.0)
     if res_power_w < 0:
         res_power_w = 0.0
@@ -213,7 +216,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     desired_step = 0
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
-        if export_w <= float(res_cfg.get("off_threshold_w", 0.0)):
+        battery_block_w = float(res_cfg.get("battery_block_w", 100.0))
+        if battery_output_w > battery_block_w:
+            desired_step = 0
+        elif export_w <= float(res_cfg.get("off_threshold_w", 0.0)):
             desired_step = 0
         elif extra_safe_w <= 0.0:
             desired_step = 0
@@ -265,6 +271,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         charge_reason = f"VOLANO_MAX: {t_volano:.1f}°C >= {vol_max:.1f}°C"
     elif dest == "OFF":
         charge_reason = dest_reason
+    elif battery_output_w > battery_block_w:
+        charge_reason = f"{power_note} | battery_out {battery_output_w:.0f}W > {battery_block_w:.0f}W"
     elif export_w <= off_thr or extra_safe_w <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
     else:
@@ -596,6 +604,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "grid_export_w": export_w,
             "extra_safe_w": extra_safe_w,
             "extra_safe_total_w": extra_safe_total_w,
+            "battery_output_w": battery_output_w,
             "resistenze_volano_power": res_power_w,
             "t_mandata_caldaia_legna": t_mandata_legna,
             "t_ritorno_caldaia_legna": t_ritorno_legna,

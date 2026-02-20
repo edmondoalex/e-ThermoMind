@@ -343,3 +343,8 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: se export > totale, vince export (cap totale solo se export <= totale).
 - Versione add-on aggiornata a 0.7.9.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: blocco step quando batteria scarica (battery_output_w > 100W) con step-down delay.
+- UI Admin: aggiunta entità `battery_output_w`.
+- Versione add-on aggiornata a 0.7.10.
