@@ -1342,7 +1342,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             on_deadline[key] = 0.0
         return
 
-    if step == 0 and export_w <= off_thr:
+    if export_w <= off_thr:
         any_on = False
         for ent in (r22, r23, r24, rg):
             if _state_is_on(ent):
@@ -1351,7 +1351,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         if any_on:
             _log_action(
                 f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE FORCE OFF "
-                f"step=0 export={export_w:.0f} off_thr={off_thr:.0f}"
+                f"export={export_w:.0f} off_thr={off_thr:.0f}"
             )
         off_sequence_start = 0.0
         for key in off_deadline:
@@ -1359,6 +1359,8 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         for key in on_deadline:
             on_deadline[key] = 0.0
         return
+
+    # handled above: export <= off_thr force off
 
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
     on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))

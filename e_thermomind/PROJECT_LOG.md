@@ -397,3 +397,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: force OFF attuatori quando step=0 e export <= soglia.
 - Versione add-on aggiornata a 0.7.22.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: force OFF immediato quando export <= soglia (indipendente dallo step).
+- Versione add-on aggiornata a 0.7.23.
