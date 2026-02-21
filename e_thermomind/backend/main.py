@@ -476,6 +476,24 @@ async def _mqtt_reconfigure() -> None:
     _mqtt_publish_discovery()
     mqtt_publish_task = asyncio.create_task(_mqtt_publish_loop())
 
+async def _resistenze_startup_safety() -> None:
+    # Safety: after restart/update, force resistances OFF once.
+    await asyncio.sleep(5)
+    if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
+        return
+    act = cfg.get("actuators", {})
+    r22 = act.get("r22_resistenza_1_volano_pdc")
+    r23 = act.get("r23_resistenza_2_volano_pdc")
+    r24 = act.get("r24_resistenza_3_volano_pdc")
+    rg = act.get("generale_resistenze_volano_pdc")
+    any_on = False
+    for ent in (r22, r23, r24, rg):
+        if _state_is_on(ent):
+            any_on = True
+            await _set_resistance(ent, False)
+    if any_on:
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE STARTUP FORCE OFF")
+
 @app.on_event("startup")
 async def on_startup():
     global cfg
@@ -491,6 +509,7 @@ async def on_startup():
     if ha.enabled:
         ws_task = asyncio.create_task(ha.run())
         asyncio.create_task(_refresh_entity_registry_loop())
+    asyncio.create_task(_resistenze_startup_safety())
     await _mqtt_reconfigure()
 
 @app.on_event("shutdown")
