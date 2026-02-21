@@ -393,3 +393,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: step da Possibile; se FV < Possibile usa Export. Export deve superare soglie.
 - Versione add-on aggiornata a 0.7.21.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: force OFF attuatori quando step=0 e export <= soglia.
+- Versione add-on aggiornata a 0.7.22.
