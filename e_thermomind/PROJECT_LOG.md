@@ -389,3 +389,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - UI: aggiunte descrizioni sintetiche per la logica dei moduli.
 - Versione add-on aggiornata a 0.7.20.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: step da Possibile; se FV < Possibile usa Export. Export deve superare soglie.
+- Versione add-on aggiornata a 0.7.21.
