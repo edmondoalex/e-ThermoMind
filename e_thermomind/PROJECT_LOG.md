@@ -405,3 +405,12 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: safety all'avvio (force OFF attuatori dopo update/riavvio).
 - Versione add-on aggiornata a 0.7.24.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: step da Possibile solo se Export >= Possibile; altrimenti OFF.
+- Versione add-on aggiornata a 0.7.25.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: base power = Export se Export > Possibile, altrimenti Possibile. Export < -100W OFF secco.
+- Batteria scarica: stop con step-down (no off immediato).
+- Versione add-on aggiornata a 0.7.26.

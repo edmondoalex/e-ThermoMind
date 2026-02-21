@@ -220,32 +220,21 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     desired_step = 0
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
         battery_block_w = float(res_cfg.get("battery_block_w", 100.0))
+        export_off_w = float(res_cfg.get("export_off_w", -100.0))
         if battery_output_w > battery_block_w:
             desired_step = 0
-        elif export_w <= float(res_cfg.get("off_threshold_w", 0.0)):
+        elif export_w <= export_off_w:
             desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-            # Step base: "possibile". If FV < possibile, use export as base.
-            base_power_w = extra_safe_w
-            if pv_power_w < extra_safe_w:
-                base_power_w = export_w
-            base_step = 0
+            # Base power: use Export if Export > Possibile, else Possibile.
+            base_power_w = export_w if export_w > extra_safe_w else extra_safe_w
             if base_power_w >= thr[2]:
-                base_step = 3
+                desired_step = 3
             elif base_power_w >= thr[1]:
-                base_step = 2
+                desired_step = 2
             elif base_power_w >= thr[0]:
-                base_step = 1
-            # Export gate: step only if export reaches same threshold.
-            export_step = 0
-            if export_w >= thr[2]:
-                export_step = 3
-            elif export_w >= thr[1]:
-                export_step = 2
-            elif export_w >= thr[0]:
-                export_step = 1
-            desired_step = min(base_step, export_step)
+                desired_step = 1
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
     step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))
@@ -253,9 +242,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     step_down_delay = int(_f(res_cfg.get("step_down_delay_s", off_delay), off_delay))
     last_step = int(_LAST.get("res_step", 0) or 0)
     last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
-    if battery_output_w > battery_block_w:
-        step = 0
-    elif desired_step > last_step:
+    if desired_step > last_step:
         if now_ts - last_step_ts >= step_up_delay:
             step = min(desired_step, last_step + 1)
         else:
@@ -281,7 +268,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         charge_reason = dest_reason
     elif battery_output_w > battery_block_w:
         charge_reason = f"{power_note} | battery_out {battery_output_w:.0f}W > {battery_block_w:.0f}W"
-    elif export_w <= off_thr or extra_safe_w <= 0.0:
+    elif export_w <= float(res_cfg.get("export_off_w", -100.0)) or extra_safe_w <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
     else:
         charge_reason = f"{power_note} | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
@@ -739,7 +726,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "impianto": "Regola: serve richiesta zone + fonte valida.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
-                "resistenze_volano": "Regola: step da Possibile; se FV < Possibile usa Export. Export deve superare soglie; stop se batteria scarica/export basso."
+                "resistenze_volano": "Regola: step da Export se Export > Possibile altrimenti Possibile. Export < -100W OFF secco; batteria scarica step-down."
             },
             "state": {
                 "last_dest": _LAST.get("dest"),

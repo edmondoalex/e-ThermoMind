@@ -1326,6 +1326,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         available_w = float(computed_available)
     off_thr = float(cfg.get("resistance", {}).get("off_threshold_w", 0.0))
     battery_block_w = float(cfg.get("resistance", {}).get("battery_block_w", 100.0))
+    export_off_w = float(cfg.get("resistance", {}).get("export_off_w", -100.0))
     off_gate_w = export_w
     desired = {
         "r22": step >= 1,
@@ -1350,18 +1351,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     except Exception:
         pass
 
-    if battery_out_w > battery_block_w:
-        for ent in (r22, r23, r24, rg):
-            if _state_is_on(ent):
-                await _set_resistance(ent, False)
-        off_sequence_start = 0.0
-        for key in off_deadline:
-            off_deadline[key] = 0.0
-        for key in on_deadline:
-            on_deadline[key] = 0.0
-        return
-
-    if export_w <= off_thr:
+    if export_w <= export_off_w:
         any_on = False
         for ent in (r22, r23, r24, rg):
             if _state_is_on(ent):
@@ -1370,7 +1360,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         if any_on:
             _log_action(
                 f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE FORCE OFF "
-                f"export={export_w:.0f} off_thr={off_thr:.0f}"
+                f"export={export_w:.0f} export_off={export_off_w:.0f}"
             )
         off_sequence_start = 0.0
         for key in off_deadline:
