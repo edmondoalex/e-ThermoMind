@@ -79,6 +79,7 @@ last_dry_run_signature: str | None = None
 recent_ui_actuations: dict[str, float] = {}
 pending_auto_off: dict[str, asyncio.Task] = {}
 transfer_tasks: dict[str, asyncio.Task] = {}
+resistenze_export_off_start: float = 0.0
 transfer_desired: dict[str, bool] = {}
 manual_overrides: dict[str, bool] = {}
 last_hvac_cmd: dict[str, tuple[str, float]] = {}
@@ -1306,6 +1307,7 @@ async def _pulse_actuator(task_name: str, eid: str | None, duration_s: float) ->
 async def _apply_resistance_live(decision_data: dict) -> None:
     global resistenze_watchdog_last_log
     global off_sequence_start
+    global resistenze_export_off_start
     if cfg.get("runtime", {}).get("mode") != "live":
         _log_dry_run(decision_data)
         return
@@ -1359,6 +1361,13 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         pass
 
     if export_w <= export_off_w:
+        now = time.time()
+        if resistenze_export_off_start == 0.0:
+            resistenze_export_off_start = now
+        export_off_delay = int(cfg.get("resistance", {}).get("step_down_delay_s", cfg.get("resistance", {}).get("off_delay_s", 5)))
+        if now - resistenze_export_off_start < export_off_delay:
+            # wait for debounce
+            return
         any_on = False
         for ent in (r22, r23, r24, rg):
             if _state_is_on(ent):
@@ -1374,7 +1383,10 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             off_deadline[key] = 0.0
         for key in on_deadline:
             on_deadline[key] = 0.0
+        resistenze_export_off_start = 0.0
         return
+    else:
+        resistenze_export_off_start = 0.0
 
     if battery_out_w > battery_block_w:
         any_on = False

@@ -426,3 +426,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: force OFF immediato quando batteria_out > soglia.
 - Versione add-on aggiornata a 0.7.30.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: debounce export_off con tempo step-down (evita on/off istantaneo).
+- Versione add-on aggiornata a 0.7.31.
