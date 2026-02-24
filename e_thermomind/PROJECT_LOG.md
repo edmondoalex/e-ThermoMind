@@ -422,3 +422,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: forza OFF step superiori quando step scende.
 - Versione add-on aggiornata a 0.7.29.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: force OFF immediato quando batteria_out > soglia.
+- Versione add-on aggiornata a 0.7.30.

@@ -1376,6 +1376,24 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             on_deadline[key] = 0.0
         return
 
+    if battery_out_w > battery_block_w:
+        any_on = False
+        for ent in (r22, r23, r24, rg):
+            if _state_is_on(ent):
+                any_on = True
+                await _set_resistance(ent, False)
+        if any_on:
+            _log_action(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE FORCE OFF "
+                f"battery_out={battery_out_w:.0f} limit={battery_block_w:.0f}"
+            )
+        off_sequence_start = 0.0
+        for key in off_deadline:
+            off_deadline[key] = 0.0
+        for key in on_deadline:
+            on_deadline[key] = 0.0
+        return
+
     # handled above: export <= off_thr force off
 
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
