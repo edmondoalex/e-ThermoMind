@@ -1333,6 +1333,13 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         "r23": step >= 2,
         "r24": step >= 3,
     }
+    # Safety: never leave higher steps ON when step decreases.
+    if step < 3 and _state_is_on(r24):
+        await _set_resistance(r24, False)
+    if step < 2 and _state_is_on(r23):
+        await _set_resistance(r23, False)
+    if step < 1 and _state_is_on(r22):
+        await _set_resistance(r22, False)
     try:
         if step == 0:
             now = time.time()
