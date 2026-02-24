@@ -414,3 +414,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Resistenze: base power = Export se Export > Possibile, altrimenti Possibile. Export < -100W OFF secco.
 - Batteria scarica: stop con step-down (no off immediato).
 - Versione add-on aggiornata a 0.7.26.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: se Possibile <= 0 allora step-down (non off immediato).
+- Versione add-on aggiornata a 0.7.28.

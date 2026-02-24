@@ -225,6 +225,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             desired_step = 0
         elif export_w <= export_off_w:
             desired_step = 0
+        elif extra_safe_w <= 0.0:
+            desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
             # Base power: use Export if Export > Possibile, else Possibile.

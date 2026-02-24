@@ -1360,7 +1360,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         if any_on:
             _log_action(
                 f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE FORCE OFF "
-                f"export={export_w:.0f} export_off={export_off_w:.0f}"
+                f"export={export_w:.0f} export_off={export_off_w:.0f} poss={extra_safe_w:.0f}"
             )
         off_sequence_start = 0.0
         for key in off_deadline:
