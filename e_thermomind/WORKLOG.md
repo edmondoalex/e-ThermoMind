@@ -247,3 +247,7 @@
 - Gas emergenza: aggiunto R21 GAS MISC OFF (chiusa solo con gas attivo, altrimenti aperta).
 - Versione add-on aggiornata a 0.6.93.
 
+## 2026-02-24
+- Resistenze: usa Export solo se Export>Possibile; quando usa Export sottrae potenza resistenze.
+- Versione add-on aggiornata a 0.7.33.
+

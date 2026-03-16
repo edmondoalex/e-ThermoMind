@@ -229,9 +229,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-            # Use Export when exporting, otherwise fall back to Possibile.
-            if export_w > 0:
-                base_power_w = export_w
+            # Use Export only when it exceeds Possibile; otherwise use Possibile.
+            # When using Export, subtract current resistance power (export is already net).
+            if export_w > extra_safe_w:
+                base_power_w = max(0.0, export_w - res_power_w)
             else:
                 base_power_w = extra_safe_w
             if base_power_w >= thr[2]:
@@ -731,7 +732,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "impianto": "Regola: serve richiesta zone + fonte valida.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
-                "resistenze_volano": "Regola: se Export>0 usa Export; se Export<=0 usa Possibile. Export < -100W OFF secco; batteria scarica step-down."
+            "resistenze_volano": "Regola: usa Export se Export>Possibile (meno potenza resistenze), altrimenti Possibile. Export < -100W OFF secco; batteria scarica step-down."
             },
             "state": {
                 "last_dest": _LAST.get("dest"),
