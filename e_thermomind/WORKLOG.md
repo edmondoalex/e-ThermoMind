@@ -263,3 +263,7 @@
 - Resistenze: memoria base Export se resistenze accese da Export (evita switch a Possibile durante cali temporanei).
 - Versione add-on aggiornata a 0.7.36.
 
+## 2026-02-24
+- Resistenze: base Export usa Export+resistenze (ricostruisce export pre-accensione).
+- Versione add-on aggiornata a 0.7.37.
+

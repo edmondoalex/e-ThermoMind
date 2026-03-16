@@ -237,10 +237,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             # - Otherwise use Possibile.
             last_base = _LAST.get("res_base")
             if export_w > extra_safe_w:
-                base_power_w = max(0.0, export_w - res_power_w)
+                base_power_w = max(0.0, export_w + res_power_w)
                 base_sel = "export"
             elif last_base == "export" and res_power_w > 0.0:
-                base_power_w = max(0.0, export_w - res_power_w)
+                base_power_w = max(0.0, export_w + res_power_w)
                 base_sel = "export"
             else:
                 base_power_w = extra_safe_w
@@ -744,7 +744,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "impianto": "Regola: serve richiesta zone + fonte valida.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
-            "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export - resistenze. Export < -100W OFF secco; batteria scarica step-down."
+            "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export < -100W OFF secco; batteria scarica step-down."
             },
             "state": {
                 "last_dest": _LAST.get("dest"),
