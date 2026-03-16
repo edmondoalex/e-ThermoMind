@@ -438,3 +438,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-24
 - Resistenze: usa Export solo se Export>Possibile; quando usa Export sottrae potenza resistenze.
 - Versione add-on aggiornata a 0.7.33.
+
+## Aggiornamenti 2026-02-24
+- Resistenze: step-down sempre con delay (niente spegnimento immediato quando scende sotto soglia).
+- Versione add-on aggiornata a 0.7.34.

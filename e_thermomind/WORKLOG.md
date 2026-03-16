@@ -251,3 +251,7 @@
 - Resistenze: usa Export solo se Export>Possibile; quando usa Export sottrae potenza resistenze.
 - Versione add-on aggiornata a 0.7.33.
 
+## 2026-02-24
+- Resistenze: step-down sempre con delay (niente spegnimento immediato quando scende sotto soglia).
+- Versione add-on aggiornata a 0.7.34.
+

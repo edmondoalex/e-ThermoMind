@@ -1326,22 +1326,13 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     computed_available = decision_data.get("computed", {}).get("available_power_w")
     if computed_available is not None:
         available_w = float(computed_available)
-    off_thr = float(cfg.get("resistance", {}).get("off_threshold_w", 0.0))
     battery_block_w = float(cfg.get("resistance", {}).get("battery_block_w", 100.0))
     export_off_w = float(cfg.get("resistance", {}).get("export_off_w", -100.0))
-    off_gate_w = export_w
     desired = {
         "r22": step >= 1,
         "r23": step >= 2,
         "r24": step >= 3,
     }
-    # Safety: never leave higher steps ON when step decreases.
-    if step < 3 and _state_is_on(r24):
-        await _set_resistance(r24, False)
-    if step < 2 and _state_is_on(r23):
-        await _set_resistance(r23, False)
-    if step < 1 and _state_is_on(r22):
-        await _set_resistance(r22, False)
     try:
         if step == 0:
             now = time.time()
@@ -1406,30 +1397,25 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             on_deadline[key] = 0.0
         return
 
-    # handled above: export <= off_thr force off
-
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
     on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))
     now = time.time()
-    if off_gate_w <= off_thr:
+    any_desired = desired["r22"] or desired["r23"] or desired["r24"]
+    any_actual = _get_state(r22) == "on" or _get_state(r23) == "on" or _get_state(r24) == "on"
+    if (not any_desired) and any_actual:
         if off_sequence_start == 0.0:
             off_sequence_start = now
     else:
         off_sequence_start = 0.0
 
-    def _allow_off(key: str) -> bool:
-        if off_gate_w > off_thr:
-            return True
-        if off_sequence_start == 0.0:
-            return False
-        elapsed = now - off_sequence_start
+    def _off_delay_for(key: str) -> int:
         if key == "r24":
-            return elapsed >= off_delay
+            return off_delay
         if key == "r23":
-            return elapsed >= (off_delay * 2)
+            return off_delay * 2
         if key == "r22":
-            return elapsed >= (off_delay * 3)
-        return False
+            return off_delay * 3
+        return off_delay
 
     for key, ent in (("r22", r22), ("r23", r23), ("r24", r24)):
         want_on = desired[key]
@@ -1447,14 +1433,11 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         else:
             on_deadline[key] = 0.0
             if current == "on":
-                if off_gate_w > off_thr:
+                if off_deadline[key] == 0.0:
+                    off_deadline[key] = now + _off_delay_for(key)
+                elif now >= off_deadline[key]:
+                    await _set_resistance(ent, False)
                     off_deadline[key] = 0.0
-                elif _allow_off(key):
-                    if off_deadline[key] == 0.0:
-                        off_deadline[key] = now + off_delay
-                    elif now >= off_deadline[key]:
-                        await _set_resistance(ent, False)
-                        off_deadline[key] = 0.0
             else:
                 off_deadline[key] = 0.0
 
