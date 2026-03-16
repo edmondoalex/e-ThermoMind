@@ -442,3 +442,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-24
 - Resistenze: step-down sempre con delay (niente spegnimento immediato quando scende sotto soglia).
 - Versione add-on aggiornata a 0.7.34.
+
+## Aggiornamenti 2026-02-24
+- Resistenze: se Export>Possibile, ignora Possibile per lo spegnimento (base Export prevale).
+- Versione add-on aggiornata a 0.7.35.

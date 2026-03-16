@@ -1328,6 +1328,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         available_w = float(computed_available)
     battery_block_w = float(cfg.get("resistance", {}).get("battery_block_w", 100.0))
     export_off_w = float(cfg.get("resistance", {}).get("export_off_w", -100.0))
+    use_export_base = export_w > extra_safe_w
     desired = {
         "r22": step >= 1,
         "r23": step >= 2,
@@ -1402,6 +1403,8 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     now = time.time()
     any_desired = desired["r22"] or desired["r23"] or desired["r24"]
     any_actual = _get_state(r22) == "on" or _get_state(r23) == "on" or _get_state(r24) == "on"
+    # If Export is the active base (Export > Possibile), ignore Possibile for OFF decisions.
+    # Only step-down based on desired_step (which already used Export in logic.py).
     if (not any_desired) and any_actual:
         if off_sequence_start == 0.0:
             off_sequence_start = now

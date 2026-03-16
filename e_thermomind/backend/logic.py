@@ -230,7 +230,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
             # Use Export only when it exceeds Possibile; otherwise use Possibile.
-            # When using Export, subtract current resistance power (export is already net).
+            # When Export is used, ignore Possibile for both on/off decisions.
+            # Subtract current resistance power from Export to avoid over-allocating.
             if export_w > extra_safe_w:
                 base_power_w = max(0.0, export_w - res_power_w)
             else:

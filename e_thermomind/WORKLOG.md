@@ -255,3 +255,7 @@
 - Resistenze: step-down sempre con delay (niente spegnimento immediato quando scende sotto soglia).
 - Versione add-on aggiornata a 0.7.34.
 
+## 2026-02-24
+- Resistenze: se Export>Possibile, ignora Possibile per lo spegnimento (base Export prevale).
+- Versione add-on aggiornata a 0.7.35.
+
