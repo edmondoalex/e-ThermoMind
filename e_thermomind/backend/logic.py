@@ -33,7 +33,8 @@ _LAST: Dict[str, Any] = {
     "gas_vol_ok": False,
     "gas_puf_ok": False,
     "res_step": 0,
-    "res_step_ts": 0.0
+    "res_step_ts": 0.0,
+    "res_base": None
 }
 
 def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool) -> bool:
@@ -229,13 +230,21 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-            # Use Export only when it exceeds Possibile; otherwise use Possibile.
-            # When Export is used, ignore Possibile for both on/off decisions.
-            # Subtract current resistance power from Export to avoid over-allocating.
+            # Base selection with memory:
+            # - If Export > Possibile, use Export (net of current resistance power).
+            # - If we previously used Export and a resistance is ON, keep using Export
+            #   to avoid immediate switch to Possibile during transient dips.
+            # - Otherwise use Possibile.
+            last_base = _LAST.get("res_base")
             if export_w > extra_safe_w:
                 base_power_w = max(0.0, export_w - res_power_w)
+                base_sel = "export"
+            elif last_base == "export" and res_power_w > 0.0:
+                base_power_w = max(0.0, export_w - res_power_w)
+                base_sel = "export"
             else:
                 base_power_w = extra_safe_w
+                base_sel = "possibile"
             if base_power_w >= thr[2]:
                 desired_step = 3
             elif base_power_w >= thr[1]:
@@ -286,6 +295,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if step != last_step:
         _LAST["res_step_ts"] = now_ts
     _LAST["res_step"] = step
+    if 'base_sel' in locals():
+        _LAST["res_base"] = base_sel
 
     timers_cfg = cfg.get("timers", {})
     vta_start = int(timers_cfg.get("volano_to_acs_start_s", 5))
@@ -733,7 +744,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "impianto": "Regola: serve richiesta zone + fonte valida.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
-            "resistenze_volano": "Regola: usa Export se Export>Possibile (meno potenza resistenze), altrimenti Possibile. Export < -100W OFF secco; batteria scarica step-down."
+            "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export - resistenze. Export < -100W OFF secco; batteria scarica step-down."
             },
             "state": {
                 "last_dest": _LAST.get("dest"),

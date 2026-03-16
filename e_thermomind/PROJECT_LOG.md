@@ -446,3 +446,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-24
 - Resistenze: se Export>Possibile, ignora Possibile per lo spegnimento (base Export prevale).
 - Versione add-on aggiornata a 0.7.35.
+
+## Aggiornamenti 2026-02-24
+- Resistenze: memoria base Export se resistenze accese da Export (evita switch a Possibile durante cali temporanei).
+- Versione add-on aggiornata a 0.7.36.
