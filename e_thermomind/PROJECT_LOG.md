@@ -430,3 +430,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-02-20
 - Resistenze: debounce export_off con tempo step-down (evita on/off istantaneo).
 - Versione add-on aggiornata a 0.7.31.
+
+## Aggiornamenti 2026-02-20
+- Resistenze: se Export>0 usa Export; se Export<=0 usa Possibile.
+- Versione add-on aggiornata a 0.7.32.
