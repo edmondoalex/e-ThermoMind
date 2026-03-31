@@ -267,3 +267,8 @@
 - Resistenze: base Export usa Export+resistenze (ricostruisce export pre-accensione).
 - Versione add-on aggiornata a 0.7.37.
 
+## 2026-03-31
+- Impianto: quando ACS usa Volano, impianto forza Puffer (se disponibile) altrimenti OFF.
+- Debug UI: aggiunte soglie start/hold impianto (volano/puffer) con valori reali backend.
+- Versione add-on aggiornata a 0.7.38.
+

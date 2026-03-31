@@ -368,19 +368,30 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
-    if sel_norm == "AUTO" or (
-        (sel_norm == "PDC" and (not pdc_vol_ready or not (vol_ok_start or (vol_ok_hold and req_on)))) or
-        (sel_norm == "PUFFER" and (not puf_ready or not (puf_ok_start or (puf_ok_hold and req_on))))
-    ):
-        if pdc_vol_ready and (vol_ok_start or (vol_ok_hold and req_on)):
-            source = "PDC"
+
+    acs_volano_active = source_to_acs == "VOLANO"
+    source_override = False
+    if acs_volano_active:
+        if puf_ready and (puf_ok_start or (puf_ok_hold and req_on)):
+            source = "PUFFER"
         else:
-            source = "PUFFER" if (puf_ready and (puf_ok_start or (puf_ok_hold and req_on))) else "OFF"
-    else:
-        source = sel_norm if (
-            (sel_norm == "PDC" and (vol_ok_start or (vol_ok_hold and req_on))) or
-            (sel_norm == "PUFFER" and (puf_ok_start or (puf_ok_hold and req_on)))
-        ) else "OFF"
+            source = "OFF"
+        source_override = True
+
+    if not source_override:
+        if sel_norm == "AUTO" or (
+            (sel_norm == "PDC" and (not pdc_vol_ready or not (vol_ok_start or (vol_ok_hold and req_on)))) or
+            (sel_norm == "PUFFER" and (not puf_ready or not (puf_ok_start or (puf_ok_hold and req_on))))
+        ):
+            if pdc_vol_ready and (vol_ok_start or (vol_ok_hold and req_on)):
+                source = "PDC"
+            else:
+                source = "PUFFER" if (puf_ready and (puf_ok_start or (puf_ok_hold and req_on))) else "OFF"
+        else:
+            source = sel_norm if (
+                (sel_norm == "PDC" and (vol_ok_start or (vol_ok_hold and req_on))) or
+                (sel_norm == "PUFFER" and (puf_ok_start or (puf_ok_hold and req_on)))
+            ) else "OFF"
     if not req_on:
         source = "OFF"
 
@@ -505,6 +516,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         f"Source={source} "
         f"| Miscelatrice={'ON' if miscelatrice_on else 'OFF'}"
         )
+    if acs_volano_active:
+        impianto_reason = f"{impianto_reason} | ACS da Volano: impianto {source}"
     impianto_reason = f"{impianto_reason} | {impianto_delay_info}"
 
     cooling_blocked = set(imp_cfg.get("cooling_blocked", []))
@@ -651,6 +664,16 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "puffer_ready": puf_ready,
                 "volano_temp_ok": bool(vol_ok_start or (vol_ok_hold and req_on)),
                 "puffer_temp_ok": bool(puf_ok_start or (puf_ok_hold and req_on)),
+                "volano_min_c": vol_min,
+                "volano_on_hyst_c": vol_on_h,
+                "volano_off_hyst_c": vol_off_h,
+                "volano_start_c": vol_min + vol_on_h,
+                "volano_hold_c": vol_min - vol_off_h,
+                "puffer_min_c": puf_min,
+                "puffer_on_hyst_c": puf_on_h,
+                "puffer_off_hyst_c": puf_off_h,
+                "puffer_start_c": puf_min + puf_on_h,
+                "puffer_hold_c": puf_min - puf_off_h,
                 "blocked_cold": blocked_cold,
                 "reason": impianto_reason,
                 "selector": sel_norm

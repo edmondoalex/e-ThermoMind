@@ -277,8 +277,14 @@
                   <div class="muted">
                     Volano OK: {{ d?.computed?.impianto?.volano_temp_ok ? 'SI' : 'NO' }} (T={{ fmtTemp(d?.inputs?.t_volano) }} / min {{ fmtNum(sp?.impianto?.volano_min_c) }}°C)
                     | Puffer OK: {{ d?.computed?.impianto?.puffer_temp_ok ? 'SI' : 'NO' }} (T={{ fmtTemp(d?.inputs?.t_puffer) }} / min {{ fmtNum(sp?.impianto?.puffer_min_c) }}°C)
-                  </div>
-                  <div v-if="d?.computed?.impianto?.blocked_cold" class="muted">
+                    </div>
+                    <div class="muted">
+                      Soglie impianto: Volano start >= {{ d?.computed?.impianto?.volano_start_c != null ? fmtNum(d?.computed?.impianto?.volano_start_c) : '-' }}Â°C
+                      | hold > {{ d?.computed?.impianto?.volano_hold_c != null ? fmtNum(d?.computed?.impianto?.volano_hold_c) : '-' }}Â°C
+                      | Puffer start >= {{ d?.computed?.impianto?.puffer_start_c != null ? fmtNum(d?.computed?.impianto?.puffer_start_c) : '-' }}Â°C
+                      | hold > {{ d?.computed?.impianto?.puffer_hold_c != null ? fmtNum(d?.computed?.impianto?.puffer_hold_c) : '-' }}Â°C
+                    </div>
+                    <div v-if="d?.computed?.impianto?.blocked_cold" class="muted">
                     Blocco freddo attivo: sorgenti sotto soglia minima.
                   </div>
                   <div v-else class="muted">
