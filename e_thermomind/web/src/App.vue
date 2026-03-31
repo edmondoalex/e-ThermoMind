@@ -284,6 +284,12 @@
                       | Puffer start >= {{ d?.computed?.impianto?.puffer_start_c != null ? fmtNum(d?.computed?.impianto?.puffer_start_c) : '-' }}Â°C
                       | hold > {{ d?.computed?.impianto?.puffer_hold_c != null ? fmtNum(d?.computed?.impianto?.puffer_hold_c) : '-' }}Â°C
                     </div>
+                    <div class="muted">
+                      Uscite impianto: R4={{ act?.r4_valve_impianto_da_puffer?.state || '-' }}
+                      | R5={{ act?.r5_valve_impianto_da_pdc?.state || '-' }}
+                      | R12={{ act?.r12_pump_mandata_piani?.state || '-' }}
+                      | R11={{ act?.r11_pump_mandata_laboratorio?.state || '-' }}
+                    </div>
                     <div v-if="d?.computed?.impianto?.blocked_cold" class="muted">
                     Blocco freddo attivo: sorgenti sotto soglia minima.
                   </div>

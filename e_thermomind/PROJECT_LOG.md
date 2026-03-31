@@ -459,3 +459,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Impianto: quando ACS usa Volano, impianto forza Puffer (se disponibile) altrimenti OFF.
 - Debug UI: aggiunte soglie start/hold impianto (volano/puffer) con valori reali backend.
 - Versione add-on aggiornata a 0.7.38.
+
+## Aggiornamenti 2026-03-31
+- Debug UI: aggiunte uscite impianto reali (R4/R5/R11/R12) nel pannello impianto.
+- Versione add-on aggiornata a 0.7.39.
