@@ -381,3 +381,7 @@
 ## 2026-04-01
 - Energy: aggiunta curva SoC (es. 99%->500W, 100%->0W) per EASAS/Privato.
 - Versione add-on aggiornata a 0.7.64.
+
+## 2026-04-01
+- Energy: log spiegazione estesa (temp, SoC, export, max carica, headroom, extra).
+- Versione add-on aggiornata a 0.7.65.

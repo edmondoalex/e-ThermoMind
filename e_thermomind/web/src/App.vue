@@ -1267,13 +1267,13 @@
             <div class="field">
               <label>Ragionamento EASAS</label>
               <div class="input-row">
-                <input type="text" :value="d?.computed?.module_reasons?.energy_easas || '-'" readonly />
+                <input type="text" :value="energyExplain(d?.computed?.energy_easas)" readonly />
               </div>
             </div>
             <div class="field">
               <label>Ragionamento Privato</label>
               <div class="input-row">
-                <input type="text" :value="d?.computed?.module_reasons?.energy_privato || '-'" readonly />
+                <input type="text" :value="energyExplain(d?.computed?.energy_privato)" readonly />
               </div>
             </div>
           </div>
@@ -2574,6 +2574,28 @@ const fmtDelta = (a, b) => {
   return `${(da - db).toFixed(1)}C`
 }
   const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
+  const energyExplain = (e) => {
+    if (!e) return 'n/d'
+    const exportW = Number(e.export_w)
+    const maxCharge = Number(e.max_charge_w)
+    const battOut = Number(e.battery_output_w)
+    const currentCharge = Number.isFinite(battOut) ? Math.max(0, -battOut) : NaN
+    const headroom = Number(e.headroom_w)
+    const extra = Number(e.extra_safe_w)
+    const extraTot = Number(e.extra_safe_total_w)
+    const temp = Number(e.temp_c)
+    const soc = Number(e.soc_pct)
+    const parts = []
+    if (Number.isFinite(temp)) parts.push(`Temp batt: ${temp.toFixed(1)}?C`)
+    if (Number.isFinite(soc)) parts.push(`SoC: ${soc.toFixed(1)}%`)
+    if (Number.isFinite(exportW)) parts.push(`Export rete: ${Math.round(exportW)} W`)
+    if (Number.isFinite(maxCharge)) parts.push(`Max carica da curve: ${Math.round(maxCharge)} W`)
+    if (Number.isFinite(currentCharge)) parts.push(`Carica attuale batteria: ${Math.round(currentCharge)} W`)
+    if (Number.isFinite(headroom)) parts.push(`Headroom = max - carica: ${Math.round(headroom)} W`)
+    if (Number.isFinite(extra)) parts.push(`Extra safe = max(0, export - headroom): ${Math.round(extra)} W`)
+    if (Number.isFinite(extraTot)) parts.push(`Extra totale = max(0, export): ${Math.round(extraTot)} W`)
+    return parts.join(" | ")
+  }
   const energyCurrentChargeW = (e) => {
     const v = Number(e?.battery_output_w)
     if (!Number.isFinite(v)) return NaN
