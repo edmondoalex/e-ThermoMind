@@ -770,6 +770,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
         for key in _NUM_KEYS["solare"]:
             if key in sol:
                 cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
+    if cfg.get("solare", {}).get("force_night_on_startup"):
+        cfg["solare"]["mode"] = "night"
     curve = payload.get("curva_climatica", {})
     if isinstance(curve, dict):
         if "x" in curve:

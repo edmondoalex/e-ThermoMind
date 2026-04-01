@@ -341,3 +341,7 @@
 - Runtime: aggiunto flag "forza LIVE al riavvio" (default ON).
 - Solare: aggiunto flag "forza NOTTE al riavvio" (default ON).
 - Versione add-on aggiornata a 0.7.54.
+
+## 2026-04-01
+- Solare: forza NOTTE applicata anche in runtime (valvole R8/R9) e salva mode al cambio UI.
+- Versione add-on aggiornata a 0.7.55.

@@ -1670,7 +1670,7 @@
             <div class="section-title">Solare</div>
             <div class="field">
               <label>Modalità</label>
-              <select v-model="sp.solare.mode">
+              <select v-model="sp.solare.mode" @change="save">
                 <option value="auto">auto (sun.sun)</option>
                 <option value="night">notte fissa</option>
               </select>

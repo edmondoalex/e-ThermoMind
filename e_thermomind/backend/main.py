@@ -1577,7 +1577,8 @@ async def _apply_solar_live(decision_data: dict) -> None:
 
     sol_cfg = cfg.get("solare", {})
     mode = sol_cfg.get("mode", "auto")
-    night = (mode == "night") or (mode == "auto" and _solar_night_debounced())
+    force_night = bool(sol_cfg.get("force_night_on_startup"))
+    night = force_night or (mode == "night") or (mode == "auto" and _solar_night_debounced())
 
     act = cfg.get("actuators", {})
     r8 = act.get("r8_valve_solare_notte_low_temp")
