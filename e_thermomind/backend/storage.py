@@ -165,6 +165,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   "energy": {
     "calc_extra_safe": True,
     "interp": "linear",
+    "soc_limit_pct": 99.0,
+    "soc_max_charge_w": 500.0,
     "charge_curve": [
       {"t": 5.0, "w": 1500.0},
       {"t": 10.0, "w": 1500.0},
@@ -178,6 +180,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "easas": {
       "calc_extra_safe": True,
       "interp": "linear",
+      "soc_limit_pct": 99.0,
+      "soc_max_charge_w": 500.0,
       "charge_curve": [
         {"t": 5.0, "w": 1500.0},
         {"t": 10.0, "w": 1500.0},
@@ -190,6 +194,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "privato": {
       "calc_extra_safe": True,
       "interp": "linear",
+      "soc_limit_pct": 99.0,
+      "soc_max_charge_w": 500.0,
       "charge_curve": [
         {"t": 5.0, "w": 1500.0},
         {"t": 10.0, "w": 1500.0},
@@ -483,6 +489,10 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["energy"]["calc_extra_safe"] = bool(energy.get("calc_extra_safe"))
         if isinstance(energy.get("interp"), str):
             cfg["energy"]["interp"] = energy.get("interp", cfg["energy"]["interp"]).strip().lower()
+        if "soc_limit_pct" in energy:
+            cfg["energy"]["soc_limit_pct"] = _float(energy.get("soc_limit_pct"), cfg["energy"]["soc_limit_pct"])
+        if "soc_max_charge_w" in energy:
+            cfg["energy"]["soc_max_charge_w"] = _float(energy.get("soc_max_charge_w"), cfg["energy"]["soc_max_charge_w"])
         if "charge_curve" in energy:
             cfg["energy"]["charge_curve"] = _curve_points(energy.get("charge_curve"), cfg["energy"]["charge_curve"])
 
@@ -746,6 +756,10 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
                 cfg["energy_profiles"]["easas"]["charge_curve"] = _curve_points(
                     energy.get("charge_curve"), cfg["energy"]["charge_curve"]
                 )
+            if "soc_limit_pct" in energy:
+                cfg["energy_profiles"]["easas"]["soc_limit_pct"] = _float(energy.get("soc_limit_pct"), cfg["energy"]["soc_limit_pct"])
+            if "soc_max_charge_w" in energy:
+                cfg["energy_profiles"]["easas"]["soc_max_charge_w"] = _float(energy.get("soc_max_charge_w"), cfg["energy"]["soc_max_charge_w"])
     energy_profiles = payload.get("energy_profiles", {})
     if isinstance(energy_profiles, dict):
         for key in ("easas", "privato"):
@@ -755,6 +769,10 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
                     cfg["energy_profiles"][key]["calc_extra_safe"] = bool(prof.get("calc_extra_safe"))
                 if isinstance(prof.get("interp"), str):
                     cfg["energy_profiles"][key]["interp"] = prof.get("interp", cfg["energy_profiles"][key]["interp"]).strip().lower()
+                if "soc_limit_pct" in prof:
+                    cfg["energy_profiles"][key]["soc_limit_pct"] = _float(prof.get("soc_limit_pct"), cfg["energy_profiles"][key]["soc_limit_pct"])
+                if "soc_max_charge_w" in prof:
+                    cfg["energy_profiles"][key]["soc_max_charge_w"] = _float(prof.get("soc_max_charge_w"), cfg["energy_profiles"][key]["soc_max_charge_w"])
                 if "charge_curve" in prof:
                     cfg["energy_profiles"][key]["charge_curve"] = _curve_points(
                         prof.get("charge_curve"), cfg["energy_profiles"][key]["charge_curve"]

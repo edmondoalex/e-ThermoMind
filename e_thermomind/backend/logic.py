@@ -122,8 +122,11 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if pv_power_w < 0:
         pv_power_w = 0.0
     battery_temp_c = get_num(ent.get("battery_temp_c"), None)
+    battery_soc = get_num_optional(ent.get("battery_soc"))
     battery_temp_c_easas = get_num_optional(ent.get("battery_temp_c_easas"))
     battery_temp_c_privato = get_num_optional(ent.get("battery_temp_c_privato"))
+    battery_soc_easas = get_num_optional(ent.get("battery_soc_easas"))
+    battery_soc_privato = get_num_optional(ent.get("battery_soc_privato"))
     export_w_easas = get_num_optional(ent.get("grid_export_w_easas"))
     export_w_privato = get_num_optional(ent.get("grid_export_w_privato"))
     batt_out_easas = get_num_optional(ent.get("battery_output_w_easas"))
@@ -147,6 +150,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         pv_power_w = pv_power_easas
     if battery_temp_c_easas is not None:
         battery_temp_c = battery_temp_c_easas
+    if battery_soc_easas is not None:
+        battery_soc = battery_soc_easas
 
     def _interp_curve(temp_c: float, points: list[dict], mode: str) -> float:
         if not points:
@@ -172,16 +177,20 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 return w0 + (w1 - w0) * ratio
         return float(pts[-1]["w"])
 
-    def _calc_profile(name: str, temp_c: float | None, export_val: float | None, batt_out: float | None, curve_cfg: dict) -> dict:
+    def _calc_profile(name: str, temp_c: float | None, soc_pct: float | None, export_val: float | None, batt_out: float | None, curve_cfg: dict) -> dict:
         calc_on = bool(curve_cfg.get("calc_extra_safe", False))
         interp_mode = str(curve_cfg.get("interp", "linear")).lower()
         curve = curve_cfg.get("charge_curve", [])
+        soc_limit = float(curve_cfg.get("soc_limit_pct", 99.0))
+        soc_max_charge_w = float(curve_cfg.get("soc_max_charge_w", 500.0))
         export_val = 0.0 if export_val is None else float(export_val)
         batt_out = 0.0 if batt_out is None else float(batt_out)
         if not calc_on or temp_c is None:
             return {"extra_safe_w": 0.0, "extra_safe_total_w": 0.0, "max_charge_w": 0.0, "headroom_w": 0.0,
-                    "temp_c": temp_c, "export_w": export_val, "battery_output_w": batt_out}
+                    "temp_c": temp_c, "soc_pct": soc_pct, "export_w": export_val, "battery_output_w": batt_out}
         max_charge_w = _interp_curve(float(temp_c), curve, interp_mode)
+        if soc_pct is not None and soc_pct >= soc_limit:
+            max_charge_w = min(max_charge_w, soc_max_charge_w)
         current_charge_w = max(0.0, -batt_out)
         headroom_w = max(0.0, max_charge_w - current_charge_w)
         calc_extra_safe_w = max(0.0, export_val - headroom_w)
@@ -192,6 +201,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "max_charge_w": max_charge_w,
             "headroom_w": headroom_w,
             "temp_c": temp_c,
+            "soc_pct": soc_pct,
             "export_w": export_val,
             "battery_output_w": batt_out
         }
@@ -203,6 +213,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     easas = _calc_profile(
         "easas",
         battery_temp_c_easas if battery_temp_c_easas is not None else battery_temp_c,
+        battery_soc_easas if battery_soc_easas is not None else battery_soc,
         export_w_easas if export_w_easas is not None else export_w,
         batt_out_easas if batt_out_easas is not None else battery_output_w,
         easas_cfg if isinstance(easas_cfg, dict) else {}
@@ -210,6 +221,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     privato = _calc_profile(
         "privato",
         battery_temp_c_privato,
+        battery_soc_privato,
         export_w_privato,
         batt_out_privato,
         priv_cfg if isinstance(priv_cfg, dict) else {}

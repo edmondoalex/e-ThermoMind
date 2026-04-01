@@ -1116,6 +1116,14 @@
               </select>
             </div>
             <div class="field">
+              <label>SO C batteria ≥ (%) → max carica (W)</label>
+              <div class="row2">
+                <input type="number" step="1" v-model.number="sp.energy_profiles.easas.soc_limit_pct"/>
+                <input type="number" step="50" v-model.number="sp.energy_profiles.easas.soc_max_charge_w"/>
+              </div>
+              <div class="help">Se SoC >= soglia, limita la carica massima a questo valore.</div>
+            </div>
+            <div class="field">
               <label>Curva potenza carica per temperatura (°C → W)</label>
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.easas.charge_curve" :key="`ec-e-${i}`">
                 <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
@@ -1144,6 +1152,14 @@
                 <option value="linear">Lineare</option>
                 <option value="step">A scalini</option>
               </select>
+            </div>
+            <div class="field">
+              <label>SO C batteria ≥ (%) → max carica (W)</label>
+              <div class="row2">
+                <input type="number" step="1" v-model.number="sp.energy_profiles.privato.soc_limit_pct"/>
+                <input type="number" step="50" v-model.number="sp.energy_profiles.privato.soc_max_charge_w"/>
+              </div>
+              <div class="help">Se SoC >= soglia, limita la carica massima a questo valore.</div>
             </div>
             <div class="field">
               <label>Curva potenza carica per temperatura (°C → W)</label>
@@ -3037,6 +3053,10 @@ async function load(){
       }
     }
   }
+  if (typeof sp.value.energy_profiles.easas.soc_limit_pct === 'undefined') sp.value.energy_profiles.easas.soc_limit_pct = 99
+  if (typeof sp.value.energy_profiles.easas.soc_max_charge_w === 'undefined') sp.value.energy_profiles.easas.soc_max_charge_w = 500
+  if (typeof sp.value.energy_profiles.privato.soc_limit_pct === 'undefined') sp.value.energy_profiles.privato.soc_limit_pct = 99
+  if (typeof sp.value.energy_profiles.privato.soc_max_charge_w === 'undefined') sp.value.energy_profiles.privato.soc_max_charge_w = 500
   if (!sp.value?.miscelatrice) {
     sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }
   }

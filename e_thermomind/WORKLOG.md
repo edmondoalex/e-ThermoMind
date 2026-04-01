@@ -361,3 +361,7 @@
 ## 2026-04-01
 - Energy curve: input T/W come testo (inputmode) per evitare salto di focus mentre scrivi.
 - Versione add-on aggiornata a 0.7.59.
+
+## 2026-04-01
+- Energy: limite carica per SoC (>= soglia -> max W) configurabile per EASAS/Privato.
+- Versione add-on aggiornata a 0.7.60.
