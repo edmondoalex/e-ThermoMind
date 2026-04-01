@@ -320,11 +320,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
         battery_block_w = float(res_cfg.get("battery_block_w", 100.0))
         export_off_w = float(res_cfg.get("export_off_w", -100.0))
+        effective_safe_w = extra_safe_w + (res_power_w if res_power_w > 0.0 else 0.0)
         if battery_output_w > battery_block_w:
             desired_step = 0
         elif export_w <= export_off_w:
             desired_step = 0
-        elif extra_safe_w <= 0.0:
+        elif effective_safe_w <= 0.0:
             desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
@@ -384,7 +385,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         charge_reason = dest_reason
     elif battery_output_w > battery_block_w:
         charge_reason = f"{power_note} | battery_out {battery_output_w:.0f}W > {battery_block_w:.0f}W"
-    elif export_w <= float(res_cfg.get("export_off_w", -100.0)) or extra_safe_w <= 0.0:
+    elif export_w <= float(res_cfg.get("export_off_w", -100.0)) or (extra_safe_w + (res_power_w if res_power_w > 0.0 else 0.0)) <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
     else:
         charge_reason = f"{power_note} | off_delay {off_delay}s | step_up_delay {step_up_delay}s"

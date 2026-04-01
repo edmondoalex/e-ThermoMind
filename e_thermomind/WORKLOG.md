@@ -369,3 +369,7 @@
 ## 2026-04-01
 - Energy: default SoC limit 100% -> max charge 0W.
 - Versione add-on aggiornata a 0.7.61.
+
+## 2026-04-01
+- Resistenze: se gia ON, la logica usa extra_safe + potenza resistenze per evitare spegnimenti immediati.
+- Versione add-on aggiornata a 0.7.62.
