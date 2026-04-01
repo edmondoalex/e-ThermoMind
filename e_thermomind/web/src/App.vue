@@ -1077,6 +1077,24 @@
               <button class="ghost" @click="save">Salva calcolo</button>
             </div>
           </div>
+          <div class="section-title">Valori calcolati</div>
+          <div class="form">
+            <div class="field">
+              <label>Extra safe possibile (W) calcolato</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="Number.isFinite(d?.inputs?.extra_safe_w) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text" :value="fmtW(d?.inputs?.extra_safe_w)" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <label>Extra safe totale (W) calcolato</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="Number.isFinite(d?.inputs?.extra_safe_total_w) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text" :value="fmtW(d?.inputs?.extra_safe_total_w)" readonly />
+              </div>
+            </div>
+          </div>
+
           <div class="section-title">Entità energia</div>
           <div class="form">
             <div class="field">
@@ -1092,38 +1110,6 @@
                        placeholder="sensor.grid_export_w"
                        @input="dirtyEnt.grid_export_w = true"
                        @focus="onFocus" @blur="onBlur"/>
-              </div>
-            </div>
-            <div class="field">
-              <label>
-                <i v-if="mdiClass(ent?.extra_safe_w?.attributes?.icon)" :class="mdiClass(ent?.extra_safe_w?.attributes?.icon)"></i>
-                Extra safe possibile (W)
-              </label>
-              <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.extra_safe_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-                <input type="text"
-                       :class="isFilled(ent?.extra_safe_w?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.extra_safe_w.entity_id"
-                       placeholder="sensor.e_energymind_zcs_easas_1_extra_safe_possibile_ora"
-                       @input="dirtyEnt.extra_safe_w = true"
-                       @focus="onFocus" @blur="onBlur"/>
-                <div class="history-inline"><label><input type="checkbox" v-model="sp.history.extra_safe_w"/> Storico</label></div>
-              </div>
-            </div>
-            <div class="field">
-              <label>
-                <i v-if="mdiClass(ent?.extra_safe_total_w?.attributes?.icon)" :class="mdiClass(ent?.extra_safe_total_w?.attributes?.icon)"></i>
-                Extra safe totale (W)
-              </label>
-              <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.extra_safe_total_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
-                <input type="text"
-                       :class="isFilled(ent?.extra_safe_total_w?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.extra_safe_total_w.entity_id"
-                       placeholder="sensor.e_energymind_zcs_easas_1_extra_safe_totale_ora"
-                       @input="dirtyEnt.extra_safe_total_w = true"
-                       @focus="onFocus" @blur="onBlur"/>
-                <div class="history-inline"><label><input type="checkbox" v-model="sp.history.extra_safe_total_w"/> Storico</label></div>
               </div>
             </div>
             <div class="field">

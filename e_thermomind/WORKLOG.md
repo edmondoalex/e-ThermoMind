@@ -285,3 +285,7 @@
 - UI: aggiunti campi curva e sensori batteria (temp/SOC) in Admin Energy.
 - Versione add-on aggiornata a 0.7.41.
 
+## 2026-04-01
+- Admin Energy: rimossi campi entità Extra Safe; mostrati valori calcolati in sola lettura.
+- Versione add-on aggiornata a 0.7.42.
+
