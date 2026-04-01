@@ -120,16 +120,30 @@
           <div class="row"><strong>Energy (calcolato)</strong></div>
           <div class="row3">
             <div class="kpi kpi-center">
-              <div class="k">Extra safe possibile</div>
+              <div class="k">EASAS Extra safe</div>
               <div class="v">{{ fmtW(d.inputs.extra_safe_w) }}</div>
             </div>
             <div class="kpi kpi-center">
-              <div class="k">Extra safe totale</div>
+              <div class="k">EASAS Totale</div>
               <div class="v">{{ fmtW(d.inputs.extra_safe_total_w) }}</div>
             </div>
             <div class="kpi kpi-center">
-              <div class="k">Temp batteria</div>
-              <div class="v">{{ fmtTemp(d.inputs.battery_temp_c) }}</div>
+              <div class="k">EASAS Temp batt.</div>
+              <div class="v">{{ fmtTemp(d.inputs.battery_temp_c_easas ?? d.inputs.battery_temp_c) }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Privato Extra safe</div>
+              <div class="v">{{ fmtW(d?.computed?.energy_privato?.extra_safe_w) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Privato Totale</div>
+              <div class="v">{{ fmtW(d?.computed?.energy_privato?.extra_safe_total_w) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Privato Temp batt.</div>
+              <div class="v">{{ fmtTemp(d?.computed?.energy_privato?.temp_c) }}</div>
             </div>
           </div>
         </div>
@@ -1065,37 +1079,68 @@
 
         <section v-else-if="tab==='energy'" class="card">
           <h2>Admin Energy</h2>
-          <p class="muted">Entità energia usate per calcolo Possibile/Extra safe e FV.</p>
-          <div class="section-title">Calcolo Possibile</div>
+          <p class="muted">Entità e curve energia separate per EASAS e Privato.</p>
+          <div class="section-title">Calcolo Possibile (EASAS)</div>
           <div class="form">
             <div class="field">
               <label class="inline">
-                <input type="checkbox" v-model="sp.energy.calc_extra_safe" @change="save"/>
+                <input type="checkbox" v-model="sp.energy_profiles.easas.calc_extra_safe" @change="save"/>
                 <span>Calcola Extra Safe interno (usa curva temperatura batteria)</span>
               </label>
             </div>
             <div class="field">
               <label>Interpolazione curva</label>
-              <select v-model="sp.energy.interp" @change="save">
+              <select v-model="sp.energy_profiles.easas.interp" @change="save">
                 <option value="linear">Lineare</option>
                 <option value="step">A scalini</option>
               </select>
             </div>
             <div class="field">
               <label>Curva potenza carica per temperatura (°C → W)</label>
-              <div class="list-row" v-for="(p, i) in sp.energy.charge_curve" :key="`ec-${i}`">
+              <div class="list-row" v-for="(p, i) in sp.energy_profiles.easas.charge_curve" :key="`ec-e-${i}`">
                 <input class="time" type="number" step="0.5" v-model.number="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
                 <input class="time" type="number" step="10" v-model.number="p.w" placeholder="W"/>
-                <button class="ghost small" @click="removeEnergyPoint(i)">Rimuovi</button>
+                <button class="ghost small" @click="removeEnergyPoint('easas', i)">Rimuovi</button>
               </div>
-              <button class="ghost small" @click="addEnergyPoint">+ Aggiungi punto</button>
+              <button class="ghost small" @click="addEnergyPoint('easas')">+ Aggiungi punto</button>
             </div>
             <div class="actions">
               <button class="ghost" @click="save">Salva calcolo</button>
             </div>
           </div>
-          <div class="section-title">Valori calcolati</div>
+
+          <div class="section-title">Calcolo Possibile (Privato)</div>
+          <div class="form">
+            <div class="field">
+              <label class="inline">
+                <input type="checkbox" v-model="sp.energy_profiles.privato.calc_extra_safe" @change="save"/>
+                <span>Calcola Extra Safe interno (usa curva temperatura batteria)</span>
+              </label>
+            </div>
+            <div class="field">
+              <label>Interpolazione curva</label>
+              <select v-model="sp.energy_profiles.privato.interp" @change="save">
+                <option value="linear">Lineare</option>
+                <option value="step">A scalini</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Curva potenza carica per temperatura (°C → W)</label>
+              <div class="list-row" v-for="(p, i) in sp.energy_profiles.privato.charge_curve" :key="`ec-p-${i}`">
+                <input class="time" type="number" step="0.5" v-model.number="p.t" placeholder="T (°C)"/>
+                <span class="muted">→</span>
+                <input class="time" type="number" step="10" v-model.number="p.w" placeholder="W"/>
+                <button class="ghost small" @click="removeEnergyPoint('privato', i)">Rimuovi</button>
+              </div>
+              <button class="ghost small" @click="addEnergyPoint('privato')">+ Aggiungi punto</button>
+            </div>
+            <div class="actions">
+              <button class="ghost" @click="save">Salva calcolo</button>
+            </div>
+          </div>
+
+          <div class="section-title">Valori calcolati (EASAS)</div>
           <div class="form">
             <div class="field">
               <label>Extra safe possibile (W) calcolato</label>
@@ -1113,7 +1158,41 @@
             </div>
           </div>
 
-          <div class="section-title">Entità energia</div>
+          <div class="section-title">Valori calcolati (Privato)</div>
+          <div class="form">
+            <div class="field">
+              <label>Extra safe possibile (W) calcolato</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="Number.isFinite(d?.computed?.energy_privato?.extra_safe_w) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text" :value="fmtW(d?.computed?.energy_privato?.extra_safe_w)" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <label>Extra safe totale (W) calcolato</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="Number.isFinite(d?.computed?.energy_privato?.extra_safe_total_w) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text" :value="fmtW(d?.computed?.energy_privato?.extra_safe_total_w)" readonly />
+              </div>
+            </div>
+          </div>
+
+          <div class="section-title">Log calcolo</div>
+          <div class="form">
+            <div class="field">
+              <label>Ragionamento EASAS</label>
+              <div class="input-row">
+                <input type="text" :value="d?.computed?.module_reasons?.energy_easas || '-'" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <label>Ragionamento Privato</label>
+              <div class="input-row">
+                <input type="text" :value="d?.computed?.module_reasons?.energy_privato || '-'" readonly />
+              </div>
+            </div>
+          </div>
+
+          <div class="section-title">Entità energia (EASAS)</div>
           <div class="form">
             <div class="field">
               <label>
@@ -1121,24 +1200,24 @@
                 Export rete (W)
               </label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <span class="logic-dot" :class="isFilled(ent?.grid_export_w_easas?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.grid_export_w.entity_id"
-                       placeholder="sensor.grid_export_w"
-                       @input="dirtyEnt.grid_export_w = true"
+                       :class="isFilled(ent?.grid_export_w_easas?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.grid_export_w_easas.entity_id"
+                       placeholder="sensor.grid_export_w_easas"
+                       @input="dirtyEnt.grid_export_w_easas = true"
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
             <div class="field">
               <label>Batteria output (W)</label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.battery_output_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <span class="logic-dot" :class="isFilled(ent?.battery_output_w_easas?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent?.battery_output_w?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.battery_output_w.entity_id"
+                       :class="isFilled(ent?.battery_output_w_easas?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_output_w_easas.entity_id"
                        placeholder="sensor.zcs_easas_1_activepower_output_total"
-                       @input="dirtyEnt.battery_output_w = true"
+                       @input="dirtyEnt.battery_output_w_easas = true"
                        @focus="onFocus" @blur="onBlur"/>
                 <div class="history-inline"><label><input type="checkbox" v-model="sp.history.battery_output_w"/> Storico</label></div>
               </div>
@@ -1146,38 +1225,105 @@
             <div class="field">
               <label>Temperatura batteria (°C)</label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.battery_temp_c?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <span class="logic-dot" :class="isFilled(ent?.battery_temp_c_easas?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent?.battery_temp_c?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.battery_temp_c.entity_id"
+                       :class="isFilled(ent?.battery_temp_c_easas?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_temp_c_easas.entity_id"
                        placeholder="sensor.battery_temp_c"
-                       @input="dirtyEnt.battery_temp_c = true"
+                       @input="dirtyEnt.battery_temp_c_easas = true"
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
             <div class="field">
               <label>SoC batteria (%)</label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.battery_soc?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <span class="logic-dot" :class="isFilled(ent?.battery_soc_easas?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent?.battery_soc?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.battery_soc.entity_id"
+                       :class="isFilled(ent?.battery_soc_easas?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_soc_easas.entity_id"
                        placeholder="sensor.battery_soc"
-                       @input="dirtyEnt.battery_soc = true"
+                       @input="dirtyEnt.battery_soc_easas = true"
                        @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
             <div class="field">
               <label>FV produzione (W)</label>
               <div class="input-row">
-                <span class="logic-dot" :class="isFilled(ent?.pv_power_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <span class="logic-dot" :class="isFilled(ent?.pv_power_w_easas?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
                 <input type="text"
-                       :class="isFilled(ent?.pv_power_w?.entity_id) ? 'input-ok' : ''"
-                       v-model="ent.pv_power_w.entity_id"
+                       :class="isFilled(ent?.pv_power_w_easas?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.pv_power_w_easas.entity_id"
                        placeholder="sensor.zcs_easas_1_activepower_pv_ext"
-                       @input="dirtyEnt.pv_power_w = true"
+                       @input="dirtyEnt.pv_power_w_easas = true"
                        @focus="onFocus" @blur="onBlur"/>
                 <div class="history-inline"><label><input type="checkbox" v-model="sp.history.pv_power_w"/> Storico</label></div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="ghost" @click="saveEntities">Salva sensori</button>
+            </div>
+          </div>
+
+          <div class="section-title">Entità energia (Privato)</div>
+          <div class="form">
+            <div class="field">
+              <label>Export rete (W)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.grid_export_w_privato?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.grid_export_w_privato?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.grid_export_w_privato.entity_id"
+                       placeholder="sensor.grid_export_w_privato"
+                       @input="dirtyEnt.grid_export_w_privato = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Batteria output (W)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.battery_output_w_privato?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.battery_output_w_privato?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_output_w_privato.entity_id"
+                       placeholder="sensor.battery_output_privato"
+                       @input="dirtyEnt.battery_output_w_privato = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Temperatura batteria (°C)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.battery_temp_c_privato?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.battery_temp_c_privato?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_temp_c_privato.entity_id"
+                       placeholder="sensor.battery_temp_privato"
+                       @input="dirtyEnt.battery_temp_c_privato = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>SoC batteria (%)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.battery_soc_privato?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.battery_soc_privato?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_soc_privato.entity_id"
+                       placeholder="sensor.battery_soc_privato"
+                       @input="dirtyEnt.battery_soc_privato = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>FV produzione (W)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.pv_power_w_privato?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.pv_power_w_privato?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.pv_power_w_privato.entity_id"
+                       placeholder="sensor.pv_power_privato"
+                       @input="dirtyEnt.pv_power_w_privato = true"
+                       @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
             <div class="actions">
@@ -2574,13 +2720,13 @@ const moduleClass = (key) => {
     off: !enabled,
     active: enabled && isActive
   }
-  function addEnergyPoint(){
-    if (!sp.value?.energy) return
-    sp.value.energy.charge_curve.push({ t: 0, w: 0 })
+  function addEnergyPoint(profileKey){
+    if (!sp.value?.energy_profiles?.[profileKey]) return
+    sp.value.energy_profiles[profileKey].charge_curve.push({ t: 0, w: 0 })
   }
-  function removeEnergyPoint(idx){
-    if (!sp.value?.energy) return
-    sp.value.energy.charge_curve.splice(idx, 1)
+  function removeEnergyPoint(profileKey, idx){
+    if (!sp.value?.energy_profiles?.[profileKey]) return
+    sp.value.energy_profiles[profileKey].charge_curve.splice(idx, 1)
   }
 }
 const modulePanelClass = (key) => {
@@ -2766,18 +2912,32 @@ async function load(){
     if (typeof sp.value.volano.min_to_puffer_c === 'undefined') sp.value.volano.min_to_puffer_c = 55
     if (typeof sp.value.volano.hyst_to_puffer_c === 'undefined') sp.value.volano.hyst_to_puffer_c = 2
   }
-  if (!sp.value?.energy) {
-    sp.value.energy = {
-      calc_extra_safe: true,
-      interp: 'linear',
-      charge_curve: [
-        { t: 5, w: 1500 },
-        { t: 10, w: 1500 },
-        { t: 15, w: 3000 },
-        { t: 23, w: 7500 },
-        { t: 25, w: 7500 },
-        { t: 30, w: 7500 }
-      ]
+  if (!sp.value?.energy_profiles) {
+    sp.value.energy_profiles = {
+      easas: {
+        calc_extra_safe: true,
+        interp: 'linear',
+        charge_curve: [
+          { t: 5, w: 1500 },
+          { t: 10, w: 1500 },
+          { t: 15, w: 3000 },
+          { t: 23, w: 7500 },
+          { t: 25, w: 7500 },
+          { t: 30, w: 7500 }
+        ]
+      },
+      privato: {
+        calc_extra_safe: true,
+        interp: 'linear',
+        charge_curve: [
+          { t: 5, w: 1500 },
+          { t: 10, w: 1500 },
+          { t: 15, w: 3000 },
+          { t: 23, w: 7500 },
+          { t: 25, w: 7500 },
+          { t: 30, w: 7500 }
+        ]
+      }
     }
   }
   if (!sp.value?.miscelatrice) {
@@ -2844,11 +3004,16 @@ async function loadActuators(){
 }
   async function save(){
     applyCurveText()
-    if (sp.value?.energy?.charge_curve) {
-      sp.value.energy.charge_curve = sp.value.energy.charge_curve
-        .map(p => ({ t: Number(p.t), w: Number(p.w) }))
-        .filter(p => Number.isFinite(p.t) && Number.isFinite(p.w))
-        .sort((a, b) => a.t - b.t)
+    if (sp.value?.energy_profiles) {
+      for (const key of ['easas', 'privato']) {
+        const curve = sp.value.energy_profiles?.[key]?.charge_curve
+        if (curve) {
+          sp.value.energy_profiles[key].charge_curve = curve
+            .map(p => ({ t: Number(p.t), w: Number(p.w) }))
+            .filter(p => Number.isFinite(p.t) && Number.isFinite(p.w))
+            .sort((a, b) => a.t - b.t)
+        }
+      }
     }
     await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
     await refresh()

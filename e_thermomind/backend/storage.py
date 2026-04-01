@@ -42,6 +42,16 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "battery_temp_c": None,
     "battery_soc": None,
     "pv_power_w": None,
+    "grid_export_w_easas": None,
+    "battery_output_w_easas": None,
+    "battery_temp_c_easas": None,
+    "battery_soc_easas": None,
+    "pv_power_w_easas": None,
+    "grid_export_w_privato": None,
+    "battery_output_w_privato": None,
+    "battery_temp_c_privato": None,
+    "battery_soc_privato": None,
+    "pv_power_w_privato": None,
     "resistenze_volano_power": None,
     "resistenze_volano_energy": None,
     "hvac_riscaldamento_select": None,
@@ -163,6 +173,32 @@ DEFAULT_CONFIG: Dict[str, Any] = {
       {"t": 25.0, "w": 7500.0},
       {"t": 30.0, "w": 7500.0}
     ]
+  },
+  "energy_profiles": {
+    "easas": {
+      "calc_extra_safe": True,
+      "interp": "linear",
+      "charge_curve": [
+        {"t": 5.0, "w": 1500.0},
+        {"t": 10.0, "w": 1500.0},
+        {"t": 15.0, "w": 3000.0},
+        {"t": 23.0, "w": 7500.0},
+        {"t": 25.0, "w": 7500.0},
+        {"t": 30.0, "w": 7500.0}
+      ]
+    },
+    "privato": {
+      "calc_extra_safe": True,
+      "interp": "linear",
+      "charge_curve": [
+        {"t": 5.0, "w": 1500.0},
+        {"t": 10.0, "w": 1500.0},
+        {"t": 15.0, "w": 3000.0},
+        {"t": 23.0, "w": 7500.0},
+        {"t": 25.0, "w": 7500.0},
+        {"t": 30.0, "w": 7500.0}
+      ]
+    }
   },
   "solare": {
     "mode": "auto",
@@ -447,6 +483,29 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["energy"]["interp"] = energy.get("interp", cfg["energy"]["interp"]).strip().lower()
         if "charge_curve" in energy:
             cfg["energy"]["charge_curve"] = _curve_points(energy.get("charge_curve"), cfg["energy"]["charge_curve"])
+
+    energy_profiles = raw.get("energy_profiles", {})
+    if isinstance(energy_profiles, dict):
+        for key in ("easas", "privato"):
+            prof = energy_profiles.get(key, {})
+            if isinstance(prof, dict):
+                if "calc_extra_safe" in prof:
+                    cfg["energy_profiles"][key]["calc_extra_safe"] = bool(prof.get("calc_extra_safe"))
+                if isinstance(prof.get("interp"), str):
+                    cfg["energy_profiles"][key]["interp"] = prof.get("interp", cfg["energy_profiles"][key]["interp"]).strip().lower()
+                if "charge_curve" in prof:
+                    cfg["energy_profiles"][key]["charge_curve"] = _curve_points(
+                        prof.get("charge_curve"), cfg["energy_profiles"][key]["charge_curve"]
+                    )
+    # Backward compat: if energy_profiles missing, use legacy energy for easas
+    if "energy_profiles" not in raw and isinstance(energy, dict):
+        cfg["energy_profiles"]["easas"]["calc_extra_safe"] = bool(energy.get("calc_extra_safe", cfg["energy"]["calc_extra_safe"]))
+        if isinstance(energy.get("interp"), str):
+            cfg["energy_profiles"]["easas"]["interp"] = energy.get("interp", cfg["energy"]["interp"]).strip().lower()
+        if "charge_curve" in energy:
+            cfg["energy_profiles"]["easas"]["charge_curve"] = _curve_points(
+                energy.get("charge_curve"), cfg["energy"]["charge_curve"]
+            )
     sol = raw.get("solare", {})
     if isinstance(sol, dict):
         if isinstance(sol.get("mode"), str):
@@ -668,6 +727,28 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["energy"]["interp"] = energy.get("interp", cfg["energy"]["interp"]).strip().lower()
         if "charge_curve" in energy:
             cfg["energy"]["charge_curve"] = _curve_points(energy.get("charge_curve"), cfg["energy"]["charge_curve"])
+        # Legacy: apply to easas if energy_profiles not provided
+        if "energy_profiles" not in payload:
+            cfg["energy_profiles"]["easas"]["calc_extra_safe"] = bool(energy.get("calc_extra_safe", cfg["energy"]["calc_extra_safe"]))
+            if isinstance(energy.get("interp"), str):
+                cfg["energy_profiles"]["easas"]["interp"] = energy.get("interp", cfg["energy"]["interp"]).strip().lower()
+            if "charge_curve" in energy:
+                cfg["energy_profiles"]["easas"]["charge_curve"] = _curve_points(
+                    energy.get("charge_curve"), cfg["energy"]["charge_curve"]
+                )
+    energy_profiles = payload.get("energy_profiles", {})
+    if isinstance(energy_profiles, dict):
+        for key in ("easas", "privato"):
+            prof = energy_profiles.get(key, {})
+            if isinstance(prof, dict):
+                if "calc_extra_safe" in prof:
+                    cfg["energy_profiles"][key]["calc_extra_safe"] = bool(prof.get("calc_extra_safe"))
+                if isinstance(prof.get("interp"), str):
+                    cfg["energy_profiles"][key]["interp"] = prof.get("interp", cfg["energy_profiles"][key]["interp"]).strip().lower()
+                if "charge_curve" in prof:
+                    cfg["energy_profiles"][key]["charge_curve"] = _curve_points(
+                        prof.get("charge_curve"), cfg["energy_profiles"][key]["charge_curve"]
+                    )
     sol = payload.get("solare", {})
     if isinstance(sol, dict):
         if isinstance(sol.get("mode"), str):

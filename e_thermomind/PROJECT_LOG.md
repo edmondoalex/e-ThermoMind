@@ -480,3 +480,8 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-04-01
 - UI User: aggiunta sezione Energy con Extra Safe calcolati e temperatura batteria.
 - Versione add-on aggiornata a 0.7.43.
+
+## Aggiornamenti 2026-04-01
+- Energy: doppio profilo EASAS/Privato con curve, entità e risultati separati.
+- Admin Energy: aggiunti log ragionamento per EASAS/Privato.
+- Versione add-on aggiornata a 0.7.44.

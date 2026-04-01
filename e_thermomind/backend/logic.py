@@ -124,6 +124,14 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if pv_power_w < 0:
         pv_power_w = 0.0
     battery_temp_c = get_num(ent.get("battery_temp_c"), None)
+    battery_temp_c_easas = get_num_optional(ent.get("battery_temp_c_easas"))
+    battery_temp_c_privato = get_num_optional(ent.get("battery_temp_c_privato"))
+    export_w_easas = get_num_optional(ent.get("grid_export_w_easas"))
+    export_w_privato = get_num_optional(ent.get("grid_export_w_privato"))
+    batt_out_easas = get_num_optional(ent.get("battery_output_w_easas"))
+    batt_out_privato = get_num_optional(ent.get("battery_output_w_privato"))
+    pv_power_easas = get_num_optional(ent.get("pv_power_w_easas"))
+    pv_power_privato = get_num_optional(ent.get("pv_power_w_privato"))
     res_power_w = get_num(ent.get("resistenze_volano_power"), 0.0)
     if res_power_w < 0:
         res_power_w = 0.0
@@ -133,53 +141,90 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     if res_cfg.get("invert_export_sign"):
         export_w = -export_w
+    if export_w_easas is not None:
+        export_w = export_w_easas
+    if batt_out_easas is not None:
+        battery_output_w = batt_out_easas
+    if pv_power_easas is not None:
+        pv_power_w = pv_power_easas
+    if battery_temp_c_easas is not None:
+        battery_temp_c = battery_temp_c_easas
+
+    def _interp_curve(temp_c: float, points: list[dict], mode: str) -> float:
+        if not points:
+            return 0.0
+        pts = sorted([p for p in points if isinstance(p, dict) and "t" in p and "w" in p], key=lambda x: float(x["t"]))
+        if not pts:
+            return 0.0
+        if temp_c <= float(pts[0]["t"]):
+            return float(pts[0]["w"])
+        if temp_c >= float(pts[-1]["t"]):
+            return float(pts[-1]["w"])
+        for i in range(1, len(pts)):
+            t0 = float(pts[i - 1]["t"])
+            t1 = float(pts[i]["t"])
+            if temp_c <= t1:
+                w0 = float(pts[i - 1]["w"])
+                w1 = float(pts[i]["w"])
+                if mode == "step":
+                    return w0
+                if t1 == t0:
+                    return w1
+                ratio = (temp_c - t0) / (t1 - t0)
+                return w0 + (w1 - w0) * ratio
+        return float(pts[-1]["w"])
+
+    def _calc_profile(name: str, temp_c: float | None, export_val: float | None, batt_out: float | None, curve_cfg: dict) -> dict:
+        calc_on = bool(curve_cfg.get("calc_extra_safe", False))
+        interp_mode = str(curve_cfg.get("interp", "linear")).lower()
+        curve = curve_cfg.get("charge_curve", [])
+        export_val = 0.0 if export_val is None else float(export_val)
+        batt_out = 0.0 if batt_out is None else float(batt_out)
+        if not calc_on or temp_c is None:
+            return {"extra_safe_w": 0.0, "extra_safe_total_w": 0.0, "max_charge_w": 0.0, "headroom_w": 0.0,
+                    "temp_c": temp_c, "export_w": export_val, "battery_output_w": batt_out}
+        max_charge_w = _interp_curve(float(temp_c), curve, interp_mode)
+        current_charge_w = max(0.0, -batt_out)
+        headroom_w = max(0.0, max_charge_w - current_charge_w)
+        calc_extra_safe_w = max(0.0, export_val - headroom_w)
+        calc_extra_total_w = max(0.0, export_val)
+        return {
+            "extra_safe_w": calc_extra_safe_w,
+            "extra_safe_total_w": calc_extra_total_w,
+            "max_charge_w": max_charge_w,
+            "headroom_w": headroom_w,
+            "temp_c": temp_c,
+            "export_w": export_val,
+            "battery_output_w": batt_out
+        }
+
+    profiles_cfg = cfg.get("energy_profiles", {})
+    easas_cfg = profiles_cfg.get("easas", cfg.get("energy", {})) if isinstance(profiles_cfg, dict) else cfg.get("energy", {})
+    priv_cfg = profiles_cfg.get("privato", cfg.get("energy", {})) if isinstance(profiles_cfg, dict) else cfg.get("energy", {})
+
+    easas = _calc_profile(
+        "easas",
+        battery_temp_c_easas if battery_temp_c_easas is not None else battery_temp_c,
+        export_w_easas if export_w_easas is not None else export_w,
+        batt_out_easas if batt_out_easas is not None else battery_output_w,
+        easas_cfg if isinstance(easas_cfg, dict) else {}
+    )
+    privato = _calc_profile(
+        "privato",
+        battery_temp_c_privato,
+        export_w_privato,
+        batt_out_privato,
+        priv_cfg if isinstance(priv_cfg, dict) else {}
+    )
+
+    extra_safe_w = easas["extra_safe_w"]
+    extra_safe_total_w = easas["extra_safe_total_w"]
+
     available_w = export_w
     if extra_safe_total_w > available_w:
         available_w = extra_safe_total_w
     if available_w < 0:
         available_w = 0.0
-
-    energy_cfg = cfg.get("energy", {})
-    calc_extra_safe = bool(energy_cfg.get("calc_extra_safe", False))
-    if calc_extra_safe and battery_temp_c is not None:
-        curve = energy_cfg.get("charge_curve", [])
-        interp_mode = str(energy_cfg.get("interp", "linear")).lower()
-
-        def _interp_curve(temp_c: float, points: list[dict], mode: str) -> float:
-            if not points:
-                return 0.0
-            pts = sorted([p for p in points if isinstance(p, dict) and "t" in p and "w" in p], key=lambda x: float(x["t"]))
-            if not pts:
-                return 0.0
-            if temp_c <= float(pts[0]["t"]):
-                return float(pts[0]["w"])
-            if temp_c >= float(pts[-1]["t"]):
-                return float(pts[-1]["w"])
-            for i in range(1, len(pts)):
-                t0 = float(pts[i - 1]["t"])
-                t1 = float(pts[i]["t"])
-                if temp_c <= t1:
-                    w0 = float(pts[i - 1]["w"])
-                    w1 = float(pts[i]["w"])
-                    if mode == "step":
-                        return w0
-                    # linear
-                    if t1 == t0:
-                        return w1
-                    ratio = (temp_c - t0) / (t1 - t0)
-                    return w0 + (w1 - w0) * ratio
-            return float(pts[-1]["w"])
-
-        max_charge_w = _interp_curve(float(battery_temp_c), curve, interp_mode)
-        current_charge_w = max(0.0, -get_num(ent.get("battery_output_w"), 0.0))
-        headroom_w = max(0.0, max_charge_w - current_charge_w)
-        calc_extra_safe_w = max(0.0, export_w - headroom_w)
-        # Keep total conservative: use export only (battery priority)
-        calc_extra_total_w = max(0.0, export_w)
-        extra_safe_w = calc_extra_safe_w
-        extra_safe_total_w = calc_extra_total_w
-        if extra_safe_total_w > available_w:
-            available_w = extra_safe_total_w
 
     acs_sp = float(acs_cfg.get("setpoint_c", 55.0))
     acs_off_h = float(acs_cfg.get("off_hyst_c", 1.0))
@@ -641,7 +686,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     legna_reason = f"{legna_reason} | startup_check {legna_startup_s}s"
 
     return {
-        "inputs": {
+            "inputs": {
             "t_acs": t_acs,
             "t_acs_alto": t_acs_alto,
             "t_acs_medio": t_acs_medio,
@@ -676,13 +721,21 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "battery_output_w": battery_output_w,
             "battery_temp_c": battery_temp_c,
             "pv_power_w": pv_power_w,
+            "battery_temp_c_easas": battery_temp_c_easas,
+            "battery_temp_c_privato": battery_temp_c_privato,
+            "grid_export_w_easas": export_w_easas,
+            "grid_export_w_privato": export_w_privato,
+            "battery_output_w_easas": batt_out_easas,
+            "battery_output_w_privato": batt_out_privato,
+            "pv_power_w_easas": pv_power_easas,
+            "pv_power_w_privato": pv_power_privato,
             "resistenze_volano_power": res_power_w,
             "t_mandata_caldaia_legna": t_mandata_legna,
             "t_ritorno_caldaia_legna": t_ritorno_legna,
             "t_caldaia_legna": t_caldaia_legna
         },
-        "computed": {
-            "available_power_w": available_w,
+            "computed": {
+                "available_power_w": available_w,
             "acs_sp": acs_sp,
             "acs_ok": acs_ok,
             "acs_need": acs_need,
@@ -796,6 +849,17 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     else "Curva climatica non attiva o senza T_EXT."
                 ),
                 "resistenze_volano": f"{charge_reason} | {power_note}",
+                "energy_privato": {
+                    "extra_safe_w": privato["extra_safe_w"],
+                    "extra_safe_total_w": privato["extra_safe_total_w"],
+                    "max_charge_w": privato["max_charge_w"],
+                    "headroom_w": privato["headroom_w"],
+                    "temp_c": privato["temp_c"],
+                    "export_w": privato["export_w"],
+                    "battery_output_w": privato["battery_output_w"]
+                },
+            "energy_easas": f"Extra {easas['extra_safe_w']:.0f}W | Tot {easas['extra_safe_total_w']:.0f}W | Headroom {easas['headroom_w']:.0f}W",
+            "energy_privato": f"Extra {privato['extra_safe_w']:.0f}W | Tot {privato['extra_safe_total_w']:.0f}W | Headroom {privato['headroom_w']:.0f}W",
                 "impianto": impianto_reason,
                 "gas_emergenza": gas_reason,
                 "caldaia_legna": legna_reason,
