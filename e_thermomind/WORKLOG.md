@@ -357,3 +357,7 @@
 ## 2026-04-01
 - Energy curve: disabilitato autosalvataggio sui campi per evitare riordino mentre scrivi; salva solo con pulsante.
 - Versione add-on aggiornata a 0.7.58.
+
+## 2026-04-01
+- Energy curve: input T/W come testo (inputmode) per evitare salto di focus mentre scrivi.
+- Versione add-on aggiornata a 0.7.59.
