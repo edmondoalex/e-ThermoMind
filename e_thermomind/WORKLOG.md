@@ -365,3 +365,7 @@
 ## 2026-04-01
 - Energy: limite carica per SoC (>= soglia -> max W) configurabile per EASAS/Privato.
 - Versione add-on aggiornata a 0.7.60.
+
+## 2026-04-01
+- Energy: default SoC limit 100% -> max charge 0W.
+- Versione add-on aggiornata a 0.7.61.

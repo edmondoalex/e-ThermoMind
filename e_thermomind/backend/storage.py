@@ -165,8 +165,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   "energy": {
     "calc_extra_safe": True,
     "interp": "linear",
-    "soc_limit_pct": 99.0,
-    "soc_max_charge_w": 500.0,
+    "soc_limit_pct": 100.0,
+    "soc_max_charge_w": 0.0,
     "charge_curve": [
       {"t": 5.0, "w": 1500.0},
       {"t": 10.0, "w": 1500.0},
@@ -180,8 +180,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "easas": {
       "calc_extra_safe": True,
       "interp": "linear",
-      "soc_limit_pct": 99.0,
-      "soc_max_charge_w": 500.0,
+      "soc_limit_pct": 100.0,
+      "soc_max_charge_w": 0.0,
       "charge_curve": [
         {"t": 5.0, "w": 1500.0},
         {"t": 10.0, "w": 1500.0},
@@ -194,8 +194,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "privato": {
       "calc_extra_safe": True,
       "interp": "linear",
-      "soc_limit_pct": 99.0,
-      "soc_max_charge_w": 500.0,
+      "soc_limit_pct": 100.0,
+      "soc_max_charge_w": 0.0,
       "charge_curve": [
         {"t": 5.0, "w": 1500.0},
         {"t": 10.0, "w": 1500.0},

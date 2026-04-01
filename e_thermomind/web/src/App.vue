@@ -3053,10 +3053,10 @@ async function load(){
       }
     }
   }
-  if (typeof sp.value.energy_profiles.easas.soc_limit_pct === 'undefined') sp.value.energy_profiles.easas.soc_limit_pct = 99
-  if (typeof sp.value.energy_profiles.easas.soc_max_charge_w === 'undefined') sp.value.energy_profiles.easas.soc_max_charge_w = 500
-  if (typeof sp.value.energy_profiles.privato.soc_limit_pct === 'undefined') sp.value.energy_profiles.privato.soc_limit_pct = 99
-  if (typeof sp.value.energy_profiles.privato.soc_max_charge_w === 'undefined') sp.value.energy_profiles.privato.soc_max_charge_w = 500
+  if (typeof sp.value.energy_profiles.easas.soc_limit_pct === 'undefined') sp.value.energy_profiles.easas.soc_limit_pct = 100
+  if (typeof sp.value.energy_profiles.easas.soc_max_charge_w === 'undefined') sp.value.energy_profiles.easas.soc_max_charge_w = 0
+  if (typeof sp.value.energy_profiles.privato.soc_limit_pct === 'undefined') sp.value.energy_profiles.privato.soc_limit_pct = 100
+  if (typeof sp.value.energy_profiles.privato.soc_max_charge_w === 'undefined') sp.value.energy_profiles.privato.soc_max_charge_w = 0
   if (!sp.value?.miscelatrice) {
     sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }
   }
