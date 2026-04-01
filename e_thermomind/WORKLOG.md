@@ -385,3 +385,7 @@
 ## 2026-04-01
 - Energy: log spiegazione estesa (temp, SoC, export, max carica, headroom, extra).
 - Versione add-on aggiornata a 0.7.65.
+
+## 2026-04-01
+- Energy log: campo ragionamento multilinea con altezza variabile.
+- Versione add-on aggiornata a 0.7.66.

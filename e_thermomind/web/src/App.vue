@@ -1267,13 +1267,13 @@
             <div class="field">
               <label>Ragionamento EASAS</label>
               <div class="input-row">
-                <input type="text" :value="energyExplain(d?.computed?.energy_easas)" readonly />
+                <textarea class="reason-box" :value="energyExplain(d?.computed?.energy_easas)" readonly></textarea>
               </div>
             </div>
             <div class="field">
               <label>Ragionamento Privato</label>
               <div class="input-row">
-                <input type="text" :value="energyExplain(d?.computed?.energy_privato)" readonly />
+                <textarea class="reason-box" :value="energyExplain(d?.computed?.energy_privato)" readonly></textarea>
               </div>
             </div>
           </div>
@@ -3816,3 +3816,6 @@ details.form summary{cursor:pointer;list-style:none}
 </style>
 
 
+
+
+.reason-box{width:100%;min-height:64px;resize:vertical;background:#0c141b;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:10px;line-height:1.3;white-space:pre-wrap;word-break:break-word}
