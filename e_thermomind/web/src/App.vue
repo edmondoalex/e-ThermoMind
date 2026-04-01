@@ -14,6 +14,7 @@
       <nav class="tabs">
         <button :class="{active: tab==='user'}" @click="tab='user'">User</button>
         <button :class="{active: tab==='admin'}" @click="tab='admin'">Admin</button>
+        <button :class="{active: tab==='energy'}" @click="tab='energy'">Energy</button>
         <button :class="{active: tab==='scheduler'}" @click="tab='scheduler'">Scheduler</button>
       </nav>
     </header>
@@ -1005,8 +1006,8 @@
         </div>
       </section>
 
-      <section v-else-if="tab==='scheduler'" class="card">
-        <h2>Scheduler</h2>
+        <section v-else-if="tab==='scheduler'" class="card">
+          <h2>Scheduler</h2>
         <p class="muted">Programmatore settimanale ON/OFF per gas emergenza. Le fasce sono persistenti e vuote di default.</p>
         <div v-if="sp && sp.scheduler && sp.scheduler.gas" class="scheduler">
           <div class="row">
@@ -1042,10 +1043,94 @@
           </div>
           <div class="muted small-note">Nota: se spegni manualmente il gas, non viene riacceso finché non parte una nuova fascia.</div>
         </div>
-      </section>
+        </section>
 
-      <section v-else class="card">
-        <h2>Admin (v0.2)</h2>
+        <section v-else-if="tab==='energy'" class="card">
+          <h2>Admin Energy</h2>
+          <p class="muted">Entità energia usate per calcolo Possibile/Extra safe e FV.</p>
+          <div class="section-title">Entità energia</div>
+          <div class="form">
+            <div class="field">
+              <label>
+                <i v-if="mdiClass(ent?.grid_export_w?.attributes?.icon)" :class="mdiClass(ent?.grid_export_w?.attributes?.icon)"></i>
+                Export rete (W)
+              </label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.grid_export_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.grid_export_w?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.grid_export_w.entity_id"
+                       placeholder="sensor.grid_export_w"
+                       @input="dirtyEnt.grid_export_w = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>
+                <i v-if="mdiClass(ent?.extra_safe_w?.attributes?.icon)" :class="mdiClass(ent?.extra_safe_w?.attributes?.icon)"></i>
+                Extra safe possibile (W)
+              </label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.extra_safe_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.extra_safe_w?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.extra_safe_w.entity_id"
+                       placeholder="sensor.e_energymind_zcs_easas_1_extra_safe_possibile_ora"
+                       @input="dirtyEnt.extra_safe_w = true"
+                       @focus="onFocus" @blur="onBlur"/>
+                <div class="history-inline"><label><input type="checkbox" v-model="sp.history.extra_safe_w"/> Storico</label></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>
+                <i v-if="mdiClass(ent?.extra_safe_total_w?.attributes?.icon)" :class="mdiClass(ent?.extra_safe_total_w?.attributes?.icon)"></i>
+                Extra safe totale (W)
+              </label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.extra_safe_total_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.extra_safe_total_w?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.extra_safe_total_w.entity_id"
+                       placeholder="sensor.e_energymind_zcs_easas_1_extra_safe_totale_ora"
+                       @input="dirtyEnt.extra_safe_total_w = true"
+                       @focus="onFocus" @blur="onBlur"/>
+                <div class="history-inline"><label><input type="checkbox" v-model="sp.history.extra_safe_total_w"/> Storico</label></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Batteria output (W)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.battery_output_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.battery_output_w?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_output_w.entity_id"
+                       placeholder="sensor.zcs_easas_1_activepower_output_total"
+                       @input="dirtyEnt.battery_output_w = true"
+                       @focus="onFocus" @blur="onBlur"/>
+                <div class="history-inline"><label><input type="checkbox" v-model="sp.history.battery_output_w"/> Storico</label></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>FV produzione (W)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.pv_power_w?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.pv_power_w?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.pv_power_w.entity_id"
+                       placeholder="sensor.zcs_easas_1_activepower_pv_ext"
+                       @input="dirtyEnt.pv_power_w = true"
+                       @focus="onFocus" @blur="onBlur"/>
+                <div class="history-inline"><label><input type="checkbox" v-model="sp.history.pv_power_w"/> Storico</label></div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="ghost" @click="saveEntities">Salva sensori</button>
+            </div>
+          </div>
+        </section>
+
+        <section v-else class="card">
+          <h2>Admin (v0.2)</h2>
         <p class="muted">Setpoint interni e mapping e-manager.</p>
         <div class="statusline">
           <span class="muted">v{{ status?.version || '-' }}</span>
@@ -2030,6 +2115,7 @@ const initialTab = (() => {
   const h = (window.location.hash || '').toLowerCase()
   if (h.includes('scheduler')) return 'scheduler'
   if (h.includes('admin')) return 'admin'
+  if (h.includes('energy')) return 'energy'
   return 'user'
 })()
 const tab = ref(initialTab)
@@ -2562,7 +2648,7 @@ const curveYTicks = computed(() => {
     }
   }
 async function refresh(){
-  if (tab.value === 'admin' || editingCount.value > 0) return
+  if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0) return
   const r = await fetch('/api/decision'); d.value = await r.json()
   zones.value = d.value?.zones || []
   schedulerStatus.value = d.value?.scheduler_status || null
@@ -2990,6 +3076,7 @@ onMounted(async()=>{
   const hash = (window.location.hash || '').toLowerCase()
   if (hash.includes('scheduler')) tab.value = 'scheduler'
   if (hash.includes('admin')) tab.value = 'admin'
+  if (hash.includes('energy')) tab.value = 'energy'
   if (hash.includes('user')) tab.value = 'user'
   await loadAll(); 
   startPolling();
@@ -2999,6 +3086,7 @@ onMounted(async()=>{
     const h = (window.location.hash || '').toLowerCase()
     if (h.includes('scheduler')) tab.value = 'scheduler'
     else if (h.includes('admin')) tab.value = 'admin'
+    else if (h.includes('energy')) tab.value = 'energy'
     else if (h.includes('user')) tab.value = 'user'
   })
   focusInHandler = (e) => {

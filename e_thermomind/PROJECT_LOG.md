@@ -463,3 +463,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-03-31
 - Debug UI: aggiunte uscite impianto reali (R4/R5/R11/R12) nel pannello impianto.
 - Versione add-on aggiornata a 0.7.39.
+
+## Aggiornamenti 2026-04-01
+- UI: aggiunta pagina "Admin Energy" per configurare le entità energia (export, extra safe, batteria, FV).
+- Versione add-on aggiornata a 0.7.40.
