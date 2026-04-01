@@ -349,3 +349,11 @@
 ## 2026-04-01
 - Energy curve: salvataggio solo a fine input (on change) per evitare autocorrezioni mentre scrivi.
 - Versione add-on aggiornata a 0.7.56.
+
+## 2026-04-01
+- Energy curve: fix pulsanti aggiungi/rimuovi punti.
+- Versione add-on aggiornata a 0.7.57.
+
+## 2026-04-01
+- Energy curve: disabilitato autosalvataggio sui campi per evitare riordino mentre scrivi; salva solo con pulsante.
+- Versione add-on aggiornata a 0.7.58.

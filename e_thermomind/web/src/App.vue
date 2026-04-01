@@ -1120,7 +1120,7 @@
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.easas.charge_curve" :key="`ec-e-${i}`">
                 <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
-                <input class="time" type="number" step="10" v-model="p.w" placeholder="W" @change="saveEnergyDebounced" @focus="onFocus" @blur="onBlur"/>
+                <input class="time" type="number" step="10" v-model="p.w" placeholder="W"/>
                 <button class="ghost small" @click="removeEnergyPoint('easas', i)">Rimuovi</button>
               </div>
               <button class="ghost small" @click="addEnergyPoint('easas')">+ Aggiungi punto</button>
@@ -1150,7 +1150,7 @@
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.privato.charge_curve" :key="`ec-p-${i}`">
                 <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
-                <input class="time" type="number" step="10" v-model="p.w" placeholder="W" @change="saveEnergyDebounced" @focus="onFocus" @blur="onBlur"/>
+                <input class="time" type="number" step="10" v-model="p.w" placeholder="W"/>
                 <button class="ghost small" @click="removeEnergyPoint('privato', i)">Rimuovi</button>
               </div>
               <button class="ghost small" @click="addEnergyPoint('privato')">+ Aggiungi punto</button>
@@ -2813,16 +2813,16 @@ const moduleClass = (key) => {
     off: !enabled,
     active: enabled && isActive
   }
-  function addEnergyPoint(profileKey){
-    if (!sp.value?.energy_profiles?.[profileKey]) return
-    sp.value.energy_profiles[profileKey].charge_curve.push({ t: 0, w: 0 })
-    saveEnergyDebounced()
-  }
-  function removeEnergyPoint(profileKey, idx){
-    if (!sp.value?.energy_profiles?.[profileKey]) return
-    sp.value.energy_profiles[profileKey].charge_curve.splice(idx, 1)
-    saveEnergyDebounced()
-  }
+}
+function addEnergyPoint(profileKey){
+  if (!sp.value?.energy_profiles?.[profileKey]) return
+  sp.value.energy_profiles[profileKey].charge_curve.push({ t: 0, w: 0 })
+  saveEnergyDebounced()
+}
+function removeEnergyPoint(profileKey, idx){
+  if (!sp.value?.energy_profiles?.[profileKey]) return
+  sp.value.energy_profiles[profileKey].charge_curve.splice(idx, 1)
+  saveEnergyDebounced()
 }
 const modulePanelClass = (key) => {
   const enabled = !!modules.value?.[key]
