@@ -328,3 +328,11 @@
 ## 2026-04-01
 - Runtime: default mode impostato a live per evitare ritorno in dry-run al riavvio.
 - Versione add-on aggiornata a 0.7.51.
+
+## 2026-04-01
+- Resistenze: se gia ON, la base "possibile" somma la potenza resistenze per scalare step.
+- Versione add-on aggiornata a 0.7.52.
+
+## 2026-04-01
+- Solare: default mode impostato a night (non auto).
+- Versione add-on aggiornata a 0.7.53.

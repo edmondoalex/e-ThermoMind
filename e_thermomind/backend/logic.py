@@ -329,7 +329,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 base_power_w = max(0.0, export_w + res_power_w)
                 base_sel = "export"
             else:
-                base_power_w = extra_safe_w
+                # If resistances are already on, add their power to available
+                # to avoid getting stuck below the next step threshold.
+                base_power_w = extra_safe_w + (res_power_w if res_power_w > 0.0 else 0.0)
                 base_sel = "possibile"
             if base_power_w >= thr[2]:
                 desired_step = 3

@@ -201,7 +201,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     }
   },
   "solare": {
-    "mode": "auto",
+    "mode": "night",
     "delta_on_c": 5.0,
     "delta_hold_c": 2.5,
     "max_c": 90.0,
