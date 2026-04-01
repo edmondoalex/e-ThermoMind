@@ -39,6 +39,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "extra_safe_w": None,
     "extra_safe_total_w": None,
     "battery_output_w": None,
+    "battery_temp_c": None,
+    "battery_soc": None,
     "pv_power_w": None,
     "resistenze_volano_power": None,
     "resistenze_volano_energy": None,
@@ -149,6 +151,18 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "step_up_delay_s": 10,
     "thresholds_w": [1100, 2200, 3300],
     "invert_export_sign": False
+  },
+  "energy": {
+    "calc_extra_safe": True,
+    "interp": "linear",
+    "charge_curve": [
+      {"t": 5.0, "w": 1500.0},
+      {"t": 10.0, "w": 1500.0},
+      {"t": 15.0, "w": 3000.0},
+      {"t": 23.0, "w": 7500.0},
+      {"t": 25.0, "w": 7500.0},
+      {"t": 30.0, "w": 7500.0}
+    ]
   },
   "solare": {
     "mode": "auto",
@@ -362,6 +376,23 @@ def _float_list_any(value: Any, defaults: Iterable[float]) -> list[float]:
             continue
     return out if out else base
 
+def _curve_points(value: Any, defaults: list[dict]) -> list[dict]:
+    if not isinstance(value, (list, tuple)):
+        return defaults
+    out: list[dict] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        t = _float(item.get("t"), None)
+        w = _float(item.get("w"), None)
+        if t is None or w is None:
+            continue
+        out.append({"t": float(t), "w": float(w)})
+    if not out:
+        return defaults
+    out.sort(key=lambda x: x["t"])
+    return out
+
 def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     cfg = json.loads(json.dumps(DEFAULT_CONFIG))
     if not isinstance(raw, dict):
@@ -408,6 +439,14 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["resistance"]["thresholds_w"] = _float_list_3(
                 res["thresholds_w"], cfg["resistance"]["thresholds_w"]
             )
+    energy = raw.get("energy", {})
+    if isinstance(energy, dict):
+        if "calc_extra_safe" in energy:
+            cfg["energy"]["calc_extra_safe"] = bool(energy.get("calc_extra_safe"))
+        if isinstance(energy.get("interp"), str):
+            cfg["energy"]["interp"] = energy.get("interp", cfg["energy"]["interp"]).strip().lower()
+        if "charge_curve" in energy:
+            cfg["energy"]["charge_curve"] = _curve_points(energy.get("charge_curve"), cfg["energy"]["charge_curve"])
     sol = raw.get("solare", {})
     if isinstance(sol, dict):
         if isinstance(sol.get("mode"), str):
@@ -621,6 +660,14 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["resistance"]["thresholds_w"] = _float_list_3(
                 res["thresholds_w"], cfg["resistance"]["thresholds_w"]
             )
+    energy = payload.get("energy", {})
+    if isinstance(energy, dict):
+        if "calc_extra_safe" in energy:
+            cfg["energy"]["calc_extra_safe"] = bool(energy.get("calc_extra_safe"))
+        if isinstance(energy.get("interp"), str):
+            cfg["energy"]["interp"] = energy.get("interp", cfg["energy"]["interp"]).strip().lower()
+        if "charge_curve" in energy:
+            cfg["energy"]["charge_curve"] = _curve_points(energy.get("charge_curve"), cfg["energy"]["charge_curve"])
     sol = payload.get("solare", {})
     if isinstance(sol, dict):
         if isinstance(sol.get("mode"), str):

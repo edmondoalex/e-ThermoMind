@@ -467,3 +467,8 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-04-01
 - UI: aggiunta pagina "Admin Energy" per configurare le entità energia (export, extra safe, batteria, FV).
 - Versione add-on aggiornata a 0.7.40.
+
+## Aggiornamenti 2026-04-01
+- Energy: curva manuale potenza carica batteria vs temperatura + calcolo Extra Safe interno.
+- UI: aggiunti campi curva e sensori batteria (temp/SOC) in Admin Energy.
+- Versione add-on aggiornata a 0.7.41.

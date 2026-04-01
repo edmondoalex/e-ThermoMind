@@ -1048,6 +1048,35 @@
         <section v-else-if="tab==='energy'" class="card">
           <h2>Admin Energy</h2>
           <p class="muted">Entità energia usate per calcolo Possibile/Extra safe e FV.</p>
+          <div class="section-title">Calcolo Possibile</div>
+          <div class="form">
+            <div class="field">
+              <label class="inline">
+                <input type="checkbox" v-model="sp.energy.calc_extra_safe" @change="save"/>
+                <span>Calcola Extra Safe interno (usa curva temperatura batteria)</span>
+              </label>
+            </div>
+            <div class="field">
+              <label>Interpolazione curva</label>
+              <select v-model="sp.energy.interp" @change="save">
+                <option value="linear">Lineare</option>
+                <option value="step">A scalini</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Curva potenza carica per temperatura (°C → W)</label>
+              <div class="list-row" v-for="(p, i) in sp.energy.charge_curve" :key="`ec-${i}`">
+                <input class="time" type="number" step="0.5" v-model.number="p.t" placeholder="T (°C)"/>
+                <span class="muted">→</span>
+                <input class="time" type="number" step="10" v-model.number="p.w" placeholder="W"/>
+                <button class="ghost small" @click="removeEnergyPoint(i)">Rimuovi</button>
+              </div>
+              <button class="ghost small" @click="addEnergyPoint">+ Aggiungi punto</button>
+            </div>
+            <div class="actions">
+              <button class="ghost" @click="save">Salva calcolo</button>
+            </div>
+          </div>
           <div class="section-title">Entità energia</div>
           <div class="form">
             <div class="field">
@@ -1108,6 +1137,30 @@
                        @input="dirtyEnt.battery_output_w = true"
                        @focus="onFocus" @blur="onBlur"/>
                 <div class="history-inline"><label><input type="checkbox" v-model="sp.history.battery_output_w"/> Storico</label></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Temperatura batteria (°C)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.battery_temp_c?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.battery_temp_c?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_temp_c.entity_id"
+                       placeholder="sensor.battery_temp_c"
+                       @input="dirtyEnt.battery_temp_c = true"
+                       @focus="onFocus" @blur="onBlur"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>SoC batteria (%)</label>
+              <div class="input-row">
+                <span class="logic-dot" :class="isFilled(ent?.battery_soc?.entity_id) ? 'logic-ok' : 'logic-no'">●</span>
+                <input type="text"
+                       :class="isFilled(ent?.battery_soc?.entity_id) ? 'input-ok' : ''"
+                       v-model="ent.battery_soc.entity_id"
+                       placeholder="sensor.battery_soc"
+                       @input="dirtyEnt.battery_soc = true"
+                       @focus="onFocus" @blur="onBlur"/>
               </div>
             </div>
             <div class="field">
@@ -2394,8 +2447,8 @@ async function openHistory(key, title){
 function closeHistory(){
   historyModal.value.open = false
 }
-function openZone(z){
-  if (!z?.entity_id) return
+  function openZone(z){
+    if (!z?.entity_id) return
   zoneModal.value = {
     open: true,
     entity_id: z.entity_id,
@@ -2423,7 +2476,7 @@ const hvacLabel = (s) => {
   if (v.includes('off')) return 'Spento'
   return v ? v : '—'
 }
-const changeZoneSetpoint = async (delta) => {
+  const changeZoneSetpoint = async (delta) => {
   if (!zoneModal.value.entity_id) return
   const next = Math.round((Number(zoneModal.value.setpoint) + delta) * 10) / 10
   zoneModal.value.setpoint = next
@@ -2516,6 +2569,14 @@ const moduleClass = (key) => {
     on: enabled,
     off: !enabled,
     active: enabled && isActive
+  }
+  function addEnergyPoint(){
+    if (!sp.value?.energy) return
+    sp.value.energy.charge_curve.push({ t: 0, w: 0 })
+  }
+  function removeEnergyPoint(idx){
+    if (!sp.value?.energy) return
+    sp.value.energy.charge_curve.splice(idx, 1)
   }
 }
 const modulePanelClass = (key) => {
@@ -2701,6 +2762,20 @@ async function load(){
     if (typeof sp.value.volano.min_to_puffer_c === 'undefined') sp.value.volano.min_to_puffer_c = 55
     if (typeof sp.value.volano.hyst_to_puffer_c === 'undefined') sp.value.volano.hyst_to_puffer_c = 2
   }
+  if (!sp.value?.energy) {
+    sp.value.energy = {
+      calc_extra_safe: true,
+      interp: 'linear',
+      charge_curve: [
+        { t: 5, w: 1500 },
+        { t: 10, w: 1500 },
+        { t: 15, w: 3000 },
+        { t: 23, w: 7500 },
+        { t: 25, w: 7500 },
+        { t: 30, w: 7500 }
+      ]
+    }
+  }
   if (!sp.value?.miscelatrice) {
     sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }
   }
@@ -2763,11 +2838,17 @@ async function loadActuators(){
   if (editingCount.value > 0) return
   const r = await fetch('/api/actuators'); act.value = await r.json()
 }
-async function save(){
-  applyCurveText()
-  await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
-  await refresh()
-  if (sp.value?.runtime?.ui_poll_ms) {
+  async function save(){
+    applyCurveText()
+    if (sp.value?.energy?.charge_curve) {
+      sp.value.energy.charge_curve = sp.value.energy.charge_curve
+        .map(p => ({ t: Number(p.t), w: Number(p.w) }))
+        .filter(p => Number.isFinite(p.t) && Number.isFinite(p.w))
+        .sort((a, b) => a.t - b.t)
+    }
+    await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
+    await refresh()
+    if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
     startPolling()
   }

@@ -123,6 +123,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     pv_power_w = get_num(ent.get("pv_power_w"), 0.0)
     if pv_power_w < 0:
         pv_power_w = 0.0
+    battery_temp_c = get_num(ent.get("battery_temp_c"), None)
     res_power_w = get_num(ent.get("resistenze_volano_power"), 0.0)
     if res_power_w < 0:
         res_power_w = 0.0
@@ -137,6 +138,48 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         available_w = extra_safe_total_w
     if available_w < 0:
         available_w = 0.0
+
+    energy_cfg = cfg.get("energy", {})
+    calc_extra_safe = bool(energy_cfg.get("calc_extra_safe", False))
+    if calc_extra_safe and battery_temp_c is not None:
+        curve = energy_cfg.get("charge_curve", [])
+        interp_mode = str(energy_cfg.get("interp", "linear")).lower()
+
+        def _interp_curve(temp_c: float, points: list[dict], mode: str) -> float:
+            if not points:
+                return 0.0
+            pts = sorted([p for p in points if isinstance(p, dict) and "t" in p and "w" in p], key=lambda x: float(x["t"]))
+            if not pts:
+                return 0.0
+            if temp_c <= float(pts[0]["t"]):
+                return float(pts[0]["w"])
+            if temp_c >= float(pts[-1]["t"]):
+                return float(pts[-1]["w"])
+            for i in range(1, len(pts)):
+                t0 = float(pts[i - 1]["t"])
+                t1 = float(pts[i]["t"])
+                if temp_c <= t1:
+                    w0 = float(pts[i - 1]["w"])
+                    w1 = float(pts[i]["w"])
+                    if mode == "step":
+                        return w0
+                    # linear
+                    if t1 == t0:
+                        return w1
+                    ratio = (temp_c - t0) / (t1 - t0)
+                    return w0 + (w1 - w0) * ratio
+            return float(pts[-1]["w"])
+
+        max_charge_w = _interp_curve(float(battery_temp_c), curve, interp_mode)
+        current_charge_w = max(0.0, -get_num(ent.get("battery_output_w"), 0.0))
+        headroom_w = max(0.0, max_charge_w - current_charge_w)
+        calc_extra_safe_w = max(0.0, export_w - headroom_w)
+        # Keep total conservative: use export only (battery priority)
+        calc_extra_total_w = max(0.0, export_w)
+        extra_safe_w = calc_extra_safe_w
+        extra_safe_total_w = calc_extra_total_w
+        if extra_safe_total_w > available_w:
+            available_w = extra_safe_total_w
 
     acs_sp = float(acs_cfg.get("setpoint_c", 55.0))
     acs_off_h = float(acs_cfg.get("off_hyst_c", 1.0))
@@ -631,6 +674,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "extra_safe_w": extra_safe_w,
             "extra_safe_total_w": extra_safe_total_w,
             "battery_output_w": battery_output_w,
+            "battery_temp_c": battery_temp_c,
             "pv_power_w": pv_power_w,
             "resistenze_volano_power": res_power_w,
             "t_mandata_caldaia_legna": t_mandata_legna,
