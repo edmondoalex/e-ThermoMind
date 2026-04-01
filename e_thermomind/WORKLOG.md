@@ -324,3 +324,7 @@
 ## 2026-04-01
 - Resistenze UI: mostrati export, extra safe, extra safe totale e disponibile calcolato.
 - Versione add-on aggiornata a 0.7.50.
+
+## 2026-04-01
+- Runtime: default mode impostato a live per evitare ritorno in dry-run al riavvio.
+- Versione add-on aggiornata a 0.7.51.

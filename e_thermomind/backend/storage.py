@@ -217,7 +217,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "volano_to_puffer_stop_s": 2
   },
   "runtime": {
-    "mode": "dry-run",
+    "mode": "live",
     "ui_poll_ms": 3000,
     "timezone": "Europe/Rome"
   },
