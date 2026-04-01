@@ -316,3 +316,7 @@
 - Energy: input curva salva anche la temperatura.
 - Energy: batteria output ora usa il segno reale (negativo=carica).
 - Versione add-on aggiornata a 0.7.48.
+
+## 2026-04-01
+- Energy UI: mostrati dettagli calcolo (max carica, carica attuale, headroom) per EASAS e Privato.
+- Versione add-on aggiornata a 0.7.49.

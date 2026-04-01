@@ -1178,6 +1178,50 @@
 
           <div class="section-title">Log calcolo</div>
           <div class="form">
+          <div class="section-title">Dettagli calcolo (EASAS)</div>
+          <div class="form">
+            <div class="field">
+              <label>Max carica da curva (W)</label>
+              <div class="input-row">
+                <input type="text" :value="fmtW(d?.computed?.energy_easas?.max_charge_w)" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <label>Carica attuale batteria (W)</label>
+              <div class="input-row">
+                <input type="text" :value="fmtW(energyCurrentChargeW(d?.computed?.energy_easas))" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <label>Headroom (W)</label>
+              <div class="input-row">
+                <input type="text" :value="fmtW(d?.computed?.energy_easas?.headroom_w)" readonly />
+              </div>
+            </div>
+          </div>
+
+          <div class="section-title">Dettagli calcolo (Privato)</div>
+          <div class="form">
+            <div class="field">
+              <label>Max carica da curva (W)</label>
+              <div class="input-row">
+                <input type="text" :value="fmtW(d?.computed?.energy_privato?.max_charge_w)" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <label>Carica attuale batteria (W)</label>
+              <div class="input-row">
+                <input type="text" :value="fmtW(energyCurrentChargeW(d?.computed?.energy_privato))" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <label>Headroom (W)</label>
+              <div class="input-row">
+                <input type="text" :value="fmtW(d?.computed?.energy_privato?.headroom_w)" readonly />
+              </div>
+            </div>
+          </div>
+
             <div class="field">
               <label>Ragionamento EASAS</label>
               <div class="input-row">
@@ -2473,6 +2517,11 @@ const fmtDelta = (a, b) => {
   return `${(da - db).toFixed(1)}C`
 }
   const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
+  const energyCurrentChargeW = (e) => {
+    const v = Number(e?.battery_output_w)
+    if (!Number.isFinite(v)) return NaN
+    return Math.max(0, -v)
+  }
   const fmtNum = (v) => (Number.isFinite(Number(v)) ? Number(v).toFixed(1) : '-')
   const fmtText = (v) => (v === null || v === undefined || v === '' ? '-' : String(v))
   const parseNumFlexible = (v) => {
