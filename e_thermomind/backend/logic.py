@@ -118,8 +118,6 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if extra_safe_total_w < 0:
         extra_safe_total_w = 0.0
     battery_output_w = get_num(ent.get("battery_output_w"), 0.0)
-    if battery_output_w < 0:
-        battery_output_w = 0.0
     pv_power_w = get_num(ent.get("pv_power_w"), 0.0)
     if pv_power_w < 0:
         pv_power_w = 0.0

@@ -1100,7 +1100,7 @@
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.easas.charge_curve" :key="`ec-e-${i}`">
                 <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
-                <input class="time" type="number" step="10" v-model="p.w" placeholder="W"/>
+                <input class="time" type="number" step="10" v-model="p.w" placeholder="W" @input="saveEnergyDebounced"/>
                 <button class="ghost small" @click="removeEnergyPoint('easas', i)">Rimuovi</button>
               </div>
               <button class="ghost small" @click="addEnergyPoint('easas')">+ Aggiungi punto</button>
@@ -1130,7 +1130,7 @@
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.privato.charge_curve" :key="`ec-p-${i}`">
                 <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
-                <input class="time" type="number" step="10" v-model="p.w" placeholder="W"/>
+                <input class="time" type="number" step="10" v-model="p.w" placeholder="W" @input="saveEnergyDebounced"/>
                 <button class="ghost small" @click="removeEnergyPoint('privato', i)">Rimuovi</button>
               </div>
               <button class="ghost small" @click="addEnergyPoint('privato')">+ Aggiungi punto</button>
@@ -2385,6 +2385,7 @@ const history = ref({
 const curveXText = ref('')
 const curveYText = ref('')
 let curveSaveTimer = null
+let energySaveTimer = null
 const zoneModal = ref({ open: false, entity_id: '', title: '', temperature: 0, setpoint: 0, hvac_action: '' })
 const historyModal = ref({ open: false, title: '', points: '', minY: '-', maxY: '-', rangeLabel: '', xTicks: [], yTicks: [], w: 600, h: 220, padL: 40, padR: 10, padT: 10, padB: 20 })
 const maxPoints = 60
@@ -2732,10 +2733,12 @@ const moduleClass = (key) => {
   function addEnergyPoint(profileKey){
     if (!sp.value?.energy_profiles?.[profileKey]) return
     sp.value.energy_profiles[profileKey].charge_curve.push({ t: 0, w: 0 })
+    saveEnergyDebounced()
   }
   function removeEnergyPoint(profileKey, idx){
     if (!sp.value?.energy_profiles?.[profileKey]) return
     sp.value.energy_profiles[profileKey].charge_curve.splice(idx, 1)
+    saveEnergyDebounced()
   }
 }
 const modulePanelClass = (key) => {
@@ -3002,6 +3005,10 @@ function saveCurveDebounced(){
   if (curveSaveTimer) clearTimeout(curveSaveTimer)
   curveSaveTimer = setTimeout(() => { save() }, 300)
 }
+function saveEnergyDebounced(){
+  if (energySaveTimer) clearTimeout(energySaveTimer)
+  energySaveTimer = setTimeout(() => { save() }, 300)
+}
 function saveHistoryDebounced(){
   if (!historyReady) return
   if (historySaveTimer) clearTimeout(historySaveTimer)
@@ -3025,7 +3032,11 @@ async function loadActuators(){
       }
     }
     await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
-    await refresh()
+    if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0) {
+      await load()
+    } else {
+      await refresh()
+    }
     if (sp.value?.runtime?.ui_poll_ms) {
     pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
     startPolling()
@@ -3637,4 +3648,5 @@ details.form summary{cursor:pointer;list-style:none}
 @keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-36}}
 @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:.35}}
 </style>
+
 

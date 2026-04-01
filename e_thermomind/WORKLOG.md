@@ -310,3 +310,9 @@
 - Energy: fix output JSON per profilo Privato (valori calcolati disponibili in UI).
 - Versione add-on aggiornata a 0.7.47.
 
+
+## 2026-04-01
+- Energy: salvataggio curve/flag piu affidabile (debounce + reload setpoints in tab Energy).
+- Energy: input curva salva anche la temperatura.
+- Energy: batteria output ora usa il segno reale (negativo=carica).
+- Versione add-on aggiornata a 0.7.48.
