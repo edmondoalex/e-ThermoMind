@@ -1098,9 +1098,9 @@
             <div class="field">
               <label>Curva potenza carica per temperatura (°C → W)</label>
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.easas.charge_curve" :key="`ec-e-${i}`">
-                <input class="time" type="number" step="0.5" v-model.number="p.t" placeholder="T (°C)"/>
+                <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
-                <input class="time" type="number" step="10" v-model.number="p.w" placeholder="W"/>
+                <input class="time" type="number" step="10" v-model="p.w" placeholder="W"/>
                 <button class="ghost small" @click="removeEnergyPoint('easas', i)">Rimuovi</button>
               </div>
               <button class="ghost small" @click="addEnergyPoint('easas')">+ Aggiungi punto</button>
@@ -1128,9 +1128,9 @@
             <div class="field">
               <label>Curva potenza carica per temperatura (°C → W)</label>
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.privato.charge_curve" :key="`ec-p-${i}`">
-                <input class="time" type="number" step="0.5" v-model.number="p.t" placeholder="T (°C)"/>
+                <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
-                <input class="time" type="number" step="10" v-model.number="p.w" placeholder="W"/>
+                <input class="time" type="number" step="10" v-model="p.w" placeholder="W"/>
                 <button class="ghost small" @click="removeEnergyPoint('privato', i)">Rimuovi</button>
               </div>
               <button class="ghost small" @click="addEnergyPoint('privato')">+ Aggiungi punto</button>
@@ -2471,9 +2471,18 @@ const fmtDelta = (a, b) => {
   if (!Number.isFinite(da) || !Number.isFinite(db)) return 'n/d'
   return `${(da - db).toFixed(1)}C`
 }
-const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
-const fmtNum = (v) => (Number.isFinite(Number(v)) ? Number(v).toFixed(1) : '-')
-const fmtText = (v) => (v === null || v === undefined || v === '' ? '-' : String(v))
+  const fmtW = (v) => (Number.isFinite(v) ? `${Math.round(v)} W` : 'n/d')
+  const fmtNum = (v) => (Number.isFinite(Number(v)) ? Number(v).toFixed(1) : '-')
+  const fmtText = (v) => (v === null || v === undefined || v === '' ? '-' : String(v))
+  const parseNumFlexible = (v) => {
+    if (typeof v === 'number') return v
+    if (typeof v === 'string') {
+      const s = v.replace(',', '.')
+      const n = Number(s)
+      return Number.isFinite(n) ? n : NaN
+    }
+    return NaN
+  }
 const fmtEntity = (e) => {
   if (!e) return 'n/d'
   const raw = e.state
@@ -3009,7 +3018,7 @@ async function loadActuators(){
         const curve = sp.value.energy_profiles?.[key]?.charge_curve
         if (curve) {
           sp.value.energy_profiles[key].charge_curve = curve
-            .map(p => ({ t: Number(p.t), w: Number(p.w) }))
+            .map(p => ({ t: parseNumFlexible(p.t), w: parseNumFlexible(p.w) }))
             .filter(p => Number.isFinite(p.t) && Number.isFinite(p.w))
             .sort((a, b) => a.t - b.t)
         }
@@ -3628,3 +3637,4 @@ details.form summary{cursor:pointer;list-style:none}
 @keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-36}}
 @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:.35}}
 </style>
+

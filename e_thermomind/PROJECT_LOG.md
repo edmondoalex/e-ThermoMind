@@ -485,3 +485,7 @@ Data export: 2026-02-08 (Europe/Rome)
 - Energy: doppio profilo EASAS/Privato con curve, entità e risultati separati.
 - Admin Energy: aggiunti log ragionamento per EASAS/Privato.
 - Versione add-on aggiornata a 0.7.44.
+
+## Aggiornamenti 2026-04-01
+- Energy: salvataggio curve accetta numeri con virgola e non resetta i valori.
+- Versione add-on aggiornata a 0.7.45.
