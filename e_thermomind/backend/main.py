@@ -2486,6 +2486,8 @@ async def get_setpoints():
         "curva_climatica": cfg.get("curva_climatica", {}),
         "resistance": cfg.get("resistance", {}),
         "solare": cfg.get("solare", {}),
+        "energy": cfg.get("energy", {}),
+        "energy_profiles": cfg.get("energy_profiles", {}),
         "timers": cfg.get("timers", {}),
         "runtime": cfg.get("runtime", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),

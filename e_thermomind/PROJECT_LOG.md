@@ -489,3 +489,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-04-01
 - Energy: salvataggio curve accetta numeri con virgola e non resetta i valori.
 - Versione add-on aggiornata a 0.7.45.
+
+## Aggiornamenti 2026-04-01
+- API: `/api/setpoints` ora include `energy_profiles` per persistenza curve.
+- Versione add-on aggiornata a 0.7.46.
