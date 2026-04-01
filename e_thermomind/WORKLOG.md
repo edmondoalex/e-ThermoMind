@@ -389,3 +389,9 @@
 ## 2026-04-01
 - Energy log: campo ragionamento multilinea con altezza variabile.
 - Versione add-on aggiornata a 0.7.66.
+
+## 2026-04-01
+- Energy: aggiunto modulo riscaldatori batterie (EASAS/Privato) con logica PV+comfort e mapping attuatori.
+- UI Energy: stato riscaldatori in User + configurazione in Admin.
+- Energy log: formattazione multilinea pulita.
+- Versione add-on aggiornata a 0.7.67.

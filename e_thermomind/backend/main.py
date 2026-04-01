@@ -600,6 +600,7 @@ async def decision():
         "enabled": bool(sched.get("enabled"))
     }
     await _apply_resistance_live(data)
+    await _apply_energy_heater_live(data)
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
     await _apply_impianto_live()
@@ -814,6 +815,7 @@ async def _build_snapshot() -> dict:
         "enabled": bool(sched.get("enabled"))
     }
     await _apply_resistance_live(data)
+    await _apply_energy_heater_live(data)
     await _apply_transfer_live(data)
     await _apply_solar_live(data)
     await _apply_impianto_live()
@@ -1637,6 +1639,23 @@ async def _apply_solar_live(decision_data: dict) -> None:
                 solar_watchdog_last_log = now
     except Exception:
         pass
+
+async def _apply_energy_heater_live(decision_data: dict) -> None:
+    if cfg.get("runtime", {}).get("mode") != "live":
+        return
+    if not ha.enabled:
+        return
+    heater = decision_data.get("computed", {}).get("energy_heater", {})
+    if not isinstance(heater, dict):
+        return
+    act = cfg.get("actuators", {})
+    cfg_heater = cfg.get("energy_heater", {})
+
+    for key, act_key in (("easas", "battery_heater_easas_switch"), ("privato", "battery_heater_privato_switch")):
+        prof = heater.get(key, {})
+        enabled = bool(cfg_heater.get(key, {}).get("enabled", True))
+        target = bool(prof.get("on")) if enabled else False
+        await _set_actuator(act.get(act_key), target)
 
 async def _apply_miscelatrice_live(decision_data: dict) -> None:
     global miscelatrice_task, miscelatrice_pause_until, miscelatrice_last_action, miscelatrice_shutdown_until
@@ -2489,6 +2508,7 @@ async def get_setpoints():
         "solare": cfg.get("solare", {}),
         "energy": cfg.get("energy", {}),
         "energy_profiles": cfg.get("energy_profiles", {}),
+        "energy_heater": cfg.get("energy_heater", {}),
         "timers": cfg.get("timers", {}),
         "runtime": cfg.get("runtime", {}),
         "modules_enabled": cfg.get("modules_enabled", {}),

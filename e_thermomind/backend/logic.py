@@ -34,7 +34,9 @@ _LAST: Dict[str, Any] = {
     "gas_puf_ok": False,
     "res_step": 0,
     "res_step_ts": 0.0,
-    "res_base": None
+    "res_base": None,
+    "heater_easas": False,
+    "heater_privato": False
 }
 
 def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool) -> bool:
@@ -238,6 +240,47 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         priv_cfg if isinstance(priv_cfg, dict) else {}
     )
 
+    def _calc_heater(profile_key: str, temp_c: float | None, pv_w: float | None, cfg_heater: dict, last_on: bool) -> dict:
+        enabled = bool(cfg_heater.get("enabled", True))
+        comfort_c = float(cfg_heater.get("comfort_c", 22.0))
+        hyst_c = float(cfg_heater.get("hyst_c", 1.0))
+        pv_on_w = float(cfg_heater.get("pv_on_w", 300.0))
+        pv_w = 0.0 if pv_w is None else float(pv_w)
+        on = False
+        reason = ""
+        if not enabled:
+            on = False
+            reason = "Disabilitato"
+        elif temp_c is None:
+            on = False
+            reason = "Temp batt n/d"
+        elif pv_w < pv_on_w:
+            on = False
+            reason = f"FV {pv_w:.0f}W < soglia {pv_on_w:.0f}W"
+        else:
+            if last_on:
+                on = temp_c < comfort_c
+            else:
+                on = temp_c <= (comfort_c - hyst_c)
+            reason = f"T={temp_c:.1f}C | comfort {comfort_c:.1f}C | hyst {hyst_c:.1f}C | FV {pv_w:.0f}W"
+        return {"on": on, "temp_c": temp_c, "pv_w": pv_w, "comfort_c": comfort_c, "hyst_c": hyst_c, "pv_on_w": pv_on_w, "reason": reason}
+
+    heater_cfg = cfg.get("energy_heater", {})
+    easas_heater = _calc_heater(
+        "easas",
+        battery_temp_c_easas if battery_temp_c_easas is not None else battery_temp_c,
+        pv_power_easas if pv_power_easas is not None else pv_power_w,
+        heater_cfg.get("easas", {}) if isinstance(heater_cfg, dict) else {},
+        bool(_LAST.get("heater_easas", False))
+    )
+    privato_heater = _calc_heater(
+        "privato",
+        battery_temp_c_privato,
+        pv_power_privato,
+        heater_cfg.get("privato", {}) if isinstance(heater_cfg, dict) else {},
+        bool(_LAST.get("heater_privato", False))
+    )
+
     extra_safe_w = easas["extra_safe_w"]
     extra_safe_total_w = easas["extra_safe_total_w"]
 
@@ -409,6 +452,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     _LAST["res_step"] = step
     if 'base_sel' in locals():
         _LAST["res_base"] = base_sel
+    _LAST["heater_easas"] = bool(easas_heater.get("on"))
+    _LAST["heater_privato"] = bool(privato_heater.get("on"))
 
     timers_cfg = cfg.get("timers", {})
     vta_start = int(timers_cfg.get("volano_to_acs_start_s", 5))
@@ -747,6 +792,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "pv_power_w": pv_power_w,
             "battery_temp_c_easas": battery_temp_c_easas,
             "battery_temp_c_privato": battery_temp_c_privato,
+            "battery_soc_easas": battery_soc_easas,
+            "battery_soc_privato": battery_soc_privato,
             "grid_export_w_easas": export_w_easas,
             "grid_export_w_privato": export_w_privato,
             "battery_output_w_easas": batt_out_easas,
@@ -816,6 +863,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "max_charge_w": easas["max_charge_w"],
                 "headroom_w": easas["headroom_w"],
                 "temp_c": easas["temp_c"],
+                "soc_pct": easas.get("soc_pct"),
                 "export_w": easas["export_w"],
                 "battery_output_w": easas["battery_output_w"]
             },
@@ -825,8 +873,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "max_charge_w": privato["max_charge_w"],
                 "headroom_w": privato["headroom_w"],
                 "temp_c": privato["temp_c"],
+                "soc_pct": privato.get("soc_pct"),
                 "export_w": privato["export_w"],
                 "battery_output_w": privato["battery_output_w"]
+            },
+            "energy_heater": {
+                "easas": easas_heater,
+                "privato": privato_heater
             },
             "curva_climatica": {
                 "enabled": curve_enabled,
@@ -893,6 +946,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "resistenze_volano": f"{charge_reason} | {power_note}",
                 "energy_easas": f"Extra {easas['extra_safe_w']:.0f}W | Tot {easas['extra_safe_total_w']:.0f}W | Headroom {easas['headroom_w']:.0f}W",
                 "energy_privato": f"Extra {privato['extra_safe_w']:.0f}W | Tot {privato['extra_safe_total_w']:.0f}W | Headroom {privato['headroom_w']:.0f}W",
+                "energy_heater_easas": f"ON={easas_heater['on']} | {easas_heater['reason']}",
+                "energy_heater_privato": f"ON={privato_heater['on']} | {privato_heater['reason']}",
                 "impianto": impianto_reason,
                 "gas_emergenza": gas_reason,
                 "caldaia_legna": legna_reason,

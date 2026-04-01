@@ -99,6 +99,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "r28_scarico_antigelo_mandata_pdc": None,
     "r29_scarico_antigelo_ritorno_pdc": None,
     "r30_alimentazione_caldaia_legna": None,
+    "battery_heater_easas_switch": None,
+    "battery_heater_privato_switch": None,
     "gas_boiler_power": None,
     "gas_boiler_ta": None
   },
@@ -211,6 +213,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         {"t": 30.0, "w": 7500.0}
       ]
     }
+  },
+  "energy_heater": {
+    "easas": {"enabled": True, "comfort_c": 22.0, "hyst_c": 1.0, "pv_on_w": 300.0},
+    "privato": {"enabled": True, "comfort_c": 22.0, "hyst_c": 1.0, "pv_on_w": 300.0}
   },
   "solare": {
     "mode": "night",
@@ -579,6 +585,20 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if cfg.get("runtime", {}).get("force_live_on_startup"):
         cfg["runtime"]["mode"] = "live"
 
+    energy_heater = raw.get("energy_heater", {})
+    if isinstance(energy_heater, dict):
+        for key in ("easas", "privato"):
+            prof = energy_heater.get(key, {})
+            if isinstance(prof, dict):
+                if "enabled" in prof:
+                    cfg["energy_heater"][key]["enabled"] = bool(prof.get("enabled"))
+                if "comfort_c" in prof:
+                    cfg["energy_heater"][key]["comfort_c"] = _float(prof.get("comfort_c"), cfg["energy_heater"][key]["comfort_c"])
+                if "hyst_c" in prof:
+                    cfg["energy_heater"][key]["hyst_c"] = _float(prof.get("hyst_c"), cfg["energy_heater"][key]["hyst_c"])
+                if "pv_on_w" in prof:
+                    cfg["energy_heater"][key]["pv_on_w"] = _float(prof.get("pv_on_w"), cfg["energy_heater"][key]["pv_on_w"])
+
     mqtt = raw.get("mqtt", {})
     if isinstance(mqtt, dict):
         if "enabled" in mqtt:
@@ -794,6 +814,19 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
                 cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
     if cfg.get("solare", {}).get("force_night_on_startup"):
         cfg["solare"]["mode"] = "night"
+    energy_heater = payload.get("energy_heater", {})
+    if isinstance(energy_heater, dict):
+        for key in ("easas", "privato"):
+            prof = energy_heater.get(key, {})
+            if isinstance(prof, dict):
+                if "enabled" in prof:
+                    cfg["energy_heater"][key]["enabled"] = bool(prof.get("enabled"))
+                if "comfort_c" in prof:
+                    cfg["energy_heater"][key]["comfort_c"] = _float(prof.get("comfort_c"), cfg["energy_heater"][key]["comfort_c"])
+                if "hyst_c" in prof:
+                    cfg["energy_heater"][key]["hyst_c"] = _float(prof.get("hyst_c"), cfg["energy_heater"][key]["hyst_c"])
+                if "pv_on_w" in prof:
+                    cfg["energy_heater"][key]["pv_on_w"] = _float(prof.get("pv_on_w"), cfg["energy_heater"][key]["pv_on_w"])
     curve = payload.get("curva_climatica", {})
     if isinstance(curve, dict):
         if "x" in curve:

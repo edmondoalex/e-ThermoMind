@@ -146,6 +146,18 @@
               <div class="v">{{ fmtTemp(d?.computed?.energy_privato?.temp_c) }}</div>
             </div>
           </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Heater EASAS</div>
+              <div class="v">{{ d?.computed?.energy_heater?.easas?.on ? 'ON' : 'OFF' }}</div>
+              <div class="muted">Switch: {{ act?.battery_heater_easas_switch?.state || '-' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Heater Privato</div>
+              <div class="v">{{ d?.computed?.energy_heater?.privato?.on ? 'ON' : 'OFF' }}</div>
+              <div class="muted">Switch: {{ act?.battery_heater_privato_switch?.state || '-' }}</div>
+            </div>
+          </div>
         </div>
 
         <div class="card inner">
@@ -1200,6 +1212,34 @@
             </div>
           </div>
 
+          <div class="section-title">Riscaldatori batterie (EASAS)</div>
+          <div class="form">
+            <div class="field">
+              <label class="inline">
+                <input type="checkbox" v-model="sp.energy_heater.easas.enabled" @change="save"/>
+                <span>Abilita riscaldatore batterie</span>
+              </label>
+            </div>
+            <div class="field"><label>Comfort (?C)</label><input type="number" step="0.5" v-model.number="sp.energy_heater.easas.comfort_c"/></div>
+            <div class="field"><label>Isteresi (?C)</label><input type="number" step="0.5" v-model.number="sp.energy_heater.easas.hyst_c"/></div>
+            <div class="field"><label>FV minimo ON (W)</label><input type="number" step="10" v-model.number="sp.energy_heater.easas.pv_on_w"/></div>
+            <div class="help">Usa T batteria + FV EASAS. Accende sotto comfort-hyst, spegne sopra comfort.</div>
+          </div>
+
+          <div class="section-title">Riscaldatori batterie (Privato)</div>
+          <div class="form">
+            <div class="field">
+              <label class="inline">
+                <input type="checkbox" v-model="sp.energy_heater.privato.enabled" @change="save"/>
+                <span>Abilita riscaldatore batterie</span>
+              </label>
+            </div>
+            <div class="field"><label>Comfort (?C)</label><input type="number" step="0.5" v-model.number="sp.energy_heater.privato.comfort_c"/></div>
+            <div class="field"><label>Isteresi (?C)</label><input type="number" step="0.5" v-model.number="sp.energy_heater.privato.hyst_c"/></div>
+            <div class="field"><label>FV minimo ON (W)</label><input type="number" step="10" v-model.number="sp.energy_heater.privato.pv_on_w"/></div>
+            <div class="help">Usa T batteria + FV Privato. Accende sotto comfort-hyst, spegne sopra comfort.</div>
+          </div>
+
           <div class="section-title">Valori calcolati (Privato)</div>
           <div class="form">
             <div class="field">
@@ -1267,13 +1307,13 @@
             <div class="field">
               <label>Ragionamento EASAS</label>
               <div class="input-row">
-                <textarea class="reason-box" :value="energyExplain(d?.computed?.energy_easas)" readonly></textarea>
+                <div class="reason-box">{{ energyExplain(d?.computed?.energy_easas) }}</div>
               </div>
             </div>
             <div class="field">
               <label>Ragionamento Privato</label>
               <div class="input-row">
-                <textarea class="reason-box" :value="energyExplain(d?.computed?.energy_privato)" readonly></textarea>
+                <div class="reason-box">{{ energyExplain(d?.computed?.energy_privato) }}</div>
               </div>
             </div>
           </div>
@@ -2549,6 +2589,8 @@ const actuatorDefs = [
   { key: 'r23_resistenza_2_volano_pdc', label: 'R23 Resistenza 2 Volano PDC', impl: true },
   { key: 'r24_resistenza_3_volano_pdc', label: 'R24 Resistenza 3 Volano PDC', impl: true },
   { key: 'generale_resistenze_volano_pdc', label: 'R0 Generale Resistenze Volano PDC', impl: true },
+  { key: 'battery_heater_easas_switch', label: 'Battery Heater EASAS', impl: true },
+  { key: 'battery_heater_privato_switch', label: 'Battery Heater Privato', impl: true },
   { key: 'r25_comparto_generale_pdc', label: 'R25 Comparto Generale PDC', impl: false },
   { key: 'r26_comparto_pdc1_avvio', label: 'R26 Comparto PDC 1 Avvio', impl: false },
   { key: 'r27_comparto_pdc2_avvio', label: 'R27 Comparto PDC 2 Avvio', impl: false },
@@ -2594,7 +2636,7 @@ const fmtDelta = (a, b) => {
     if (Number.isFinite(headroom)) parts.push(`Headroom = max - carica: ${Math.round(headroom)} W`)
     if (Number.isFinite(extra)) parts.push(`Extra safe = max(0, export - headroom): ${Math.round(extra)} W`)
     if (Number.isFinite(extraTot)) parts.push(`Extra totale = max(0, export): ${Math.round(extraTot)} W`)
-    return parts.join(" | ")
+    return parts.join("\n")
   }
   const energyCurrentChargeW = (e) => {
     const v = Number(e?.battery_output_w)
@@ -3110,6 +3152,14 @@ async function load(){
   if (typeof sp.value.energy_profiles.easas.soc_max_charge_w === 'undefined') sp.value.energy_profiles.easas.soc_max_charge_w = 0
   if (typeof sp.value.energy_profiles.privato.soc_limit_pct === 'undefined') sp.value.energy_profiles.privato.soc_limit_pct = 100
   if (typeof sp.value.energy_profiles.privato.soc_max_charge_w === 'undefined') sp.value.energy_profiles.privato.soc_max_charge_w = 0
+  if (!sp.value?.energy_heater) {
+    sp.value.energy_heater = {
+      easas: { enabled: true, comfort_c: 22, hyst_c: 1, pv_on_w: 300 },
+      privato: { enabled: true, comfort_c: 22, hyst_c: 1, pv_on_w: 300 }
+    }
+  }
+  if (!sp.value.energy_heater.easas) sp.value.energy_heater.easas = { enabled: true, comfort_c: 22, hyst_c: 1, pv_on_w: 300 }
+  if (!sp.value.energy_heater.privato) sp.value.energy_heater.privato = { enabled: true, comfort_c: 22, hyst_c: 1, pv_on_w: 300 }
   if (!sp.value?.miscelatrice) {
     sp.value.miscelatrice = { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, min_temp_c: 20, max_temp_c: 80, force_impulse_s: 3 }
   }
@@ -3818,4 +3868,4 @@ details.form summary{cursor:pointer;list-style:none}
 
 
 
-.reason-box{width:100%;min-height:64px;resize:vertical;background:#0c141b;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:10px;line-height:1.3;white-space:pre-wrap;word-break:break-word}
+.reason-box{width:100%;min-height:80px;background:#0c141b;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;line-height:1.4;white-space:pre-line;word-break:break-word}
