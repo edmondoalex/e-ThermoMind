@@ -377,3 +377,7 @@
 ## 2026-04-01
 - UI: mostrata soglia spegnimento export (export_off_w) per resistenze.
 - Versione add-on aggiornata a 0.7.63.
+
+## 2026-04-01
+- Energy: aggiunta curva SoC (es. 99%->500W, 100%->0W) per EASAS/Privato.
+- Versione add-on aggiornata a 0.7.64.

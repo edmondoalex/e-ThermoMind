@@ -1116,12 +1116,15 @@
               </select>
             </div>
             <div class="field">
-              <label>SO C batteria ≥ (%) → max carica (W)</label>
-              <div class="row2">
-                <input type="number" step="1" v-model.number="sp.energy_profiles.easas.soc_limit_pct"/>
-                <input type="number" step="50" v-model.number="sp.energy_profiles.easas.soc_max_charge_w"/>
+              <label>SoC batteria → max carica (W)</label>
+              <div class="list-row" v-for="(p, i) in sp.energy_profiles.easas.soc_curve" :key="`sc-e-${i}`">
+                <input class="time" type="text" inputmode="decimal" v-model="p.soc" placeholder="SoC (%)"/>
+                <span class="muted">→</span>
+                <input class="time" type="text" inputmode="numeric" v-model="p.w" placeholder="W"/>
+                <button class="ghost small" @click="removeSocPoint('easas', i)">Rimuovi</button>
               </div>
-              <div class="help">Se SoC >= soglia, limita la carica massima a questo valore.</div>
+              <button class="ghost small" @click="addSocPoint('easas')">+ Aggiungi punto</button>
+              <div class="help">Se SoC supera un punto, limita la carica massima al relativo valore.</div>
             </div>
             <div class="field">
               <label>Curva potenza carica per temperatura (°C → W)</label>
@@ -1154,12 +1157,15 @@
               </select>
             </div>
             <div class="field">
-              <label>SO C batteria ≥ (%) → max carica (W)</label>
-              <div class="row2">
-                <input type="number" step="1" v-model.number="sp.energy_profiles.privato.soc_limit_pct"/>
-                <input type="number" step="50" v-model.number="sp.energy_profiles.privato.soc_max_charge_w"/>
+              <label>SoC batteria → max carica (W)</label>
+              <div class="list-row" v-for="(p, i) in sp.energy_profiles.privato.soc_curve" :key="`sc-p-${i}`">
+                <input class="time" type="text" inputmode="decimal" v-model="p.soc" placeholder="SoC (%)"/>
+                <span class="muted">→</span>
+                <input class="time" type="text" inputmode="numeric" v-model="p.w" placeholder="W"/>
+                <button class="ghost small" @click="removeSocPoint('privato', i)">Rimuovi</button>
               </div>
-              <div class="help">Se SoC >= soglia, limita la carica massima a questo valore.</div>
+              <button class="ghost small" @click="addSocPoint('privato')">+ Aggiungi punto</button>
+              <div class="help">Se SoC supera un punto, limita la carica massima al relativo valore.</div>
             </div>
             <div class="field">
               <label>Curva potenza carica per temperatura (°C → W)</label>
@@ -2834,12 +2840,22 @@ const moduleClass = (key) => {
 function addEnergyPoint(profileKey){
   if (!sp.value?.energy_profiles?.[profileKey]) return
   sp.value.energy_profiles[profileKey].charge_curve.push({ t: 0, w: 0 })
-  saveEnergyDebounced()
 }
 function removeEnergyPoint(profileKey, idx){
   if (!sp.value?.energy_profiles?.[profileKey]) return
   sp.value.energy_profiles[profileKey].charge_curve.splice(idx, 1)
-  saveEnergyDebounced()
+}
+function addSocPoint(profileKey){
+  if (!sp.value?.energy_profiles?.[profileKey]) return
+  if (!Array.isArray(sp.value.energy_profiles[profileKey].soc_curve)) {
+    sp.value.energy_profiles[profileKey].soc_curve = []
+  }
+  sp.value.energy_profiles[profileKey].soc_curve.push({ soc: 99, w: 500 })
+}
+function removeSocPoint(profileKey, idx){
+  if (!sp.value?.energy_profiles?.[profileKey]) return
+  if (!Array.isArray(sp.value.energy_profiles[profileKey].soc_curve)) return
+  sp.value.energy_profiles[profileKey].soc_curve.splice(idx, 1)
 }
 const modulePanelClass = (key) => {
   const enabled = !!modules.value?.[key]
@@ -3031,6 +3047,10 @@ async function load(){
       easas: {
         calc_extra_safe: true,
         interp: 'linear',
+        soc_curve: [
+          { soc: 99, w: 500 },
+          { soc: 100, w: 0 }
+        ],
         charge_curve: [
           { t: 5, w: 1500 },
           { t: 10, w: 1500 },
@@ -3043,6 +3063,10 @@ async function load(){
       privato: {
         calc_extra_safe: true,
         interp: 'linear',
+        soc_curve: [
+          { soc: 99, w: 500 },
+          { soc: 100, w: 0 }
+        ],
         charge_curve: [
           { t: 5, w: 1500 },
           { t: 10, w: 1500 },
@@ -3053,6 +3077,12 @@ async function load(){
         ]
       }
     }
+  }
+  if (!Array.isArray(sp.value.energy_profiles.easas.soc_curve)) {
+    sp.value.energy_profiles.easas.soc_curve = [{ soc: 99, w: 500 }, { soc: 100, w: 0 }]
+  }
+  if (!Array.isArray(sp.value.energy_profiles.privato.soc_curve)) {
+    sp.value.energy_profiles.privato.soc_curve = [{ soc: 99, w: 500 }, { soc: 100, w: 0 }]
   }
   if (typeof sp.value.energy_profiles.easas.soc_limit_pct === 'undefined') sp.value.energy_profiles.easas.soc_limit_pct = 100
   if (typeof sp.value.energy_profiles.easas.soc_max_charge_w === 'undefined') sp.value.energy_profiles.easas.soc_max_charge_w = 0
@@ -3135,6 +3165,13 @@ async function loadActuators(){
             .map(p => ({ t: parseNumFlexible(p.t), w: parseNumFlexible(p.w) }))
             .filter(p => Number.isFinite(p.t) && Number.isFinite(p.w))
             .sort((a, b) => a.t - b.t)
+        }
+        const socCurve = sp.value.energy_profiles?.[key]?.soc_curve
+        if (socCurve) {
+          sp.value.energy_profiles[key].soc_curve = socCurve
+            .map(p => ({ soc: parseNumFlexible(p.soc), w: parseNumFlexible(p.w) }))
+            .filter(p => Number.isFinite(p.soc) && Number.isFinite(p.w))
+            .sort((a, b) => a.soc - b.soc)
         }
       }
     }

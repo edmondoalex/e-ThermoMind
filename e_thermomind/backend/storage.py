@@ -165,8 +165,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   "energy": {
     "calc_extra_safe": True,
     "interp": "linear",
-    "soc_limit_pct": 100.0,
-    "soc_max_charge_w": 0.0,
+    "soc_curve": [
+      {"soc": 99.0, "w": 500.0},
+      {"soc": 100.0, "w": 0.0}
+    ],
     "charge_curve": [
       {"t": 5.0, "w": 1500.0},
       {"t": 10.0, "w": 1500.0},
@@ -180,8 +182,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "easas": {
       "calc_extra_safe": True,
       "interp": "linear",
-      "soc_limit_pct": 100.0,
-      "soc_max_charge_w": 0.0,
+      "soc_curve": [
+        {"soc": 99.0, "w": 500.0},
+        {"soc": 100.0, "w": 0.0}
+      ],
       "charge_curve": [
         {"t": 5.0, "w": 1500.0},
         {"t": 10.0, "w": 1500.0},
@@ -194,8 +198,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "privato": {
       "calc_extra_safe": True,
       "interp": "linear",
-      "soc_limit_pct": 100.0,
-      "soc_max_charge_w": 0.0,
+      "soc_curve": [
+        {"soc": 99.0, "w": 500.0},
+        {"soc": 100.0, "w": 0.0}
+      ],
       "charge_curve": [
         {"t": 5.0, "w": 1500.0},
         {"t": 10.0, "w": 1500.0},
@@ -420,21 +426,21 @@ def _float_list_any(value: Any, defaults: Iterable[float]) -> list[float]:
             continue
     return out if out else base
 
-def _curve_points(value: Any, defaults: list[dict]) -> list[dict]:
+def _curve_points(value: Any, defaults: list[dict], key_t: str = "t") -> list[dict]:
     if not isinstance(value, (list, tuple)):
         return defaults
     out: list[dict] = []
     for item in value:
         if not isinstance(item, dict):
             continue
-        t = _float(item.get("t"), None)
+        t = _float(item.get(key_t), None)
         w = _float(item.get("w"), None)
         if t is None or w is None:
             continue
-        out.append({"t": float(t), "w": float(w)})
+        out.append({key_t: float(t), "w": float(w)})
     if not out:
         return defaults
-    out.sort(key=lambda x: x["t"])
+    out.sort(key=lambda x: x[key_t])
     return out
 
 def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
@@ -489,10 +495,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["energy"]["calc_extra_safe"] = bool(energy.get("calc_extra_safe"))
         if isinstance(energy.get("interp"), str):
             cfg["energy"]["interp"] = energy.get("interp", cfg["energy"]["interp"]).strip().lower()
-        if "soc_limit_pct" in energy:
-            cfg["energy"]["soc_limit_pct"] = _float(energy.get("soc_limit_pct"), cfg["energy"]["soc_limit_pct"])
-        if "soc_max_charge_w" in energy:
-            cfg["energy"]["soc_max_charge_w"] = _float(energy.get("soc_max_charge_w"), cfg["energy"]["soc_max_charge_w"])
+        if "soc_curve" in energy:
+            cfg["energy"]["soc_curve"] = _curve_points(energy.get("soc_curve"), cfg["energy"]["soc_curve"], key_t="soc")
         if "charge_curve" in energy:
             cfg["energy"]["charge_curve"] = _curve_points(energy.get("charge_curve"), cfg["energy"]["charge_curve"])
 
@@ -756,10 +760,10 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
                 cfg["energy_profiles"]["easas"]["charge_curve"] = _curve_points(
                     energy.get("charge_curve"), cfg["energy"]["charge_curve"]
                 )
-            if "soc_limit_pct" in energy:
-                cfg["energy_profiles"]["easas"]["soc_limit_pct"] = _float(energy.get("soc_limit_pct"), cfg["energy"]["soc_limit_pct"])
-            if "soc_max_charge_w" in energy:
-                cfg["energy_profiles"]["easas"]["soc_max_charge_w"] = _float(energy.get("soc_max_charge_w"), cfg["energy"]["soc_max_charge_w"])
+            if "soc_curve" in energy:
+                cfg["energy_profiles"]["easas"]["soc_curve"] = _curve_points(
+                    energy.get("soc_curve"), cfg["energy"]["soc_curve"], key_t="soc"
+                )
     energy_profiles = payload.get("energy_profiles", {})
     if isinstance(energy_profiles, dict):
         for key in ("easas", "privato"):
@@ -769,10 +773,10 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
                     cfg["energy_profiles"][key]["calc_extra_safe"] = bool(prof.get("calc_extra_safe"))
                 if isinstance(prof.get("interp"), str):
                     cfg["energy_profiles"][key]["interp"] = prof.get("interp", cfg["energy_profiles"][key]["interp"]).strip().lower()
-                if "soc_limit_pct" in prof:
-                    cfg["energy_profiles"][key]["soc_limit_pct"] = _float(prof.get("soc_limit_pct"), cfg["energy_profiles"][key]["soc_limit_pct"])
-                if "soc_max_charge_w" in prof:
-                    cfg["energy_profiles"][key]["soc_max_charge_w"] = _float(prof.get("soc_max_charge_w"), cfg["energy_profiles"][key]["soc_max_charge_w"])
+                if "soc_curve" in prof:
+                    cfg["energy_profiles"][key]["soc_curve"] = _curve_points(
+                        prof.get("soc_curve"), cfg["energy_profiles"][key]["soc_curve"], key_t="soc"
+                    )
                 if "charge_curve" in prof:
                     cfg["energy_profiles"][key]["charge_curve"] = _curve_points(
                         prof.get("charge_curve"), cfg["energy_profiles"][key]["charge_curve"]

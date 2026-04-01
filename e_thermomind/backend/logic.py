@@ -181,16 +181,27 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         calc_on = bool(curve_cfg.get("calc_extra_safe", False))
         interp_mode = str(curve_cfg.get("interp", "linear")).lower()
         curve = curve_cfg.get("charge_curve", [])
-        soc_limit = float(curve_cfg.get("soc_limit_pct", 99.0))
-        soc_max_charge_w = float(curve_cfg.get("soc_max_charge_w", 500.0))
+        soc_curve = curve_cfg.get("soc_curve", [])
         export_val = 0.0 if export_val is None else float(export_val)
         batt_out = 0.0 if batt_out is None else float(batt_out)
         if not calc_on or temp_c is None:
             return {"extra_safe_w": 0.0, "extra_safe_total_w": 0.0, "max_charge_w": 0.0, "headroom_w": 0.0,
                     "temp_c": temp_c, "soc_pct": soc_pct, "export_w": export_val, "battery_output_w": batt_out}
         max_charge_w = _interp_curve(float(temp_c), curve, interp_mode)
-        if soc_pct is not None and soc_pct >= soc_limit:
-            max_charge_w = min(max_charge_w, soc_max_charge_w)
+        if soc_pct is not None and soc_curve:
+            try:
+                pts = sorted([p for p in soc_curve if isinstance(p, dict) and "soc" in p and "w" in p],
+                             key=lambda x: float(x["soc"]))
+                if pts:
+                    # step: take last point with soc <= current
+                    limit_w = None
+                    for p in pts:
+                        if soc_pct >= float(p["soc"]):
+                            limit_w = float(p["w"])
+                    if limit_w is not None:
+                        max_charge_w = min(max_charge_w, limit_w)
+            except Exception:
+                pass
         current_charge_w = max(0.0, -batt_out)
         headroom_w = max(0.0, max_charge_w - current_charge_w)
         calc_extra_safe_w = max(0.0, export_val - headroom_w)
