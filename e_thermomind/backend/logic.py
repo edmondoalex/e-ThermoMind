@@ -786,6 +786,24 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "action": mix_action,
                 "reason": mix_reason
             },
+            "energy_easas": {
+                "extra_safe_w": easas["extra_safe_w"],
+                "extra_safe_total_w": easas["extra_safe_total_w"],
+                "max_charge_w": easas["max_charge_w"],
+                "headroom_w": easas["headroom_w"],
+                "temp_c": easas["temp_c"],
+                "export_w": easas["export_w"],
+                "battery_output_w": easas["battery_output_w"]
+            },
+            "energy_privato": {
+                "extra_safe_w": privato["extra_safe_w"],
+                "extra_safe_total_w": privato["extra_safe_total_w"],
+                "max_charge_w": privato["max_charge_w"],
+                "headroom_w": privato["headroom_w"],
+                "temp_c": privato["temp_c"],
+                "export_w": privato["export_w"],
+                "battery_output_w": privato["battery_output_w"]
+            },
             "curva_climatica": {
                 "enabled": curve_enabled,
                 "t_ext": t_esterna,
@@ -849,17 +867,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                     else "Curva climatica non attiva o senza T_EXT."
                 ),
                 "resistenze_volano": f"{charge_reason} | {power_note}",
-                "energy_privato": {
-                    "extra_safe_w": privato["extra_safe_w"],
-                    "extra_safe_total_w": privato["extra_safe_total_w"],
-                    "max_charge_w": privato["max_charge_w"],
-                    "headroom_w": privato["headroom_w"],
-                    "temp_c": privato["temp_c"],
-                    "export_w": privato["export_w"],
-                    "battery_output_w": privato["battery_output_w"]
-                },
-            "energy_easas": f"Extra {easas['extra_safe_w']:.0f}W | Tot {easas['extra_safe_total_w']:.0f}W | Headroom {easas['headroom_w']:.0f}W",
-            "energy_privato": f"Extra {privato['extra_safe_w']:.0f}W | Tot {privato['extra_safe_total_w']:.0f}W | Headroom {privato['headroom_w']:.0f}W",
+                "energy_easas": f"Extra {easas['extra_safe_w']:.0f}W | Tot {easas['extra_safe_total_w']:.0f}W | Headroom {easas['headroom_w']:.0f}W",
+                "energy_privato": f"Extra {privato['extra_safe_w']:.0f}W | Tot {privato['extra_safe_total_w']:.0f}W | Headroom {privato['headroom_w']:.0f}W",
                 "impianto": impianto_reason,
                 "gas_emergenza": gas_reason,
                 "caldaia_legna": legna_reason,
