@@ -320,3 +320,7 @@
 ## 2026-04-01
 - Energy UI: mostrati dettagli calcolo (max carica, carica attuale, headroom) per EASAS e Privato.
 - Versione add-on aggiornata a 0.7.49.
+
+## 2026-04-01
+- Resistenze UI: mostrati export, extra safe, extra safe totale e disponibile calcolato.
+- Versione add-on aggiornata a 0.7.50.

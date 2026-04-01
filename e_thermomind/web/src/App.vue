@@ -402,6 +402,26 @@
             </div>
           </div>
         </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Export rete</div>
+              <div class="v">{{ fmtW(d?.inputs?.grid_export_w) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Extra safe</div>
+              <div class="v">{{ fmtW(d?.inputs?.extra_safe_w) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Extra safe totale</div>
+              <div class="v">{{ fmtW(d?.inputs?.extra_safe_total_w) }}</div>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="kpi kpi-center">
+              <div class="k">Disponibile (calcolato)</div>
+              <div class="v">{{ fmtW(d?.computed?.available_power_w) }}</div>
+            </div>
+          </div>
 
         <div v-if="act" class="card inner module-panel" :class="modulePanelClass('volano_to_acs')">
           <div class="row"><strong>Volano → ACS</strong></div>
