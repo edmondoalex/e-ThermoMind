@@ -116,6 +116,24 @@
           </div>
         </div>
 
+        <div v-if="d" class="card inner">
+          <div class="row"><strong>Energy (calcolato)</strong></div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Extra safe possibile</div>
+              <div class="v">{{ fmtW(d.inputs.extra_safe_w) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Extra safe totale</div>
+              <div class="v">{{ fmtW(d.inputs.extra_safe_total_w) }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Temp batteria</div>
+              <div class="v">{{ fmtTemp(d.inputs.battery_temp_c) }}</div>
+            </div>
+          </div>
+        </div>
+
         <div class="card inner">
           <div class="row"><strong>Moduli (User)</strong></div>
           <div class="row3">

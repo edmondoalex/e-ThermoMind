@@ -476,3 +476,7 @@ Data export: 2026-02-08 (Europe/Rome)
 ## Aggiornamenti 2026-04-01
 - Admin Energy: rimossi campi entità Extra Safe; mostrati valori calcolati in sola lettura.
 - Versione add-on aggiornata a 0.7.42.
+
+## Aggiornamenti 2026-04-01
+- UI User: aggiunta sezione Energy con Extra Safe calcolati e temperatura batteria.
+- Versione add-on aggiornata a 0.7.43.
