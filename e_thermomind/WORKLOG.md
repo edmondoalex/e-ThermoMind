@@ -373,3 +373,7 @@
 ## 2026-04-01
 - Resistenze: se gia ON, la logica usa extra_safe + potenza resistenze per evitare spegnimenti immediati.
 - Versione add-on aggiornata a 0.7.62.
+
+## 2026-04-01
+- UI: mostrata soglia spegnimento export (export_off_w) per resistenze.
+- Versione add-on aggiornata a 0.7.63.
