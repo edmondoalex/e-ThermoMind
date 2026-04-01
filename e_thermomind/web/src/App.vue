@@ -1426,6 +1426,13 @@
               <div class="help">dry-run = nessun comando agli attuatori. live = comandi reali su HA.</div>
             </div>
             <div class="field">
+              <label class="inline">
+                <input type="checkbox" v-model="sp.runtime.force_live_on_startup" @change="save"/>
+                <span>Forza LIVE al riavvio</span>
+              </label>
+              <div class="help">Se attivo, il sistema torna in LIVE dopo ogni riavvio.</div>
+            </div>
+            <div class="field">
               <label>Polling UI (ms)</label>
               <input type="number" min="500" step="500" v-model.number="sp.runtime.ui_poll_ms"/>
               <div class="help">Intervallo aggiornamento UI. Non influisce sulla logica interna.</div>
@@ -1667,6 +1674,13 @@
                 <option value="auto">auto (sun.sun)</option>
                 <option value="night">notte fissa</option>
               </select>
+            </div>
+            <div class="field">
+              <label class="inline">
+                <input type="checkbox" v-model="sp.solare.force_night_on_startup" @change="save"/>
+                <span>Forza NOTTE al riavvio</span>
+              </label>
+              <div class="help">Se attivo, il solare torna in NOTTE dopo ogni riavvio.</div>
             </div>
             <div class="field">
               <label>FV entity (W) per giorno/notte</label>
@@ -2977,7 +2991,8 @@ async function load(){
     delta_puffer_acs: false, delta_volano_acs: false, delta_volano_puffer: false, delta_mandata_ritorno: false, kp_eff: false,
     curva_setpoint: false
   }
-  if (!sp.value?.runtime) sp.value.runtime = { mode: 'dry-run', ui_poll_ms: 3000, timezone: 'Europe/Rome' }
+  if (!sp.value?.runtime) sp.value.runtime = { mode: 'dry-run', force_live_on_startup: true, ui_poll_ms: 3000, timezone: 'Europe/Rome' }
+  if (typeof sp.value.runtime.force_live_on_startup === 'undefined') sp.value.runtime.force_live_on_startup = true
   if (typeof sp.value.runtime.timezone === 'undefined' || sp.value.runtime.timezone === null) {
     sp.value.runtime.timezone = 'Europe/Rome'
   }
@@ -2985,8 +3000,9 @@ async function load(){
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
   }
   if (!sp.value?.solare) {
-    sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
+    sp.value.solare = { mode: 'auto', force_night_on_startup: true, delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
   }
+  if (typeof sp.value.solare.force_night_on_startup === 'undefined') sp.value.solare.force_night_on_startup = true
   if (!sp.value?.volano) {
     sp.value.volano = { margin_c: 3, max_c: 60, max_hyst_c: 2, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2 }
   } else {

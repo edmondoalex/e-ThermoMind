@@ -202,6 +202,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   },
   "solare": {
     "mode": "night",
+    "force_night_on_startup": True,
     "delta_on_c": 5.0,
     "delta_hold_c": 2.5,
     "max_c": 90.0,
@@ -218,6 +219,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   },
   "runtime": {
     "mode": "live",
+    "force_live_on_startup": True,
     "ui_poll_ms": 3000,
     "timezone": "Europe/Rome"
   },
@@ -510,11 +512,15 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(sol, dict):
         if isinstance(sol.get("mode"), str):
             cfg["solare"]["mode"] = sol.get("mode", "auto")
+        if "force_night_on_startup" in sol:
+            cfg["solare"]["force_night_on_startup"] = bool(sol.get("force_night_on_startup"))
         if isinstance(sol.get("pv_entity"), str):
             cfg["solare"]["pv_entity"] = sol.get("pv_entity", "").strip()
         for key in _NUM_KEYS["solare"]:
             if key in sol:
                 cfg["solare"][key] = _float(sol[key], cfg["solare"][key])
+    if cfg.get("solare", {}).get("force_night_on_startup"):
+        cfg["solare"]["mode"] = "night"
 
     curve = raw.get("curva_climatica", {})
     if isinstance(curve, dict):
@@ -550,10 +556,14 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(runtime, dict):
         if isinstance(runtime.get("mode"), str):
             cfg["runtime"]["mode"] = runtime["mode"]
+        if "force_live_on_startup" in runtime:
+            cfg["runtime"]["force_live_on_startup"] = bool(runtime.get("force_live_on_startup"))
         if "ui_poll_ms" in runtime:
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
         if isinstance(runtime.get("timezone"), str):
             cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
+    if cfg.get("runtime", {}).get("force_live_on_startup"):
+        cfg["runtime"]["mode"] = "live"
 
     mqtt = raw.get("mqtt", {})
     if isinstance(mqtt, dict):
@@ -753,6 +763,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(sol, dict):
         if isinstance(sol.get("mode"), str):
             cfg["solare"]["mode"] = sol.get("mode", "auto")
+        if "force_night_on_startup" in sol:
+            cfg["solare"]["force_night_on_startup"] = bool(sol.get("force_night_on_startup"))
         if isinstance(sol.get("pv_entity"), str):
             cfg["solare"]["pv_entity"] = sol.get("pv_entity", "").strip()
         for key in _NUM_KEYS["solare"]:
@@ -783,6 +795,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
         if isinstance(runtime.get("mode"), str):
             cfg["runtime"]["mode"] = runtime["mode"]
+        if "force_live_on_startup" in runtime:
+            cfg["runtime"]["force_live_on_startup"] = bool(runtime.get("force_live_on_startup"))
         if isinstance(runtime.get("timezone"), str):
             cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
 

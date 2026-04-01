@@ -336,3 +336,8 @@
 ## 2026-04-01
 - Solare: default mode impostato a night (non auto).
 - Versione add-on aggiornata a 0.7.53.
+
+## 2026-04-01
+- Runtime: aggiunto flag "forza LIVE al riavvio" (default ON).
+- Solare: aggiunto flag "forza NOTTE al riavvio" (default ON).
+- Versione add-on aggiornata a 0.7.54.
