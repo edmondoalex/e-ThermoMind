@@ -1120,7 +1120,7 @@
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.easas.charge_curve" :key="`ec-e-${i}`">
                 <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
-                <input class="time" type="number" step="10" v-model="p.w" placeholder="W" @input="saveEnergyDebounced"/>
+                <input class="time" type="number" step="10" v-model="p.w" placeholder="W" @change="saveEnergyDebounced" @focus="onFocus" @blur="onBlur"/>
                 <button class="ghost small" @click="removeEnergyPoint('easas', i)">Rimuovi</button>
               </div>
               <button class="ghost small" @click="addEnergyPoint('easas')">+ Aggiungi punto</button>
@@ -1150,7 +1150,7 @@
               <div class="list-row" v-for="(p, i) in sp.energy_profiles.privato.charge_curve" :key="`ec-p-${i}`">
                 <input class="time" type="number" step="0.5" v-model="p.t" placeholder="T (°C)"/>
                 <span class="muted">→</span>
-                <input class="time" type="number" step="10" v-model="p.w" placeholder="W" @input="saveEnergyDebounced"/>
+                <input class="time" type="number" step="10" v-model="p.w" placeholder="W" @change="saveEnergyDebounced" @focus="onFocus" @blur="onBlur"/>
                 <button class="ghost small" @click="removeEnergyPoint('privato', i)">Rimuovi</button>
               </div>
               <button class="ghost small" @click="addEnergyPoint('privato')">+ Aggiungi punto</button>
@@ -3091,6 +3091,7 @@ function saveCurveDebounced(){
   curveSaveTimer = setTimeout(() => { save() }, 300)
 }
 function saveEnergyDebounced(){
+  if (editingCount.value > 0) return
   if (energySaveTimer) clearTimeout(energySaveTimer)
   energySaveTimer = setTimeout(() => { save() }, 300)
 }

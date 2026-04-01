@@ -345,3 +345,7 @@
 ## 2026-04-01
 - Solare: forza NOTTE applicata anche in runtime (valvole R8/R9) e salva mode al cambio UI.
 - Versione add-on aggiornata a 0.7.55.
+
+## 2026-04-01
+- Energy curve: salvataggio solo a fine input (on change) per evitare autocorrezioni mentre scrivi.
+- Versione add-on aggiornata a 0.7.56.
