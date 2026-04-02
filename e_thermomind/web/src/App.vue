@@ -2533,6 +2533,7 @@ const historyModal = ref({ open: false, title: '', points: '', minY: '-', maxY: 
 const maxPoints = 60
   const filterAct = ref('')
   const editingCount = ref(0)
+  const manualEditHold = ref(false)
   const dirtyEnt = ref({})
   const dirtyAct = ref({})
 let focusInHandler = null
@@ -2690,11 +2691,15 @@ function addZone(key){
   if (!sp.value?.impianto) return
   if (!Array.isArray(sp.value.impianto[key])) sp.value.impianto[key] = []
   sp.value.impianto[key].push('')
+  manualEditHold.value = true
+  stopPolling()
 }
 function removeZone(key, idx){
   if (!sp.value?.impianto) return
   if (!Array.isArray(sp.value.impianto[key])) return
   sp.value.impianto[key].splice(idx, 1)
+  manualEditHold.value = true
+  stopPolling()
 }
 function addGasZone(){
   if (!sp.value?.gas_emergenza) return
@@ -3052,7 +3057,7 @@ const curveYTicks = computed(() => {
     }
   }
 async function refresh(){
-  if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0) return
+  if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0 || manualEditHold.value) return
   const r = await fetch('/api/decision'); d.value = await r.json()
   zones.value = d.value?.zones || []
   schedulerStatus.value = d.value?.scheduler_status || null
@@ -3249,6 +3254,7 @@ async function loadActuators(){
       }
     }
     await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
+    manualEditHold.value = false
     if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0) {
       await load()
     } else {

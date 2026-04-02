@@ -414,3 +414,7 @@
 - Impianto: logica richiesta basata su sorgenti valide (volano/puffer OK), non sulle zone.
 - Tag IMPIANTO_LOGIC nel codice per evitare regressioni.
 - Versione add-on aggiornata a 0.7.71.
+
+## 2026-04-02
+- UI Admin: aggiunta protezione per evitare reset liste zone durante modifica (manualEditHold).
+- Versione add-on aggiornata a 0.7.72.
