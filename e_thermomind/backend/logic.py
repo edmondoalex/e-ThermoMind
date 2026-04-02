@@ -96,13 +96,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     t_volano_alto = get_num(ent.get("t_volano_alto"), 0.0)
     t_volano_basso = get_num(ent.get("t_volano_basso"), 0.0)
     t_sol = get_num(ent.get("t_solare_mandata"), 0.0)
-    sol_flow = get_num(ent.get("solare_flow_lmin"), 0.0)
     col_status_code = get_text(ent.get("collettore_status_code"), "")
     col_status = get_text(ent.get("collettore_status"), "")
     col_datetime = get_text(ent.get("collettore_datetime"), "")
     col_energy_day = get_num(ent.get("collettore_energy_day_kwh"), 0.0)
     col_energy_total = get_num(ent.get("collettore_energy_total_kwh"), 0.0)
     col_flow = get_num(ent.get("collettore_flow_lmin"), 0.0)
+    sol_flow = get_num_optional(ent.get("solare_flow_lmin"))
+    if sol_flow is None:
+        sol_flow = col_flow
     col_pwm = get_num(ent.get("collettore_pwm_pct"), 0.0)
     col_status2 = get_text(ent.get("collettore_status2"), "")
     col_t_ext = get_num(ent.get("collettore_temp_esterna"), None)

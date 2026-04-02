@@ -405,3 +405,7 @@
 - UI User: mostrata portata solare.
 - UI Admin: campo entit? portata + soglia minima.
 - Versione add-on aggiornata a 0.7.69.
+
+## 2026-04-02
+- Solare: fallback automatico su portata collettore se la portata solare dedicata non ? mappata.
+- Versione add-on aggiornata a 0.7.70.
