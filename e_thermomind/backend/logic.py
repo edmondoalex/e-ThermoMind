@@ -96,6 +96,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     t_volano_alto = get_num(ent.get("t_volano_alto"), 0.0)
     t_volano_basso = get_num(ent.get("t_volano_basso"), 0.0)
     t_sol = get_num(ent.get("t_solare_mandata"), 0.0)
+    sol_flow = get_num(ent.get("solare_flow_lmin"), 0.0)
     col_status_code = get_text(ent.get("collettore_status_code"), "")
     col_status = get_text(ent.get("collettore_status"), "")
     col_datetime = get_text(ent.get("collettore_datetime"), "")
@@ -323,6 +324,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         dest_reason = "Nessuna destinazione utile."
 
     solar_cfg = cfg.get("solare", {})
+    flow_min_lmin = float(solar_cfg.get("flow_min_lmin", 0.0))
+    solar_flow_ok = sol_flow >= flow_min_lmin
     misc_cfg = cfg.get("miscelatrice", {})
     solar_delta_on = float(solar_cfg.get("delta_on_c", 5.0))
     solar_delta_hold = float(solar_cfg.get("delta_hold_c", 2.5))
@@ -341,10 +344,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     puf_h_acs = float(puf_cfg.get("hyst_to_acs_c", 5.0))
     last_vol_to_puf = bool(_LAST.get("volano_to_puffer"))
 
-    if (t_sol >= t_acs + solar_delta_on) and (not acs_max_hit):
+    if solar_flow_ok and (t_sol >= t_acs + solar_delta_on) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}°C >= T_ACS+delta {t_acs + solar_delta_on:.1f}°C"
-    elif last_source == "SOLAR" and (t_sol >= t_acs + solar_delta_hold) and (not acs_max_hit):
+    elif solar_flow_ok and last_source == "SOLAR" and (t_sol >= t_acs + solar_delta_hold) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}°C >= T_ACS+delta_hold {t_acs + solar_delta_hold:.1f}°C"
     elif dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit) and (t_volano >= vol_min_acs + vol_h_acs):
@@ -768,6 +771,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "t_volano_alto": t_volano_alto,
             "t_volano_basso": t_volano_basso,
             "t_solare_mandata": t_sol,
+            "solare_flow_lmin": sol_flow,
             "collettore_status_code": col_status_code,
             "collettore_status": col_status,
             "collettore_datetime": col_datetime,
@@ -919,9 +923,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             },
             "module_reasons": {
                 "solare": (
-                    f"{source_reason} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C | pv_debounce {int(solar_cfg.get('pv_debounce_s', 300))}s"
+                    f"{source_reason} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | Flow {sol_flow:.1f} l/min (min {flow_min_lmin:.1f}) | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C | pv_debounce {int(solar_cfg.get('pv_debounce_s', 300))}s"
                     if source_to_acs == "SOLAR"
-                    else f"Solare non attivo. T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C | pv_debounce {int(solar_cfg.get('pv_debounce_s', 300))}s"
+                    else f"Solare non attivo. T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | Flow {sol_flow:.1f} l/min (min {flow_min_lmin:.1f}) | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C | pv_debounce {int(solar_cfg.get('pv_debounce_s', 300))}s"
                 ),
                 "volano_to_acs": (
                     f"{volano_to_acs_reason}"

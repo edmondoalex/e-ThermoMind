@@ -399,3 +399,9 @@
 ## 2026-04-02
 - Persistenza config: salvataggio atomico + backup e fallback su backup in caso di corruzione.
 - Versione add-on aggiornata a 0.7.68.
+
+## 2026-04-02
+- Solare: aggiunta portata (L/min) e soglia minima per considerare il solare attivo.
+- UI User: mostrata portata solare.
+- UI Admin: campo entit? portata + soglia minima.
+- Versione add-on aggiornata a 0.7.69.

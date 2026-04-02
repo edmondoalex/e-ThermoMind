@@ -18,6 +18,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "t_volano_alto": None,
     "t_volano_basso": None,
     "t_solare_mandata": None,
+    "solare_flow_lmin": None,
     "collettore_status_code": None,
     "collettore_status": None,
     "collettore_datetime": None,
@@ -229,7 +230,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "pv_entity": "",
     "pv_day_w": 1000.0,
     "pv_night_w": 300.0,
-    "pv_debounce_s": 300
+    "pv_debounce_s": 300,
+    "flow_min_lmin": 6.0
   },
   "timers": {
     "volano_to_acs_start_s": 5,

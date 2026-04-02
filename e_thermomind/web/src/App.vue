@@ -1753,6 +1753,7 @@
             <div class="field"><label>Soglia giorno FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_day_w"/><div class="help">Se FV > soglia allora giorno.</div></div>
             <div class="field"><label>Soglia notte FV (W)</label><input type="number" step="10" v-model.number="sp.solare.pv_night_w"/><div class="help">Se FV &lt; soglia allora notte.</div></div>
             <div class="field"><label>Debounce FV (s)</label><input type="number" step="10" v-model.number="sp.solare.pv_debounce_s"/><div class="help">Tempo minimo per cambiare stato giorno/notte.</div></div>
+            <div class="field"><label>Portata minima solare (L/min)</label><input type="number" step="0.1" v-model.number="sp.solare.flow_min_lmin"/><div class="help">Sotto questa portata il solare ? considerato fermo.</div></div>
             <div class="field"><label>Δ Start Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_on_c"/></div>
             <div class="field"><label>Δ Hold Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_hold_c"/></div>
             <div class="field"><label>Solare MAX (C)</label><input type="number" step="0.5" v-model.number="sp.solare.max_c"/><div class="help">Sicurezza: sopra questo valore stop solare.</div></div>
@@ -3080,7 +3081,7 @@ async function load(){
   const histDefaults = {
     t_acs: false, t_acs_alto: false, t_acs_medio: false, t_acs_basso: false, t_puffer: false, t_volano: false,
     t_volano_alto: false, t_volano_basso: false,
-    t_solare_mandata: false, t_esterna: false,
+    t_solare_mandata: false, solare_flow_lmin: false, t_esterna: false,
     t_puffer_alto: false, t_puffer_medio: false, t_puffer_basso: false,
     collettore_energy_day_kwh: false, collettore_energy_total_kwh: false, collettore_flow_lmin: false, collettore_pwm_pct: false,
     collettore_temp_esterna: false, collettore_tsa1: false, collettore_tse: false, collettore_tsv: false, collettore_twu: false,
