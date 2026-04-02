@@ -508,14 +508,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         return _zone_active(st.get("state"), st.get("attributes", {}).get("hvac_action"), eid in cooling_blocked)
     any_active = any(_is_zone_on(z) for z in (zones_pt + zones_p1 + zones_mans + zones_lab + ([zone_scala] if zone_scala else [])))
     if req_eid:
-        req_on = _is_on_state(req_state)
+        zone_demand_on = _is_on_state(req_state)
     else:
-        req_on = any_active if zones_configured else bool(imp_cfg.get("richiesta_heat"))
+        zone_demand_on = any_active if zones_configured else bool(imp_cfg.get("richiesta_heat"))
     if zones_configured:
-        req_on = any_active
+        zone_demand_on = any_active
     season_mode = str(imp_cfg.get("season_mode", "winter")).lower()
-    if season_mode == "summer":
-        req_on = False
     sel_norm = str(sel_state or "AUTO").strip().upper()
     vol_min = float(imp_cfg.get("volano_min_c", 35.0))
     vol_on_h = float(imp_cfg.get("volano_on_hyst_c", imp_cfg.get("volano_hyst_c", 2.0)))
@@ -527,14 +525,26 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     vol_ok_hold = t_volano > (vol_min - vol_off_h)
     puf_ok_start = t_puffer >= (puf_min + puf_on_h)
     puf_ok_hold = t_puffer > (puf_min - puf_off_h)
+    vol_ok = vol_ok_start or vol_ok_hold
+    puf_ok = puf_ok_start or puf_ok_hold
 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
+    # IMPIANTO_LOGIC: richiesta = ON se una sorgente valida (volano/puffer) è OK.
+    # Le zone NON determinano la richiesta: vengono accese dal modulo quando la sorgente è OK.
+    if sel_norm == "PDC":
+        req_on = bool(pdc_vol_ready and vol_ok)
+    elif sel_norm == "PUFFER":
+        req_on = bool(puf_ready and puf_ok)
+    else:
+        req_on = bool((pdc_vol_ready and vol_ok) or (puf_ready and puf_ok))
+    if season_mode == "summer":
+        req_on = False
 
     acs_volano_active = source_to_acs == "VOLANO"
     source_override = False
     if acs_volano_active:
-        if puf_ready and (puf_ok_start or (puf_ok_hold and req_on)):
+        if puf_ready and puf_ok:
             source = "PUFFER"
         else:
             source = "OFF"
@@ -542,17 +552,17 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     if not source_override:
         if sel_norm == "AUTO" or (
-            (sel_norm == "PDC" and (not pdc_vol_ready or not (vol_ok_start or (vol_ok_hold and req_on)))) or
-            (sel_norm == "PUFFER" and (not puf_ready or not (puf_ok_start or (puf_ok_hold and req_on))))
+            (sel_norm == "PDC" and (not pdc_vol_ready or not vol_ok)) or
+            (sel_norm == "PUFFER" and (not puf_ready or not puf_ok))
         ):
-            if pdc_vol_ready and (vol_ok_start or (vol_ok_hold and req_on)):
+            if pdc_vol_ready and vol_ok:
                 source = "PDC"
             else:
-                source = "PUFFER" if (puf_ready and (puf_ok_start or (puf_ok_hold and req_on))) else "OFF"
+                source = "PUFFER" if (puf_ready and puf_ok) else "OFF"
         else:
             source = sel_norm if (
-                (sel_norm == "PDC" and (vol_ok_start or (vol_ok_hold and req_on))) or
-                (sel_norm == "PUFFER" and (puf_ok_start or (puf_ok_hold and req_on)))
+                (sel_norm == "PDC" and vol_ok) or
+                (sel_norm == "PUFFER" and puf_ok)
             ) else "OFF"
     if not req_on:
         source = "OFF"

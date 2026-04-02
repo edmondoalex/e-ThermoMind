@@ -409,3 +409,8 @@
 ## 2026-04-02
 - Solare: fallback automatico su portata collettore se la portata solare dedicata non ? mappata.
 - Versione add-on aggiornata a 0.7.70.
+
+## 2026-04-02
+- Impianto: logica richiesta basata su sorgenti valide (volano/puffer OK), non sulle zone.
+- Tag IMPIANTO_LOGIC nel codice per evitare regressioni.
+- Versione add-on aggiornata a 0.7.71.

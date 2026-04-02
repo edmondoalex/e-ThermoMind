@@ -2000,19 +2000,15 @@ async def _apply_impianto_live() -> None:
 
     any_active = pt_active or p1_active or mans_active or lab_active or scala_active
 
-    # Se ci sono zone configurate, la richiesta viene dalle zone (non dal sensore richiesta_heat)
-    zones_configured = (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
-    if zones_configured:
-        demand_on = bool(any_active)
-    else:
-        demand_on = bool(richiesta_on)
-    if season == "summer":
-        demand_on = False
-        impianto_heat_state["active"] = False
-        impianto_heat_state["last_change"] = time.time()
+    vol_ok = vol_ok_start or vol_ok_hold
+    puf_ok = puf_ok_start or puf_ok_hold
 
-    # Se selector AUTO o sorgente non disponibile -> fallback con priorit?
-    allow_hold = demand_on and (not gas_emergenza_start_only)
+    # IMPIANTO_LOGIC: il modulo si attiva quando almeno una sorgente valida (volano/puffer) è OK.
+    # Le zone NON devono guidare l'accensione: vengono accese dal modulo quando la sorgente è OK.
+    # Se nessuna sorgente è OK, il modulo si spegne e spegne le zone.
+
+    # Se selector AUTO o sorgente non disponibile -> fallback con priorità
+    allow_hold = not gas_emergenza_start_only
     if sel_state == "AUTO" or (
         (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (vol_ok_hold and allow_hold)))) or
         (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (puf_ok_hold and allow_hold))))
@@ -2023,6 +2019,11 @@ async def _apply_impianto_live() -> None:
             source = "PUFFER" if (puffer_ready and (puf_ok_start or (puf_ok_hold and allow_hold))) else None
     else:
         source = sel_state
+    if season == "summer":
+        source = None
+        impianto_heat_state["active"] = False
+        impianto_heat_state["last_change"] = time.time()
+    demand_on = bool(source)
 
     if gas_emergenza_start_only and source:
         gas_emergenza_start_only = False
@@ -2106,9 +2107,8 @@ async def _apply_impianto_live() -> None:
             f"source={source or 'OFF'} act=[r1,r2,r3,r4,r5,r11,r12]"
         )
         _watchdog("no_demand")
-        if season == "winter" and not _gas_emergenza_active():
-            for z in _collect_zones(imp):
-                await _set_climate_hvac_mode(z, "heat", "IMPIANTO no demand")
+        for z in _collect_zones(imp):
+            await _set_climate_hvac_mode(z, "off", "IMPIANTO no demand")
         if r2:
             await _set_actuator_impianto(r2, False, "no_demand", force=True)
         if r3:
@@ -2125,9 +2125,8 @@ async def _apply_impianto_live() -> None:
         return
 
     # Auto-heat: termostati in HEAT quando impianto è OK (fonte valida).
-    auto_heat = False
-    if season == "winter":
-        auto_heat = True
+    desired_heat = bool(season == "winter" and demand_on)
+    auto_heat = _impianto_auto_heat(desired_heat, imp)
     heat_reason = f"IMPIANTO auto_heat={'ON' if auto_heat else 'OFF'} source={source or 'OFF'}"
     for z in _collect_zones(imp):
         await _set_climate_hvac_mode(z, "heat" if auto_heat else "off", heat_reason)
