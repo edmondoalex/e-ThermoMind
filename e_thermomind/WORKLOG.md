@@ -418,3 +418,7 @@
 ## 2026-04-02
 - UI Admin: aggiunta protezione per evitare reset liste zone durante modifica (manualEditHold).
 - Versione add-on aggiornata a 0.7.72.
+
+## 2026-04-02
+- UI Admin: blocco salvataggio automatico history mentre si modificano le zone (evita sparizione immediata).
+- Versione add-on aggiornata a 0.7.73.

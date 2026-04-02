@@ -3226,6 +3226,7 @@ function saveEnergyDebounced(){
 }
 function saveHistoryDebounced(){
   if (!historyReady) return
+  if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0 || manualEditHold.value) return
   if (historySaveTimer) clearTimeout(historySaveTimer)
   historySaveTimer = setTimeout(() => { save() }, 300)
 }
