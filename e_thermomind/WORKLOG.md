@@ -395,3 +395,7 @@
 - UI Energy: stato riscaldatori in User + configurazione in Admin.
 - Energy log: formattazione multilinea pulita.
 - Versione add-on aggiornata a 0.7.67.
+
+## 2026-04-02
+- Persistenza config: salvataggio atomico + backup e fallback su backup in caso di corruzione.
+- Versione add-on aggiornata a 0.7.68.

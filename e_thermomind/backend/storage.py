@@ -4,6 +4,8 @@ from typing import Any, Dict, Iterable
 
 DATA_DIR = Path("/data")
 CONF_PATH = DATA_DIR / "thermomind_config.json"
+CONF_BACKUP = DATA_DIR / "thermomind_config.backup.json"
+CONF_TEMP = DATA_DIR / "thermomind_config.tmp.json"
 
 DEFAULT_CONFIG: Dict[str, Any] = {
   "entities": {
@@ -1028,14 +1030,29 @@ def apply_actuators(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     return cfg
 
 def load_config() -> Dict[str, Any]:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
     if not CONF_PATH.exists():
         return json.loads(json.dumps(DEFAULT_CONFIG))
     try:
         raw = json.loads(CONF_PATH.read_text(encoding="utf-8"))
         return normalize_config(raw)
     except Exception:
+        try:
+            if CONF_BACKUP.exists():
+                raw = json.loads(CONF_BACKUP.read_text(encoding="utf-8"))
+                return normalize_config(raw)
+        except Exception:
+            pass
         return json.loads(json.dumps(DEFAULT_CONFIG))
 
 def save_config(cfg: Dict[str, Any]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    CONF_PATH.write_text(json.dumps(normalize_config(cfg), indent=2, ensure_ascii=False), encoding="utf-8")
+    payload = json.dumps(normalize_config(cfg), indent=2, ensure_ascii=False)
+    # Write temp then replace for atomicity
+    CONF_TEMP.write_text(payload, encoding="utf-8")
+    CONF_TEMP.replace(CONF_PATH)
+    # Keep backup
+    try:
+        CONF_BACKUP.write_text(payload, encoding="utf-8")
+    except Exception:
+        pass
