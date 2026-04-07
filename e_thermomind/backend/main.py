@@ -2134,6 +2134,29 @@ async def _apply_impianto_live() -> None:
     # Consenso/centralina
     await _set_actuator(off_centralina, False)
 
+    zones_configured = (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
+    if zones_configured and not any_active:
+        _log_action(
+            f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO idle zones_off "
+            f"source={source or 'OFF'} act=[r1,r2,r3,r4,r5,r11,r12]"
+        )
+        _watchdog("zones_off")
+        if r2:
+            await _set_actuator_impianto(r2, False, "zones_off", force=True)
+        if r3:
+            await _set_actuator_impianto(r3, False, "zones_off", force=True)
+        if r1:
+            await _set_actuator_impianto(r1, False, "zones_off", force=True)
+        await _force_pump_off("impianto:pump", r12, "zones_off")
+        await _force_pump_off("impianto:lab_pump", r11, "zones_off")
+        await _set_actuator_impianto(r4, False, "zones_off", force=True)
+        await _set_actuator_impianto(r5, False, "zones_off", force=True)
+        await _set_actuator_impianto(r31, False, "zones_off", force=True)
+        await _set_climate_hvac_mode(clima, "off", "IMPIANTO zones_off")
+        await _set_actuator(off_centralina, True)
+        # miscelatrice gestita solo dal suo modulo
+        return
+
     # Valvole zone (mansarda e 1P condividono R3)
     if r2:
         await _set_actuator_impianto(r2, pt_active or scala_active, "active")

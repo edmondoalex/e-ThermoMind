@@ -422,3 +422,7 @@
 ## 2026-04-02
 - UI Admin: blocco salvataggio automatico history mentre si modificano le zone (evita sparizione immediata).
 - Versione add-on aggiornata a 0.7.73.
+
+## 2026-04-07
+- Impianto: se nessuna zona attiva, spegne pompe/valvole pur mantenendo modulo attivo (zones_off).
+- Versione add-on aggiornata a 0.7.74.
