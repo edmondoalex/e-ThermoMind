@@ -426,3 +426,7 @@
 ## 2026-04-07
 - Impianto: se nessuna zona attiva, spegne pompe/valvole pur mantenendo modulo attivo (zones_off).
 - Versione add-on aggiornata a 0.7.74.
+
+## 2026-04-07
+- Solare: stop su ACS quando T_ACS >= setpoint (evita superare target).
+- Versione add-on aggiornata a 0.7.75.
