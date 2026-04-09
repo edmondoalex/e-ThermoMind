@@ -75,7 +75,7 @@ class HAClient:
         self._session = aiohttp.ClientSession(
             headers={"Authorization": f"Bearer {self._token}", "Content-Type": "application/json"}
         )
-        await self._connect_ws()
+        await self._connect_ws_with_retry()
 
     async def close(self):
         if self._ws is not None:
@@ -100,6 +100,21 @@ class HAClient:
         if not sub_ok.get("success", False):
             raise RuntimeError(f"Subscribe failed: {sub_ok}")
         await self._prime_states()
+
+    async def _connect_ws_with_retry(self):
+        backoff = 1
+        while True:
+            try:
+                self._log.info("Connecting to Home Assistant WS (%s)...", self._ws_url)
+                await self._connect_ws()
+                self._log.info("WS connected.")
+                return
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self._log.warning("WS connect failed: %s (retry in %ss)", exc, backoff)
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, 30)
 
     async def _prime_states(self):
         assert self._session is not None

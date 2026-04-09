@@ -430,3 +430,7 @@
 ## 2026-04-07
 - Solare: stop su ACS quando T_ACS >= setpoint (evita superare target).
 - Versione add-on aggiornata a 0.7.75.
+
+## 2026-04-09
+- HA WS: retry/backoff in startup per evitare crash se Core non è pronto.
+- Versione add-on aggiornata a 0.7.76.
