@@ -99,6 +99,7 @@ volano_watchdog_last_log: float = 0.0
 solar_watchdog_last_log: float = 0.0
 miscelatrice_watchdog_last_log: float = 0.0
 resistenze_watchdog_last_log: float = 0.0
+resistenze_disabled_forced: bool = False
 gas_watchdog_last_log: float = 0.0
 legna_watchdog_last_log: float = 0.0
 gas_emergenza_state: dict[str, Any] = {"vol_ok": False, "puf_ok": False, "active": False, "last_change": 0.0}
@@ -1310,11 +1311,22 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     global resistenze_watchdog_last_log
     global off_sequence_start
     global resistenze_export_off_start
+    global resistenze_disabled_forced
     if cfg.get("runtime", {}).get("mode") != "live":
         _log_dry_run(decision_data)
         return
     if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
+        if not resistenze_disabled_forced:
+            act = cfg.get("actuators", {})
+            r22 = act.get("r22_resistenza_1_volano_pdc")
+            r23 = act.get("r23_resistenza_2_volano_pdc")
+            r24 = act.get("r24_resistenza_3_volano_pdc")
+            rg = act.get("generale_resistenze_volano_pdc")
+            for ent in (r22, r23, r24, rg):
+                await _set_resistance(ent, False)
+            resistenze_disabled_forced = True
         return
+    resistenze_disabled_forced = False
     act = cfg.get("actuators", {})
     r22 = act.get("r22_resistenza_1_volano_pdc")
     r23 = act.get("r23_resistenza_2_volano_pdc")

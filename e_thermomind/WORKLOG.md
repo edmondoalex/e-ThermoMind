@@ -434,3 +434,7 @@
 ## 2026-04-09
 - HA WS: retry/backoff in startup per evitare crash se Core non è pronto.
 - Versione add-on aggiornata a 0.7.76.
+
+## 2026-04-09
+- Resistenze: se modulo disabilitato, spegne una sola volta le resistenze (poi manuale libero).
+- Versione add-on aggiornata a 0.7.77.
