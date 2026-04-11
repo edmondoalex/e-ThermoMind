@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, Iterable
 
@@ -6,6 +7,7 @@ DATA_DIR = Path("/data")
 CONF_PATH = DATA_DIR / "thermomind_config.json"
 CONF_BACKUP = DATA_DIR / "thermomind_config.backup.json"
 CONF_TEMP = DATA_DIR / "thermomind_config.tmp.json"
+_LOG = logging.getLogger("thermomind.storage")
 
 DEFAULT_CONFIG: Dict[str, Any] = {
   "entities": {
@@ -1034,17 +1036,24 @@ def apply_actuators(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
 def load_config() -> Dict[str, Any]:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     if not CONF_PATH.exists():
+        _LOG.warning("CONFIG_LOAD source=default reason=main_missing path=%s", CONF_PATH)
         return json.loads(json.dumps(DEFAULT_CONFIG))
     try:
         raw = json.loads(CONF_PATH.read_text(encoding="utf-8"))
+        _LOG.warning("CONFIG_LOAD source=main path=%s", CONF_PATH)
         return normalize_config(raw)
-    except Exception:
+    except Exception as e_main:
+        _LOG.warning("CONFIG_LOAD main_failed path=%s err=%s", CONF_PATH, e_main)
         try:
             if CONF_BACKUP.exists():
                 raw = json.loads(CONF_BACKUP.read_text(encoding="utf-8"))
+                _LOG.warning("CONFIG_LOAD source=backup path=%s", CONF_BACKUP)
                 return normalize_config(raw)
-        except Exception:
+            _LOG.warning("CONFIG_LOAD source=default reason=backup_missing path=%s", CONF_BACKUP)
+        except Exception as e_bak:
+            _LOG.warning("CONFIG_LOAD backup_failed path=%s err=%s", CONF_BACKUP, e_bak)
             pass
+        _LOG.warning("CONFIG_LOAD source=default reason=all_failed")
         return json.loads(json.dumps(DEFAULT_CONFIG))
 
 def save_config(cfg: Dict[str, Any]) -> None:

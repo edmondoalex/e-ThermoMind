@@ -446,3 +446,6 @@
 ## 2026-04-11
 - Manifest add-on: sostituito arch deprecato rmv7 con rmhf.
 - Versione add-on aggiornata a 0.7.79.
+## 2026-04-11
+- Config persistence: aggiunti log espliciti su load config (source=main|backup|default) con motivo fallback.
+- Versione add-on aggiornata a 0.7.80.
