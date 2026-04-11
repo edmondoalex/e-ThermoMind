@@ -438,3 +438,7 @@
 ## 2026-04-09
 - Resistenze: se modulo disabilitato, spegne una sola volta le resistenze (poi manuale libero).
 - Versione add-on aggiornata a 0.7.77.
+
+## 2026-04-11
+- Impianto/Miscelatrice: fix domanda zone. Ora la richiesta impianto richiede sia sorgente valida sia domanda termostati/zone.
+- Evitato caso di miscelatrice in regolazione continua (ALZA) quando non c'e domanda reale.

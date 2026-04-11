@@ -2011,6 +2011,8 @@ async def _apply_impianto_live() -> None:
     scala_active = _zone_active(zone_scala, cooling_blocked) if zone_scala else False
 
     any_active = pt_active or p1_active or mans_active or lab_active or scala_active
+    zones_configured = bool(zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
+    zone_demand_on = any_active if zones_configured else richiesta_on
 
     vol_ok = vol_ok_start or vol_ok_hold
     puf_ok = puf_ok_start or puf_ok_hold
@@ -2035,7 +2037,7 @@ async def _apply_impianto_live() -> None:
         source = None
         impianto_heat_state["active"] = False
         impianto_heat_state["last_change"] = time.time()
-    demand_on = bool(source)
+    demand_on = bool(zone_demand_on and source)
 
     if gas_emergenza_start_only and source:
         gas_emergenza_start_only = False
@@ -2087,7 +2089,7 @@ async def _apply_impianto_live() -> None:
             if puf_ok_hold:
                 source = "PUFFER"
 
-    blocked_cold = bool(demand_on and source is None)
+    blocked_cold = bool(zone_demand_on and source is None)
     if not source:
         _log_action(
             f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF no_source "
@@ -2146,7 +2148,6 @@ async def _apply_impianto_live() -> None:
     # Consenso/centralina
     await _set_actuator(off_centralina, False)
 
-    zones_configured = (zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
     if zones_configured and not any_active:
         _log_action(
             f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO idle zones_off "

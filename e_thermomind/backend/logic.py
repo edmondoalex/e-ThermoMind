@@ -530,14 +530,14 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
-    # IMPIANTO_LOGIC: richiesta = ON se una sorgente valida (volano/puffer) è OK.
-    # Le zone NON determinano la richiesta: vengono accese dal modulo quando la sorgente è OK.
+    # IMPIANTO_LOGIC: richiesta ON solo se c'e' domanda zone e una sorgente valida.
     if sel_norm == "PDC":
-        req_on = bool(pdc_vol_ready and vol_ok)
+        source_req_on = bool(pdc_vol_ready and vol_ok)
     elif sel_norm == "PUFFER":
-        req_on = bool(puf_ready and puf_ok)
+        source_req_on = bool(puf_ready and puf_ok)
     else:
-        req_on = bool((pdc_vol_ready and vol_ok) or (puf_ready and puf_ok))
+        source_req_on = bool((pdc_vol_ready and vol_ok) or (puf_ready and puf_ok))
+    req_on = bool(zone_demand_on and source_req_on)
     if season_mode == "summer":
         req_on = False
 
