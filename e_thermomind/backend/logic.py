@@ -530,14 +530,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
-    # IMPIANTO_LOGIC: richiesta ON solo se c'e' domanda zone e una sorgente valida.
+    # IMPIANTO_LOGIC: richiesta ON se una sorgente valida e' disponibile.
+    # Le zone attive guidano uscite/pompe, non la disponibilita' fonte.
     if sel_norm == "PDC":
         source_req_on = bool(pdc_vol_ready and vol_ok)
     elif sel_norm == "PUFFER":
         source_req_on = bool(puf_ready and puf_ok)
     else:
         source_req_on = bool((pdc_vol_ready and vol_ok) or (puf_ready and puf_ok))
-    req_on = bool(zone_demand_on and source_req_on)
+    req_on = bool(source_req_on)
     if season_mode == "summer":
         req_on = False
 
@@ -564,9 +565,6 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 (sel_norm == "PDC" and vol_ok) or
                 (sel_norm == "PUFFER" and puf_ok)
             ) else "OFF"
-    if not req_on:
-        source = "OFF"
-
     def _float_list(val, default_list):
         if isinstance(val, (list, tuple)):
             out = []
@@ -659,7 +657,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     gas_enabled = cfg.get("modules_enabled", {}).get("gas_emergenza", False)
     blocked_cold = req_on and (source == "OFF")
-    imp_active = req_on and (source != "OFF") and (not blocked_cold) and (not gas_enabled)
+    imp_active = req_on and zone_demand_on and (source != "OFF") and (not blocked_cold) and (not gas_enabled)
     miscelatrice_on = imp_active and cfg.get("modules_enabled", {}).get("miscelatrice", True)
     if not miscelatrice_on:
         mix_action = "STOP"
@@ -842,6 +840,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "impianto": {
                 "source": source,
                 "richiesta": req_on,
+                "zone_demand": zone_demand_on,
+                "zones_active": any_active,
                 "miscelatrice": miscelatrice_on,
                 "pdc_ready": pdc_vol_ready,
                 "volano_ready": vol_ready,
@@ -976,7 +976,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "puffer_to_acs": "Regola: Dest=ACS e T_PUF >= T_ACS+Δ e T_PUF >= Min.",
                 "miscelatrice": "Regola: mantiene ΔT mandata/ritorno verso setpoint con impulsi.",
                 "curva_climatica": "Regola: SP da curva in base a T_EXT.",
-                "impianto": "Regola: serve richiesta zone + fonte valida.",
+                "impianto": "Regola: termostati HEAT se fonte valida; uscite/pompe solo con zone attive.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
             "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export < -100W OFF secco; batteria scarica step-down."

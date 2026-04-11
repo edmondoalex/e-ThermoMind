@@ -449,3 +449,7 @@
 ## 2026-04-11
 - Config persistence: aggiunti log espliciti su load config (source=main|backup|default) con motivo fallback.
 - Versione add-on aggiornata a 0.7.80.
+## 2026-04-11
+- Impianto: termostati in HEAT quando la fonte e' disponibile (anche senza richiesta zona immediata).
+- Miscelatrice: resta inattiva se non c'e domanda zone, evitando regolazione continua a vuoto.
+- Versione add-on aggiornata a 0.7.81.

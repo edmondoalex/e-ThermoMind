@@ -1705,6 +1705,7 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     imp_active = (
         cfg.get("modules_enabled", {}).get("impianto", True)
         and imp.get("richiesta")
+        and imp.get("zone_demand")
         and (not imp.get("blocked_cold"))
         and (imp.get("source") not in (None, "OFF"))
     )
@@ -2037,7 +2038,7 @@ async def _apply_impianto_live() -> None:
         source = None
         impianto_heat_state["active"] = False
         impianto_heat_state["last_change"] = time.time()
-    demand_on = bool(zone_demand_on and source)
+    demand_on = bool(source)
 
     if gas_emergenza_start_only and source:
         gas_emergenza_start_only = False
@@ -2089,7 +2090,7 @@ async def _apply_impianto_live() -> None:
             if puf_ok_hold:
                 source = "PUFFER"
 
-    blocked_cold = bool(zone_demand_on and source is None)
+    blocked_cold = bool(source is None)
     if not source:
         _log_action(
             f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF no_source "
