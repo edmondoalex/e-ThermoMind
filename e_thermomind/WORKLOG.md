@@ -443,3 +443,6 @@
 - Impianto/Miscelatrice: fix domanda zone. Ora la richiesta impianto richiede sia sorgente valida sia domanda termostati/zone.
 - Evitato caso di miscelatrice in regolazione continua (ALZA) quando non c'e domanda reale.
 - Versione add-on aggiornata a 0.7.78.
+## 2026-04-11
+- Manifest add-on: sostituito arch deprecato rmv7 con rmhf.
+- Versione add-on aggiornata a 0.7.79.
