@@ -206,7 +206,7 @@
             <div class="field">
               <label>ACS setpoint (°C)</label>
               <div class="slider-row">
-                <input type="range" min="40" max="65" step="0.5" v-model.number="sp.acs.setpoint_c" @change="save" />
+                <input type="range" min="40" max="85" step="0.5" v-model.number="sp.acs.setpoint_c" @change="save" />
                 <span class="slider-value">{{ fmtNum(sp?.acs?.setpoint_c) }}°C</span>
               </div>
               <div class="help">Target acqua sanitaria. Sotto questo valore il sistema cerca una sorgente.</div>

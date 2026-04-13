@@ -184,7 +184,7 @@ def _mqtt_device_info() -> dict[str, Any]:
 
 def _mqtt_setpoint_defs() -> list[dict[str, Any]]:
     return [
-        {"key": "acs_setpoint", "name": "ACS setpoint", "section": "acs", "field": "setpoint_c", "min": 40, "max": 65, "step": 0.5},
+        {"key": "acs_setpoint", "name": "ACS setpoint", "section": "acs", "field": "setpoint_c", "min": 40, "max": 85, "step": 0.5},
         {"key": "acs_max", "name": "ACS MAX", "section": "acs", "field": "max_c", "min": 50, "max": 85, "step": 0.5},
         {"key": "volano_max", "name": "Volano MAX", "section": "volano", "field": "max_c", "min": 40, "max": 95, "step": 0.5},
         {"key": "volano_min_to_acs", "name": "Volano min -> ACS", "section": "volano", "field": "min_to_acs_c", "min": 35, "max": 75, "step": 0.5},

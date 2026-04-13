@@ -453,3 +453,6 @@
 - Impianto: termostati in HEAT quando la fonte e' disponibile (anche senza richiesta zona immediata).
 - Miscelatrice: resta inattiva se non c'e domanda zone, evitando regolazione continua a vuoto.
 - Versione add-on aggiornata a 0.7.81.
+## 2026-04-13
+- ACS setpoint: alzato limite massimo da 65C a 85C (UI slider + MQTT number).
+- Versione add-on aggiornata a 0.7.82.
