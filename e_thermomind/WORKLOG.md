@@ -492,3 +492,11 @@
 ## 2026-04-13
 - MQTT discovery: corretto `unit_of_measurement` temperature da `Â°C` a `°C` (elimina lettera anomala nella UI HA).
 - Versione add-on aggiornata a 0.7.90.
+## 2026-04-13
+- MQTT: aggiunta discovery + publish di sensori extra read-only (`thermomind/sensors/*`).
+- Inclusi sensori logica principali: `dest`, `source_to_acs`, `acs_need`, `acs_ok`, `resistance_step`.
+- Inclusi sensori impianto: `impianto_source`, `impianto_richiesta`, `impianto_zone_demand`, `impianto_blocked_cold`.
+- Inclusi sensori forzatura: `force_acs_puffer_active`, `force_acs_puffer_remaining_s`.
+- Inclusi sensori SAFE energia EASAS/Privato: extra safe, totale, headroom, max charge, export, battery output, temp, soc.
+- Inclusi sensori temperature principali: `t_acs`, `t_puffer`, `t_volano`, `t_solare_mandata`, `t_esterna`, `solare_flow_lmin`.
+- Versione add-on aggiornata a 0.7.91.

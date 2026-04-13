@@ -233,6 +233,86 @@ def _mqtt_module_defs() -> list[dict[str, str]]:
         {"key": "caldaia_legna", "name": "Modulo Caldaia Legna"},
     ]
 
+def _mqtt_extra_sensor_defs() -> list[dict[str, Any]]:
+    return [
+        {"key": "t_acs", "name": "T ACS", "unit": "°C", "device_class": "temperature"},
+        {"key": "t_puffer", "name": "T Puffer", "unit": "°C", "device_class": "temperature"},
+        {"key": "t_volano", "name": "T Volano", "unit": "°C", "device_class": "temperature"},
+        {"key": "t_solare_mandata", "name": "T Solare Mandata", "unit": "°C", "device_class": "temperature"},
+        {"key": "t_esterna", "name": "T Esterna", "unit": "°C", "device_class": "temperature"},
+        {"key": "solare_flow_lmin", "name": "Portata Solare", "unit": "L/min"},
+        {"key": "dest", "name": "Destinazione ACS"},
+        {"key": "source_to_acs", "name": "Sorgente ACS"},
+        {"key": "acs_need", "name": "ACS Need", "binary": True},
+        {"key": "acs_ok", "name": "ACS OK", "binary": True},
+        {"key": "resistance_step", "name": "Step Resistenze", "unit": "step"},
+        {"key": "impianto_source", "name": "Impianto Sorgente"},
+        {"key": "impianto_richiesta", "name": "Impianto Richiesta", "binary": True},
+        {"key": "impianto_zone_demand", "name": "Impianto Zone Demand", "binary": True},
+        {"key": "impianto_blocked_cold", "name": "Impianto Blocco Freddo", "binary": True},
+        {"key": "force_acs_puffer_active", "name": "Forzatura ACS da Puffer", "binary": True},
+        {"key": "force_acs_puffer_remaining_s", "name": "Forzatura ACS residuo", "unit": "s", "state_class": "measurement"},
+        {"key": "safe_easas_extra_safe_w", "name": "Safe EASAS Extra", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_easas_extra_total_w", "name": "Safe EASAS Totale", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_easas_headroom_w", "name": "Safe EASAS Headroom", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_easas_max_charge_w", "name": "Safe EASAS Max Carica", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_easas_export_w", "name": "Safe EASAS Export", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_easas_battery_output_w", "name": "Safe EASAS Battery Output", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_easas_temp_c", "name": "Safe EASAS Temp Batt", "unit": "°C", "device_class": "temperature", "state_class": "measurement"},
+        {"key": "safe_easas_soc_pct", "name": "Safe EASAS SoC", "unit": "%", "state_class": "measurement"},
+        {"key": "safe_privato_extra_safe_w", "name": "Safe Privato Extra", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_privato_extra_total_w", "name": "Safe Privato Totale", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_privato_headroom_w", "name": "Safe Privato Headroom", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_privato_max_charge_w", "name": "Safe Privato Max Carica", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_privato_export_w", "name": "Safe Privato Export", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_privato_battery_output_w", "name": "Safe Privato Battery Output", "unit": "W", "device_class": "power", "state_class": "measurement"},
+        {"key": "safe_privato_temp_c", "name": "Safe Privato Temp Batt", "unit": "°C", "device_class": "temperature", "state_class": "measurement"},
+        {"key": "safe_privato_soc_pct", "name": "Safe Privato SoC", "unit": "%", "state_class": "measurement"},
+    ]
+
+def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
+    inputs = (decision or {}).get("inputs", {}) or {}
+    computed = (decision or {}).get("computed", {}) or {}
+    imp = computed.get("impianto", {}) or {}
+    force = computed.get("force_acs_puffer", {}) or {}
+    easas = computed.get("energy_easas", {}) or {}
+    priv = computed.get("energy_privato", {}) or {}
+    return {
+        "t_acs": inputs.get("t_acs"),
+        "t_puffer": inputs.get("t_puffer"),
+        "t_volano": inputs.get("t_volano"),
+        "t_solare_mandata": inputs.get("t_solare_mandata"),
+        "t_esterna": inputs.get("t_esterna"),
+        "solare_flow_lmin": inputs.get("solare_flow_lmin"),
+        "dest": computed.get("dest"),
+        "source_to_acs": computed.get("source_to_acs"),
+        "acs_need": bool(computed.get("acs_need")),
+        "acs_ok": bool(computed.get("acs_ok")),
+        "resistance_step": computed.get("resistance_step"),
+        "impianto_source": imp.get("source"),
+        "impianto_richiesta": bool(imp.get("richiesta")),
+        "impianto_zone_demand": bool(imp.get("zone_demand")),
+        "impianto_blocked_cold": bool(imp.get("blocked_cold")),
+        "force_acs_puffer_active": bool(force.get("active")),
+        "force_acs_puffer_remaining_s": force.get("remaining_s"),
+        "safe_easas_extra_safe_w": easas.get("extra_safe_w"),
+        "safe_easas_extra_total_w": easas.get("extra_safe_total_w"),
+        "safe_easas_headroom_w": easas.get("headroom_w"),
+        "safe_easas_max_charge_w": easas.get("max_charge_w"),
+        "safe_easas_export_w": easas.get("export_w"),
+        "safe_easas_battery_output_w": easas.get("battery_output_w"),
+        "safe_easas_temp_c": easas.get("temp_c"),
+        "safe_easas_soc_pct": easas.get("soc_pct"),
+        "safe_privato_extra_safe_w": priv.get("extra_safe_w"),
+        "safe_privato_extra_total_w": priv.get("extra_safe_total_w"),
+        "safe_privato_headroom_w": priv.get("headroom_w"),
+        "safe_privato_max_charge_w": priv.get("max_charge_w"),
+        "safe_privato_export_w": priv.get("export_w"),
+        "safe_privato_battery_output_w": priv.get("battery_output_w"),
+        "safe_privato_temp_c": priv.get("temp_c"),
+        "safe_privato_soc_pct": priv.get("soc_pct"),
+    }
+
 def _mqtt_topic(*parts: str) -> str:
     base = _mqtt_cfg().get("base_topic") or "thermomind"
     segs = [base] + [p.strip("/") for p in parts if p]
@@ -381,6 +461,31 @@ def _mqtt_publish_discovery() -> int:
         mqtt_discovery_topics.append(active_disc)
         mqtt_state_topics.append(active_topic)
 
+    # extra read-only sensors (logic + safe + key temperatures)
+    for sdef in _mqtt_extra_sensor_defs():
+        key = sdef["key"]
+        state_topic = _mqtt_topic("sensors", key)
+        disc_topic = f"{prefix}/{'binary_sensor' if sdef.get('binary') else 'sensor'}/thermomind/{key}/config"
+        payload = {
+            "name": sdef["name"],
+            "unique_id": f"thermomind_{key}",
+            "state_topic": state_topic,
+            "availability_topic": f"{base_topic}/availability",
+            "device": device,
+        }
+        if sdef.get("binary"):
+            payload["payload_on"] = "ON"
+            payload["payload_off"] = "OFF"
+        if sdef.get("unit"):
+            payload["unit_of_measurement"] = sdef["unit"]
+        if sdef.get("device_class"):
+            payload["device_class"] = sdef["device_class"]
+        if sdef.get("state_class"):
+            payload["state_class"] = sdef["state_class"]
+        _mqtt_publish(disc_topic, payload, retain=True)
+        mqtt_discovery_topics.append(disc_topic)
+        mqtt_state_topics.append(state_topic)
+
     _mqtt_publish_states(force=True)
     return len(mqtt_discovery_topics)
 
@@ -406,6 +511,16 @@ def _mqtt_publish_states(force: bool = False) -> None:
         _mqtt_publish_value(_mqtt_topic("modules", key, "enabled"), "ON" if enabled else "OFF", retain=True, force=force)
         active = bool(active_map.get(key))
         _mqtt_publish_value(_mqtt_topic("modules", key, "active"), "ON" if active else "OFF", retain=True, force=force)
+
+    extra = _mqtt_extra_sensor_values(decision)
+    for sdef in _mqtt_extra_sensor_defs():
+        key = sdef["key"]
+        val = extra.get(key)
+        if sdef.get("binary"):
+            val = "ON" if bool(val) else "OFF"
+        elif val is None:
+            val = ""
+        _mqtt_publish_value(_mqtt_topic("sensors", key), val, retain=True, force=force)
 
 def _mqtt_clear_discovery() -> int:
     if not mqtt_client:
