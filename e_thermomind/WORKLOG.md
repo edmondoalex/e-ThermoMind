@@ -489,3 +489,6 @@
 - Fix forzatura ACS da puffer: `STOP` non può più essere sovrascritto da salvataggi generici `/api/setpoints` (latch `force_acs_puffer_until_ts` protetto lato backend).
 - UI: lock anti-doppio-click su pulsanti Forza/Stop forzatura (evita comandi concorrenti).
 - Versione add-on aggiornata a 0.7.89.
+## 2026-04-13
+- MQTT discovery: corretto `unit_of_measurement` temperature da `Â°C` a `°C` (elimina lettera anomala nella UI HA).
+- Versione add-on aggiornata a 0.7.90.

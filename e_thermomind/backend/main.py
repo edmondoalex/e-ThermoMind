@@ -307,7 +307,7 @@ def _mqtt_publish_discovery() -> int:
             "command_topic": cmd_topic,
             "availability_topic": f"{base_topic}/availability",
             "device": device,
-            "unit_of_measurement": "Â°C",
+            "unit_of_measurement": "°C",
             "device_class": "temperature",
             "state_class": "measurement",
             "min": sp_def["min"],
