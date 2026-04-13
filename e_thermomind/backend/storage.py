@@ -245,7 +245,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "mode": "live",
     "force_live_on_startup": True,
     "ui_poll_ms": 3000,
-    "timezone": "Europe/Rome"
+    "timezone": "Europe/Rome",
+    "force_acs_puffer_until_ts": 0.0,
+    "force_acs_puffer_default_minutes": 30
   },
   "mqtt": {
     "enabled": False,
@@ -588,6 +590,16 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["runtime"]["ui_poll_ms"] = int(_float(runtime["ui_poll_ms"], cfg["runtime"]["ui_poll_ms"]))
         if isinstance(runtime.get("timezone"), str):
             cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
+        if "force_acs_puffer_until_ts" in runtime:
+            cfg["runtime"]["force_acs_puffer_until_ts"] = _float(
+                runtime.get("force_acs_puffer_until_ts"),
+                cfg["runtime"]["force_acs_puffer_until_ts"],
+            )
+        if "force_acs_puffer_default_minutes" in runtime:
+            cfg["runtime"]["force_acs_puffer_default_minutes"] = max(
+                1,
+                int(_float(runtime.get("force_acs_puffer_default_minutes"), cfg["runtime"]["force_acs_puffer_default_minutes"])),
+            )
     if cfg.get("runtime", {}).get("force_live_on_startup"):
         cfg["runtime"]["mode"] = "live"
 
@@ -862,6 +874,16 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["runtime"]["force_live_on_startup"] = bool(runtime.get("force_live_on_startup"))
         if isinstance(runtime.get("timezone"), str):
             cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
+        if "force_acs_puffer_until_ts" in runtime:
+            cfg["runtime"]["force_acs_puffer_until_ts"] = _float(
+                runtime.get("force_acs_puffer_until_ts"),
+                cfg["runtime"]["force_acs_puffer_until_ts"],
+            )
+        if "force_acs_puffer_default_minutes" in runtime:
+            cfg["runtime"]["force_acs_puffer_default_minutes"] = max(
+                1,
+                int(_float(runtime.get("force_acs_puffer_default_minutes"), cfg["runtime"]["force_acs_puffer_default_minutes"])),
+            )
 
     mqtt = payload.get("mqtt", {})
     if isinstance(mqtt, dict):

@@ -689,6 +689,23 @@
               <div class="v">{{ d?.computed?.flags?.puffer_to_acs ? 'ATTIVO' : 'STOP' }}</div>
             </div>
           </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Forzatura emergenza</div>
+              <div class="v">{{ forceAcsPuffer.active ? 'ATTIVA' : 'OFF' }}</div>
+              <div class="muted">{{ forceAcsPuffer.reason || '-' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Durata (min)</div>
+              <input type="number" min="1" max="240" step="1" v-model.number="sp.runtime.force_acs_puffer_default_minutes"/>
+              <div class="help">Timer temporaneo: non cambia i setpoint.</div>
+            </div>
+            <div class="kpi kpi-center">
+              <button class="ghost toggle on" @click="activateForceAcsPuffer()">Forza ACS da Puffer</button>
+              <button class="ghost toggle off" style="margin-top:8px" @click="clearForceAcsPuffer()">Stop forzatura</button>
+              <div class="muted" style="margin-top:6px">Residuo: {{ forceAcsPuffer.active ? `${forceAcsPuffer.remaining_s}s` : '-' }}</div>
+            </div>
+          </div>
         </div>
 
         <div v-if="act" class="card inner module-panel" :class="modulePanelClass('impianto')">
@@ -2829,6 +2846,7 @@ const hvacLabel = (s) => {
 const flowSolarToAcs = computed(() => d.value?.computed?.source_to_acs === 'SOLAR')
 const flowVolanoToAcs = computed(() => d.value?.computed?.source_to_acs === 'VOLANO')
 const flowPufferToAcs = computed(() => d.value?.computed?.source_to_acs === 'PUFFER')
+const forceAcsPuffer = computed(() => d.value?.computed?.force_acs_puffer || { active: false, remaining_s: 0, reason: 'Forzatura OFF.' })
 const flowVolanoToPuffer = computed(() => d.value?.computed?.flags?.volano_to_puffer)
 const flowPufferToVolano = computed(() => false)
 const flowSolarToPuffer = computed(() => false)
@@ -2866,6 +2884,7 @@ const moduleReasonsList = computed(() => {
       label: legnaTimer > 0 ? `Caldaia Legna (startup ${legnaTimer}s)` : 'Caldaia Legna',
       active: !!(d.value?.computed?.caldaia_legna?.power || d.value?.computed?.caldaia_legna?.ta || legnaTimer > 0)
     },
+    { key: 'force_acs_puffer', label: 'Forzatura ACS da Puffer', active: !!d.value?.computed?.force_acs_puffer?.active },
     { key: 'gas_emergenza', label: 'Caldaia Gas Emergenza Riscaldamento', active: !!d.value?.computed?.gas_emergenza?.need },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
@@ -3100,11 +3119,13 @@ async function load(){
     delta_puffer_acs: false, delta_volano_acs: false, delta_volano_puffer: false, delta_mandata_ritorno: false, kp_eff: false,
     curva_setpoint: false
   }
-  if (!sp.value?.runtime) sp.value.runtime = { mode: 'dry-run', force_live_on_startup: true, ui_poll_ms: 3000, timezone: 'Europe/Rome' }
+  if (!sp.value?.runtime) sp.value.runtime = { mode: 'dry-run', force_live_on_startup: true, ui_poll_ms: 3000, timezone: 'Europe/Rome', force_acs_puffer_until_ts: 0, force_acs_puffer_default_minutes: 30 }
   if (typeof sp.value.runtime.force_live_on_startup === 'undefined') sp.value.runtime.force_live_on_startup = true
   if (typeof sp.value.runtime.timezone === 'undefined' || sp.value.runtime.timezone === null) {
     sp.value.runtime.timezone = 'Europe/Rome'
   }
+  if (typeof sp.value.runtime.force_acs_puffer_until_ts === 'undefined') sp.value.runtime.force_acs_puffer_until_ts = 0
+  if (typeof sp.value.runtime.force_acs_puffer_default_minutes === 'undefined') sp.value.runtime.force_acs_puffer_default_minutes = 30
   for (const [k, v] of Object.entries(histDefaults)) {
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
   }
@@ -3274,6 +3295,19 @@ async function loadActuators(){
 }
 async function resetLegnaForcedOff(){
   await fetch('/api/legna/reset_startup', { method: 'POST' })
+  await refresh()
+}
+async function activateForceAcsPuffer(){
+  const mins = Math.max(1, Math.min(240, Number(sp.value?.runtime?.force_acs_puffer_default_minutes || 30)))
+  await fetch('/api/acs/force_puffer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ minutes: mins })
+  })
+  await refresh()
+}
+async function clearForceAcsPuffer(){
+  await fetch('/api/acs/force_puffer/clear', { method: 'POST' })
   await refresh()
 }
 async function saveAll(){

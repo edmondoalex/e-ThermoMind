@@ -471,3 +471,11 @@
 - UI moduli: Impianto ATTIVO ora richiede anche zone_demand (evita falsi "in esecuzione" con sole sorgenti disponibili).
 - Backend: fissato bug latente in _set_climate_hvac_mode_guard (parametro eason definito).
 - Versione add-on aggiornata a 0.7.86.
+## 2026-04-13
+- Forzatura emergenza ACS da puffer: nuova API temporizzata (`/api/acs/force_puffer` + clear) con scadenza automatica persistente.
+- Logica ACS: se forzatura attiva e applicabile, selezione sorgente PUFFER senza modificare setpoint/config standard.
+- Trasferimenti live: la pompa R14 può essere comandata dalla forzatura anche se modulo `puffer_to_acs` è OFF.
+- UI User (Puffer -> ACS): aggiunti stato forzatura, durata timer e pulsanti avvio/stop forzatura.
+- Pulizia: rimosso ramo morto `no_demand` in `_apply_impianto_live`.
+- Build: frontend compilato con npm installato localmente; aggiunto `web/package-lock.json`.
+- Versione add-on aggiornata a 0.7.87.

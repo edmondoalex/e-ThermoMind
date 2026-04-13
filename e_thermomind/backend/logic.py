@@ -369,6 +369,27 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         source_to_acs = "OFF"
         source_reason = "Nessuna sorgente selezionata (v0.1)."
 
+    runtime_cfg = cfg.get("runtime", {})
+    force_until = float(runtime_cfg.get("force_acs_puffer_until_ts", 0.0) or 0.0)
+    force_active = force_until > now_ts
+    force_remaining_s = max(0, int(force_until - now_ts)) if force_active else 0
+    force_can_apply = bool(dest == "ACS" and (not acs_max_hit) and (t_puffer > t_acs))
+    force_reason = "Forzatura OFF."
+    if force_active:
+        if force_can_apply:
+            source_to_acs = "PUFFER"
+            source_reason = "Forzatura emergenza ACS da PUFFER attiva."
+            force_reason = (
+                f"Forzatura ACS da PUFFER attiva ({force_remaining_s}s). "
+                f"T_PUF {t_puffer:.1f}C > T_ACS {t_acs:.1f}C"
+            )
+        else:
+            force_reason = (
+                f"Forzatura attiva ma non applicabile ({force_remaining_s}s): "
+                f"Dest={dest} | ACS_MAX={'SI' if acs_max_hit else 'NO'} | "
+                f"T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C"
+            )
+
     volano_to_puffer = False
     if dest == "PUFFER" and (not vol_max_hit):
         if (t_volano >= t_puffer + puf_delta_start) and (t_volano >= vol_min_puf + vol_h_puf):
@@ -865,6 +886,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "reason": impianto_reason,
                 "selector": sel_norm
             },
+            "force_acs_puffer": {
+                "active": force_active,
+                "until_ts": force_until,
+                "remaining_s": force_remaining_s,
+                "can_apply": force_can_apply,
+                "reason": force_reason
+            },
             "miscelatrice": {
                 "enabled": mix_enabled,
                 "setpoint": mix_sp,
@@ -970,7 +998,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "impianto": impianto_reason,
                 "gas_emergenza": gas_reason,
                 "caldaia_legna": legna_reason,
-                "miscelatrice": mix_reason
+                "miscelatrice": mix_reason,
+                "force_acs_puffer": force_reason
             },
             "module_summaries": {
                 "solare": "Regola: attivo se T_SOL >= T_ACS + d_on (o d_hold se già attivo).",
@@ -982,7 +1011,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "impianto": "Regola: termostati HEAT se fonte valida; uscite/pompe solo con zone attive.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
-            "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export < -100W OFF secco; batteria scarica step-down."
+            "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export < -100W OFF secco; batteria scarica step-down.",
+                "force_acs_puffer": "Regola: forzatura temporizzata ACS da PUFFER senza cambiare setpoint."
             },
             "state": {
                 "last_dest": _LAST.get("dest"),

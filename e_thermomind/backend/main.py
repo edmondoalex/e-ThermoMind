@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import json
 import logging
 import time
@@ -134,6 +134,30 @@ def _apply_season_block(modules: dict[str, bool]) -> tuple[dict[str, bool], bool
             out[key] = False
             changed = True
     return out, changed
+
+def _force_acs_puffer_status(now_ts: float | None = None) -> dict[str, Any]:
+    now = time.time() if now_ts is None else float(now_ts)
+    runtime = cfg.get("runtime", {}) if isinstance(cfg.get("runtime", {}), dict) else {}
+    until_ts = float(runtime.get("force_acs_puffer_until_ts", 0.0) or 0.0)
+    active = until_ts > now
+    return {
+        "active": active,
+        "until_ts": until_ts,
+        "remaining_s": max(0, int(until_ts - now)) if active else 0,
+    }
+
+def _expire_force_acs_puffer(now_ts: float | None = None) -> bool:
+    runtime = cfg.get("runtime", {})
+    if not isinstance(runtime, dict):
+        return False
+    now = time.time() if now_ts is None else float(now_ts)
+    until_ts = float(runtime.get("force_acs_puffer_until_ts", 0.0) or 0.0)
+    if until_ts <= 0.0 or until_ts > now:
+        return False
+    runtime["force_acs_puffer_until_ts"] = 0.0
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} FORCE_ACS_PUFFER expired")
+    save_config(cfg)
+    return True
 
 def _load_options_mqtt() -> dict[str, Any]:
     opts_path = Path("/data/options.json")
@@ -283,7 +307,7 @@ def _mqtt_publish_discovery() -> int:
             "command_topic": cmd_topic,
             "availability_topic": f"{base_topic}/availability",
             "device": device,
-            "unit_of_measurement": "°C",
+            "unit_of_measurement": "Â°C",
             "device_class": "temperature",
             "state_class": "measurement",
             "min": sp_def["min"],
@@ -574,6 +598,7 @@ async def set_config(payload: dict):
 
 @app.get("/api/decision")
 async def decision():
+    _expire_force_acs_puffer()
     data = compute_decision(cfg, ha.states)
     # scheduler status (ora server + prossimo start)
     sched = cfg.get("scheduler", {}).get("gas", {})
@@ -786,6 +811,7 @@ def _collect_zones(imp: dict) -> list[str]:
     return out
 
 async def _build_snapshot() -> dict:
+    _expire_force_acs_puffer()
     data = compute_decision(cfg, ha.states)
     # scheduler status (ora server + prossimo start)
     sched = cfg.get("scheduler", {}).get("gas", {})
@@ -1510,6 +1536,7 @@ async def _apply_transfer_live(decision_data: dict) -> None:
         return
 
     flags = decision_data.get("computed", {}).get("flags", {})
+    force_acs_puffer = (decision_data.get("computed", {}) or {}).get("force_acs_puffer", {}) or {}
     modules = cfg.get("modules_enabled", {})
     act = cfg.get("actuators", {})
 
@@ -1518,7 +1545,8 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     r13 = act.get("r13_pump_pdc_to_acs_puffer")
     r14 = act.get("r14_pump_puffer_to_acs")
 
-    if not (modules.get("volano_to_acs", True) or modules.get("volano_to_puffer", True) or modules.get("puffer_to_acs", True)):
+    force_puf_acs = bool(force_acs_puffer.get("active")) and bool(force_acs_puffer.get("can_apply"))
+    if not (modules.get("volano_to_acs", True) or modules.get("volano_to_puffer", True) or modules.get("puffer_to_acs", True) or force_puf_acs):
         await _set_valve_only(r6, False)
         await _set_valve_only(r7, False)
         await _set_pump_only("volano_to_acs", r13, False)
@@ -1528,9 +1556,12 @@ async def _apply_transfer_live(decision_data: dict) -> None:
 
     want_vol_acs = bool(flags.get("volano_to_acs")) and modules.get("volano_to_acs", True)
     want_vol_puf = bool(flags.get("volano_to_puffer")) and modules.get("volano_to_puffer", True)
-    want_puf_acs = bool(flags.get("puffer_to_acs")) and modules.get("puffer_to_acs", True)
+    want_puf_acs = (bool(flags.get("puffer_to_acs")) and modules.get("puffer_to_acs", True)) or force_puf_acs
 
-    if want_vol_acs:
+    if force_puf_acs:
+        want_vol_acs = False
+        want_vol_puf = False
+    elif want_vol_acs:
         want_vol_puf = False
         want_puf_acs = False
     # watchdog log: if transfer modules ON but nothing requested and actuators still ON
@@ -1713,7 +1744,7 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         close_s = 180.0
         r16 = act.get("r16_cmd_miscelatrice_alza")
         r17 = act.get("r17_cmd_miscelatrice_abbassa")
-        # shutdown completato: non riarmare finché impianto non torna attivo
+        # shutdown completato: non riarmare finchÃ© impianto non torna attivo
         if miscelatrice_shutdown_until < 0:
             await _set_actuator(r16, False)
             await _set_actuator(r17, False)
@@ -1723,7 +1754,7 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         if miscelatrice_shutdown_until > now:
             await _set_actuator(r16, False)
             return
-        # se era in corso ed è finito, segna completato
+        # se era in corso ed Ã¨ finito, segna completato
         if miscelatrice_shutdown_until > 0 and miscelatrice_shutdown_until <= now:
             miscelatrice_shutdown_until = -1.0
             await _set_actuator(r16, False)
@@ -2017,11 +2048,11 @@ async def _apply_impianto_live() -> None:
     vol_ok = vol_ok_start or (vol_ok_hold and vol_hold_allowed)
     puf_ok = puf_ok_start or (puf_ok_hold and puf_hold_allowed)
 
-    # IMPIANTO_LOGIC: il modulo si attiva quando almeno una sorgente valida (volano/puffer) è OK.
-    # Le zone NON devono guidare l'accensione: vengono accese dal modulo quando la sorgente è OK.
-    # Se nessuna sorgente è OK, il modulo si spegne e spegne le zone.
+    # IMPIANTO_LOGIC: il modulo si attiva quando almeno una sorgente valida (volano/puffer) Ã¨ OK.
+    # Le zone NON devono guidare l'accensione: vengono accese dal modulo quando la sorgente Ã¨ OK.
+    # Se nessuna sorgente Ã¨ OK, il modulo si spegne e spegne le zone.
 
-    # Se selector AUTO o sorgente non disponibile -> fallback con priorità
+    # Se selector AUTO o sorgente non disponibile -> fallback con prioritÃ 
     if sel_state == "AUTO" or (
         (sel_state == "PDC" and (not pdc_volano_ready or not vol_ok)) or
         (sel_state == "PUFFER" and (not puffer_ready or not puf_ok))
@@ -2104,30 +2135,6 @@ async def _apply_impianto_live() -> None:
         return
 
     impianto_last_source = source
-
-    if not demand_on:
-        _log_action(
-            f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF no_demand "
-            f"source={source or 'OFF'} act=[r1,r2,r3,r4,r5,r11,r12]"
-        )
-        _watchdog("no_demand")
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off", "IMPIANTO no demand")
-        if r2:
-            await _set_actuator_impianto(r2, False, "no_demand", force=True)
-        if r3:
-            await _set_actuator_impianto(r3, False, "no_demand", force=True)
-        if r1:
-            await _set_actuator_impianto(r1, False, "no_demand", force=True)
-        await _set_actuator_impianto(r4, False, "no_demand", force=True)
-        await _set_actuator_impianto(r5, False, "no_demand", force=True)
-        await _force_pump_off("impianto:pump", r12, "no_demand")
-        await _force_pump_off("impianto:lab_pump", r11, "no_demand")
-        # Termostati restano in HEAT quando non c'è domanda.
-        await _set_actuator(off_centralina, True)
-        # miscelatrice gestita solo dal suo modulo
-        return
-
     # Auto-heat: termostati in HEAT quando impianto è OK (fonte valida).
     desired_heat = bool(season == "winter" and demand_on)
     auto_heat = _impianto_auto_heat(desired_heat, imp)
@@ -2586,6 +2593,43 @@ async def climate_setpoint(payload: dict):
 async def get_modules():
     return JSONResponse(cfg.get("modules_enabled", {}))
 
+@app.get("/api/acs/force_puffer")
+async def get_force_acs_puffer():
+    _expire_force_acs_puffer()
+    return JSONResponse(_force_acs_puffer_status())
+
+@app.post("/api/acs/force_puffer")
+async def set_force_acs_puffer(payload: dict):
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    runtime = cfg.setdefault("runtime", {})
+    if not isinstance(runtime, dict):
+        cfg["runtime"] = {}
+        runtime = cfg["runtime"]
+    default_minutes = int(runtime.get("force_acs_puffer_default_minutes", 30) or 30)
+    minutes_raw = payload.get("minutes", default_minutes)
+    try:
+        minutes = int(float(minutes_raw))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid minutes")
+    minutes = max(1, min(240, minutes))
+    until_ts = time.time() + (minutes * 60)
+    runtime["force_acs_puffer_until_ts"] = until_ts
+    save_config(cfg)
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} FORCE_ACS_PUFFER ON {minutes}m")
+    return JSONResponse({"ok": True, **_force_acs_puffer_status()})
+
+@app.post("/api/acs/force_puffer/clear")
+async def clear_force_acs_puffer():
+    runtime = cfg.setdefault("runtime", {})
+    if not isinstance(runtime, dict):
+        cfg["runtime"] = {}
+        runtime = cfg["runtime"]
+    runtime["force_acs_puffer_until_ts"] = 0.0
+    save_config(cfg)
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} FORCE_ACS_PUFFER OFF")
+    return JSONResponse({"ok": True, **_force_acs_puffer_status()})
+
 @app.post("/api/modules")
 async def set_modules(payload: dict, request: Request):
     global cfg
@@ -2800,3 +2844,4 @@ async def reset_legna_startup():
         save_config(cfg)
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} LEGNA reset startup")
     return JSONResponse({"ok": True})
+
