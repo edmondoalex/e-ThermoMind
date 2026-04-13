@@ -456,3 +456,7 @@
 ## 2026-04-13
 - ACS setpoint: alzato limite massimo da 65C a 85C (UI slider + MQTT number).
 - Versione add-on aggiornata a 0.7.82.
+## 2026-04-13
+- Impianto: rimosso ritardo di riaccensione termostati (uto_heat_min_off_s) quando fonte disponibile.
+- Con fonte OK i termostati tornano subito in HEAT; min_on resta attivo per anti-flap in spegnimento.
+- Versione add-on aggiornata a 0.7.83.

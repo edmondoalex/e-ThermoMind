@@ -753,13 +753,10 @@ def _gas_emergenza_active() -> bool:
 def _impianto_auto_heat(desired: bool, imp_cfg: dict) -> bool:
     # anti-flap per termostati in modalit? normale
     min_on = float(imp_cfg.get("auto_heat_min_on_s", 60.0))
-    min_off = float(imp_cfg.get("auto_heat_min_off_s", 60.0))
     now = time.time()
     active = bool(impianto_heat_state.get("active"))
     last = float(impianto_heat_state.get("last_change") or 0.0)
     if desired:
-        if not active and (now - last) < min_off:
-            return False
         if not active:
             impianto_heat_state["active"] = True
             impianto_heat_state["last_change"] = now
