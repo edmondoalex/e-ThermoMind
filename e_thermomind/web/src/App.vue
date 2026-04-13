@@ -311,6 +311,10 @@
                   </div>
                 </div>
                 <div v-if="item.summary" class="muted">{{ item.summary }}</div>
+                <div class="module-state-line">
+                  ABILITATO: <strong>{{ item.enabled ? 'ABILITATO' : 'SPENTO' }}</strong>
+                  | ESECUZIONE: <strong>{{ item.active ? 'IN ESECUZIONE' : 'NON IN ESECUZIONE' }}</strong>
+                </div>
                 <div class="muted">{{ item.reason }}</div>
                 <div v-if="item.key === 'impianto'" class="module-extra">
                   <div class="muted">
@@ -3862,6 +3866,7 @@ details.form summary{cursor:pointer;list-style:none}
 .module-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .module-label{font-size:12px;font-weight:700;letter-spacing:.3px}
 .module-badges{display:flex;gap:6px;align-items:center}
+.module-state-line{margin-top:4px;font-size:12px;font-weight:800;color:#ffd8d8}
 .module-panel.mod-on{background:linear-gradient(135deg, rgba(34,197,94,.08), rgba(34,197,94,.03))}
 .module-panel.mod-active{background:linear-gradient(135deg, rgba(239,68,68,.10), rgba(239,68,68,.04))}
 .badge-mini{font-size:10px;border:1px solid var(--border);padding:2px 6px;border-radius:999px;color:var(--muted)}

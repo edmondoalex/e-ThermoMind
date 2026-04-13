@@ -460,3 +460,6 @@
 - Impianto: rimosso ritardo di riaccensione termostati (uto_heat_min_off_s) quando fonte disponibile.
 - Con fonte OK i termostati tornano subito in HEAT; min_on resta attivo per anti-flap in spegnimento.
 - Versione add-on aggiornata a 0.7.83.
+## 2026-04-13
+- UI Moduli: aggiunta riga esplicita stato ABILITATO/SPENTO e IN ESECUZIONE/NON IN ESECUZIONE.
+- Versione add-on aggiornata a 0.7.84.
