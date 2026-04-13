@@ -2557,8 +2557,11 @@ async def set_setpoints(payload: dict):
     global cfg
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
+    force_until_ts = float((cfg.get("runtime", {}) or {}).get("force_acs_puffer_until_ts", 0.0) or 0.0)
     prev_modules = dict(cfg.get("modules_enabled", {}))
     cfg = apply_setpoints(cfg, payload)
+    # Dedicated force endpoint owns this runtime latch: never overwrite from generic setpoints save.
+    cfg.setdefault("runtime", {})["force_acs_puffer_until_ts"] = force_until_ts
     # keep module toggles owned by /api/modules (except seasonal block)
     modules, changed = _apply_season_block(prev_modules)
     if changed:

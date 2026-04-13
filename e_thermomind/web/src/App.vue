@@ -701,8 +701,8 @@
               <div class="help">Timer temporaneo: non cambia i setpoint.</div>
             </div>
             <div class="kpi kpi-center">
-              <button class="ghost toggle on" @click="activateForceAcsPuffer()">Forza ACS da Puffer</button>
-              <button class="ghost toggle off" style="margin-top:8px" @click="clearForceAcsPuffer()">Stop forzatura</button>
+              <button class="ghost toggle on" :disabled="forceAcsBusy" @click="activateForceAcsPuffer()">Forza ACS da Puffer</button>
+              <button class="ghost toggle off" :disabled="forceAcsBusy" style="margin-top:8px" @click="clearForceAcsPuffer()">Stop forzatura</button>
               <div class="muted" style="margin-top:6px">Residuo: {{ forceAcsPuffer.active ? `${forceAcsPuffer.remaining_s}s` : '-' }}</div>
             </div>
           </div>
@@ -2497,6 +2497,7 @@ const pollMs = ref(3000)
 const actions = ref([])
 const zones = ref([])
 const schedulerStatus = ref(null)
+const forceAcsBusy = ref(false)
 let historySaveTimer = null
 let historyReady = false
 const schedulerDays = [
@@ -3299,17 +3300,29 @@ async function resetLegnaForcedOff(){
   await refresh()
 }
 async function activateForceAcsPuffer(){
-  const mins = Math.max(1, Math.min(240, Number(sp.value?.runtime?.force_acs_puffer_default_minutes || 30)))
-  await fetch('/api/acs/force_puffer', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ minutes: mins })
-  })
-  await refresh()
+  if (forceAcsBusy.value) return
+  forceAcsBusy.value = true
+  try {
+    const mins = Math.max(1, Math.min(240, Number(sp.value?.runtime?.force_acs_puffer_default_minutes || 30)))
+    const res = await fetch('/api/acs/force_puffer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ minutes: mins })
+    })
+    if (res.ok) await refresh()
+  } finally {
+    forceAcsBusy.value = false
+  }
 }
 async function clearForceAcsPuffer(){
-  await fetch('/api/acs/force_puffer/clear', { method: 'POST' })
-  await refresh()
+  if (forceAcsBusy.value) return
+  forceAcsBusy.value = true
+  try {
+    const res = await fetch('/api/acs/force_puffer/clear', { method: 'POST' })
+    if (res.ok) await refresh()
+  } finally {
+    forceAcsBusy.value = false
+  }
 }
 async function saveAll(){
   await save()

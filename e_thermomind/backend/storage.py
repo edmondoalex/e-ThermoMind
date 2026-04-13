@@ -901,11 +901,6 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["runtime"]["force_live_on_startup"] = bool(runtime.get("force_live_on_startup"))
         if isinstance(runtime.get("timezone"), str):
             cfg["runtime"]["timezone"] = runtime.get("timezone", cfg["runtime"]["timezone"]).strip()
-        if "force_acs_puffer_until_ts" in runtime:
-            cfg["runtime"]["force_acs_puffer_until_ts"] = _float(
-                runtime.get("force_acs_puffer_until_ts"),
-                cfg["runtime"]["force_acs_puffer_until_ts"],
-            )
         if "force_acs_puffer_default_minutes" in runtime:
             cfg["runtime"]["force_acs_puffer_default_minutes"] = max(
                 1,
