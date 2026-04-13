@@ -3130,9 +3130,10 @@ async function load(){
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
   }
   if (!sp.value?.solare) {
-    sp.value.solare = { mode: 'auto', force_night_on_startup: true, delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300 }
+    sp.value.solare = { mode: 'auto', force_night_on_startup: true, delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300, flow_min_lmin: 6 }
   }
   if (typeof sp.value.solare.force_night_on_startup === 'undefined') sp.value.solare.force_night_on_startup = true
+  if (typeof sp.value.solare.flow_min_lmin === 'undefined') sp.value.solare.flow_min_lmin = 6
   if (!sp.value?.volano) {
     sp.value.volano = { margin_c: 3, max_c: 60, max_hyst_c: 2, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2 }
   } else {

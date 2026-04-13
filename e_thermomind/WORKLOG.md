@@ -479,3 +479,9 @@
 - Pulizia: rimosso ramo morto `no_demand` in `_apply_impianto_live`.
 - Build: frontend compilato con npm installato localmente; aggiunto `web/package-lock.json`.
 - Versione add-on aggiornata a 0.7.87.
+## 2026-04-13
+- Fix salvataggio setpoint Solare: `flow_min_lmin` (portata minima start) ora viene persistito correttamente.
+- Fix persistenza parametri Resistenze: aggiunti e salvati `export_off_w`, `battery_block_w`, `step_down_delay_s`.
+- Fix persistenza parametri Impianto: ora vengono salvati anche `season_mode`, `auto_heat_min_on_s`, `auto_heat_min_off_s`, `auto_heat_keep_on`.
+- UI fallback Solare: default locale allineato con `flow_min_lmin` per evitare valori undefined.
+- Versione add-on aggiornata a 0.7.88.

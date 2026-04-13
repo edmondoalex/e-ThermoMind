@@ -163,9 +163,12 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   },
   "resistance": {
     "enabled": True,
+    "export_off_w": -100.0,
+    "battery_block_w": 100.0,
     "off_threshold_w": 0.0,
     "off_delay_s": 5,
     "step_up_delay_s": 10,
+    "step_down_delay_s": 5,
     "thresholds_w": [1100, 2200, 3300],
     "invert_export_sign": False
   },
@@ -382,7 +385,7 @@ _NUM_KEYS = {
   "puffer": ["setpoint_c", "off_hyst_c", "max_c", "max_hyst_c", "min_to_acs_c", "hyst_to_acs_c", "delta_to_acs_start_c", "delta_to_acs_hold_c"],
   "miscelatrice": ["setpoint_c", "hyst_c", "kp", "min_imp_s", "max_imp_s", "pause_s", "dt_ref_c", "dt_min_factor", "dt_max_factor", "min_temp_c", "max_temp_c", "force_impulse_s"],
   "curva_climatica": ["slope", "offset", "min_c", "max_c"],
-  "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s"],
+  "solare": ["delta_on_c", "delta_hold_c", "max_c", "pv_day_w", "pv_night_w", "pv_debounce_s", "flow_min_lmin"],
   "gas_emergenza": ["volano_min_c", "volano_hyst_c", "puffer_min_c", "puffer_hyst_c", "min_on_s", "min_off_s"],
   "caldaia_legna": ["temp_min_alim_c", "temp_min_alim_hyst_c", "startup_check_s", "puffer_alto_sp_c", "puffer_alto_hyst_c"],
   "volano": [
@@ -491,12 +494,18 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(res, dict):
         if "enabled" in res:
             cfg["resistance"]["enabled"] = bool(res["enabled"])
+        if "export_off_w" in res:
+            cfg["resistance"]["export_off_w"] = _float(res["export_off_w"], cfg["resistance"]["export_off_w"])
+        if "battery_block_w" in res:
+            cfg["resistance"]["battery_block_w"] = _float(res["battery_block_w"], cfg["resistance"]["battery_block_w"])
         if "off_threshold_w" in res:
             cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
             cfg["resistance"]["off_delay_s"] = int(_float(res["off_delay_s"], cfg["resistance"]["off_delay_s"]))
         if "step_up_delay_s" in res:
             cfg["resistance"]["step_up_delay_s"] = int(_float(res["step_up_delay_s"], cfg["resistance"]["step_up_delay_s"]))
+        if "step_down_delay_s" in res:
+            cfg["resistance"]["step_down_delay_s"] = int(_float(res["step_down_delay_s"], cfg["resistance"]["step_down_delay_s"]))
         if "invert_export_sign" in res:
             cfg["resistance"]["invert_export_sign"] = bool(res["invert_export_sign"])
         if "thresholds_w" in res:
@@ -682,11 +691,17 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
             cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
+        if isinstance(imp.get("season_mode"), str):
+            cfg["impianto"]["season_mode"] = imp.get("season_mode", cfg["impianto"]["season_mode"]).strip().lower()
         for key in ("pdc_ready", "volano_ready", "puffer_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
         if "auto_heat_keep_on" in imp:
             cfg["impianto"]["auto_heat_keep_on"] = bool(imp.get("auto_heat_keep_on"))
+        if "auto_heat_min_on_s" in imp:
+            cfg["impianto"]["auto_heat_min_on_s"] = int(_float(imp.get("auto_heat_min_on_s"), cfg["impianto"]["auto_heat_min_on_s"]))
+        if "auto_heat_min_off_s" in imp:
+            cfg["impianto"]["auto_heat_min_off_s"] = int(_float(imp.get("auto_heat_min_off_s"), cfg["impianto"]["auto_heat_min_off_s"]))
 
     hist = raw.get("history", {})
     if isinstance(hist, dict):
@@ -711,11 +726,17 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
             cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
+        if isinstance(imp.get("season_mode"), str):
+            cfg["impianto"]["season_mode"] = imp.get("season_mode", cfg["impianto"]["season_mode"]).strip().lower()
         for key in ("pdc_ready", "volano_ready", "puffer_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
         if "auto_heat_keep_on" in imp:
             cfg["impianto"]["auto_heat_keep_on"] = bool(imp.get("auto_heat_keep_on"))
+        if "auto_heat_min_on_s" in imp:
+            cfg["impianto"]["auto_heat_min_on_s"] = int(_float(imp.get("auto_heat_min_on_s"), cfg["impianto"]["auto_heat_min_on_s"]))
+        if "auto_heat_min_off_s" in imp:
+            cfg["impianto"]["auto_heat_min_off_s"] = int(_float(imp.get("auto_heat_min_off_s"), cfg["impianto"]["auto_heat_min_off_s"]))
         for key in (
             "volano_min_c", "volano_hyst_c", "volano_on_hyst_c", "volano_off_hyst_c",
             "puffer_min_c", "puffer_hyst_c", "puffer_on_hyst_c", "puffer_off_hyst_c"
@@ -769,12 +790,18 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(res, dict):
         if "enabled" in res:
             cfg["resistance"]["enabled"] = bool(res["enabled"])
+        if "export_off_w" in res:
+            cfg["resistance"]["export_off_w"] = _float(res["export_off_w"], cfg["resistance"]["export_off_w"])
+        if "battery_block_w" in res:
+            cfg["resistance"]["battery_block_w"] = _float(res["battery_block_w"], cfg["resistance"]["battery_block_w"])
         if "off_threshold_w" in res:
             cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
             cfg["resistance"]["off_delay_s"] = int(_float(res["off_delay_s"], cfg["resistance"]["off_delay_s"]))
         if "step_up_delay_s" in res:
             cfg["resistance"]["step_up_delay_s"] = int(_float(res["step_up_delay_s"], cfg["resistance"]["step_up_delay_s"]))
+        if "step_down_delay_s" in res:
+            cfg["resistance"]["step_down_delay_s"] = int(_float(res["step_down_delay_s"], cfg["resistance"]["step_down_delay_s"]))
         if "invert_export_sign" in res:
             cfg["resistance"]["invert_export_sign"] = bool(res["invert_export_sign"])
         if "thresholds_w" in res:
@@ -950,9 +977,17 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
             cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
+        if isinstance(imp.get("season_mode"), str):
+            cfg["impianto"]["season_mode"] = imp.get("season_mode", cfg["impianto"]["season_mode"]).strip().lower()
         for key in ("pdc_ready", "volano_ready", "puffer_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
+        if "auto_heat_keep_on" in imp:
+            cfg["impianto"]["auto_heat_keep_on"] = bool(imp.get("auto_heat_keep_on"))
+        if "auto_heat_min_on_s" in imp:
+            cfg["impianto"]["auto_heat_min_on_s"] = int(_float(imp.get("auto_heat_min_on_s"), cfg["impianto"]["auto_heat_min_on_s"]))
+        if "auto_heat_min_off_s" in imp:
+            cfg["impianto"]["auto_heat_min_off_s"] = int(_float(imp.get("auto_heat_min_off_s"), cfg["impianto"]["auto_heat_min_off_s"]))
 
     hist = payload.get("history", {})
     if isinstance(hist, dict):
@@ -976,9 +1011,17 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(imp, dict):
         if isinstance(imp.get("source_mode"), str):
             cfg["impianto"]["source_mode"] = imp.get("source_mode", "AUTO").strip().upper()
+        if isinstance(imp.get("season_mode"), str):
+            cfg["impianto"]["season_mode"] = imp.get("season_mode", cfg["impianto"]["season_mode"]).strip().lower()
         for key in ("pdc_ready", "volano_ready", "puffer_ready", "richiesta_heat"):
             if key in imp:
                 cfg["impianto"][key] = bool(imp[key])
+        if "auto_heat_keep_on" in imp:
+            cfg["impianto"]["auto_heat_keep_on"] = bool(imp.get("auto_heat_keep_on"))
+        if "auto_heat_min_on_s" in imp:
+            cfg["impianto"]["auto_heat_min_on_s"] = int(_float(imp.get("auto_heat_min_on_s"), cfg["impianto"]["auto_heat_min_on_s"]))
+        if "auto_heat_min_off_s" in imp:
+            cfg["impianto"]["auto_heat_min_off_s"] = int(_float(imp.get("auto_heat_min_off_s"), cfg["impianto"]["auto_heat_min_off_s"]))
         for key in (
             "volano_min_c", "volano_hyst_c", "volano_on_hyst_c", "volano_off_hyst_c",
             "puffer_min_c", "puffer_hyst_c", "puffer_on_hyst_c", "puffer_off_hyst_c"
