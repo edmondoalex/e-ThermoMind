@@ -29,6 +29,7 @@ def _thr_list(value: Any) -> list[float]:
 _LAST: Dict[str, Any] = {
     "dest": None,
     "source_to_acs": None,
+    "impianto_source": None,
     "volano_to_puffer": False,
     "gas_vol_ok": False,
     "gas_puf_ok": False,
@@ -525,8 +526,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     vol_ok_hold = t_volano > (vol_min - vol_off_h)
     puf_ok_start = t_puffer >= (puf_min + puf_on_h)
     puf_ok_hold = t_puffer > (puf_min - puf_off_h)
-    vol_ok = vol_ok_start or vol_ok_hold
-    puf_ok = puf_ok_start or puf_ok_hold
+    last_imp_source = _LAST.get("impianto_source")
+    vol_ok = vol_ok_start or (vol_ok_hold and last_imp_source == "PDC")
+    puf_ok = puf_ok_start or (puf_ok_hold and last_imp_source == "PUFFER")
 
     if sel_norm not in ("AUTO", "PDC", "PUFFER"):
         sel_norm = "AUTO"
@@ -565,6 +567,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 (sel_norm == "PDC" and vol_ok) or
                 (sel_norm == "PUFFER" and puf_ok)
             ) else "OFF"
+    _LAST["impianto_source"] = source if source in ("PDC", "PUFFER") else None
     def _float_list(val, default_list):
         if isinstance(val, (list, tuple)):
             out = []
@@ -846,8 +849,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "pdc_ready": pdc_vol_ready,
                 "volano_ready": vol_ready,
                 "puffer_ready": puf_ready,
-                "volano_temp_ok": bool(vol_ok_start or (vol_ok_hold and req_on)),
-                "puffer_temp_ok": bool(puf_ok_start or (puf_ok_hold and req_on)),
+                "volano_temp_ok": bool(vol_ok),
+                "puffer_temp_ok": bool(puf_ok),
                 "volano_min_c": vol_min,
                 "volano_on_hyst_c": vol_on_h,
                 "volano_off_hyst_c": vol_off_h,

@@ -463,3 +463,7 @@
 ## 2026-04-13
 - UI Moduli: aggiunta riga esplicita stato ABILITATO/SPENTO e IN ESECUZIONE/NON IN ESECUZIONE.
 - Versione add-on aggiornata a 0.7.84.
+## 2026-04-13
+- Impianto: isteresi hold corretta su sorgenti (PDC/Puffer) solo se la stessa sorgente era gia attiva; niente hold in avvio da fermo.
+- Impianto: reset del latch sorgente quando source va OFF per evitare riagganci a soglia hold.
+- Versione add-on aggiornata a 0.7.85.

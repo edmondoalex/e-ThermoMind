@@ -2012,23 +2012,24 @@ async def _apply_impianto_live() -> None:
     zones_configured = bool(zones_pt or zones_p1 or zones_mans or zones_lab or zone_scala)
     zone_demand_on = any_active if zones_configured else richiesta_on
 
-    vol_ok = vol_ok_start or vol_ok_hold
-    puf_ok = puf_ok_start or puf_ok_hold
+    vol_hold_allowed = (not gas_emergenza_start_only) and (impianto_last_source == "PDC")
+    puf_hold_allowed = (not gas_emergenza_start_only) and (impianto_last_source == "PUFFER")
+    vol_ok = vol_ok_start or (vol_ok_hold and vol_hold_allowed)
+    puf_ok = puf_ok_start or (puf_ok_hold and puf_hold_allowed)
 
     # IMPIANTO_LOGIC: il modulo si attiva quando almeno una sorgente valida (volano/puffer) è OK.
     # Le zone NON devono guidare l'accensione: vengono accese dal modulo quando la sorgente è OK.
     # Se nessuna sorgente è OK, il modulo si spegne e spegne le zone.
 
     # Se selector AUTO o sorgente non disponibile -> fallback con priorità
-    allow_hold = not gas_emergenza_start_only
     if sel_state == "AUTO" or (
-        (sel_state == "PDC" and (not pdc_volano_ready or not (vol_ok_start or (vol_ok_hold and allow_hold)))) or
-        (sel_state == "PUFFER" and (not puffer_ready or not (puf_ok_start or (puf_ok_hold and allow_hold))))
+        (sel_state == "PDC" and (not pdc_volano_ready or not vol_ok)) or
+        (sel_state == "PUFFER" and (not puffer_ready or not puf_ok))
     ):
-        if pdc_volano_ready and (vol_ok_start or (vol_ok_hold and allow_hold)):
+        if pdc_volano_ready and vol_ok:
             source = "PDC"
         else:
-            source = "PUFFER" if (puffer_ready and (puf_ok_start or (puf_ok_hold and allow_hold))) else None
+            source = "PUFFER" if (puffer_ready and puf_ok) else None
     else:
         source = sel_state
     if season == "summer":
@@ -2077,18 +2078,9 @@ async def _apply_impianto_live() -> None:
         except Exception:
             pass
 
-    # blocco se nessuna fonte valida o troppo fredda
-    # latch: se era attiva una sorgente, mantienila finch? non scende sotto min (con isteresi)
-    if (not gas_emergenza_start_only) and demand_on and source is None and impianto_last_source:
-        if impianto_last_source == "PDC" and pdc_volano_ready:
-            if vol_ok_hold:
-                source = "PDC"
-        if impianto_last_source == "PUFFER" and puffer_ready:
-            if puf_ok_hold:
-                source = "PUFFER"
-
     blocked_cold = bool(source is None)
     if not source:
+        impianto_last_source = None
         _log_action(
             f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF no_source "
             f"demand={demand_on} blocked={blocked_cold} act=[r1,r2,r3,r4,r5,r11,r12]"
