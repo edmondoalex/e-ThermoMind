@@ -467,3 +467,7 @@
 - Impianto: isteresi hold corretta su sorgenti (PDC/Puffer) solo se la stessa sorgente era gia attiva; niente hold in avvio da fermo.
 - Impianto: reset del latch sorgente quando source va OFF per evitare riagganci a soglia hold.
 - Versione add-on aggiornata a 0.7.85.
+## 2026-04-13
+- UI moduli: Impianto ATTIVO ora richiede anche zone_demand (evita falsi "in esecuzione" con sole sorgenti disponibili).
+- Backend: fissato bug latente in _set_climate_hvac_mode_guard (parametro eason definito).
+- Versione add-on aggiornata a 0.7.86.

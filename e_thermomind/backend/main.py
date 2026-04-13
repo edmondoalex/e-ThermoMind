@@ -1862,7 +1862,7 @@ async def _set_climate_hvac_mode(entity_id: str | None, mode: str, reason: str |
     last_hvac_cmd[entity_id] = (mode, now)
 
 
-async def _set_climate_hvac_mode_guard(entity_id: str | None, mode: str, min_switch_s: float) -> None:
+async def _set_climate_hvac_mode_guard(entity_id: str | None, mode: str, min_switch_s: float, reason: str = "") -> None:
     if not entity_id or not ha.enabled:
         return
     prev = last_hvac_cmd.get(entity_id)

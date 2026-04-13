@@ -2855,6 +2855,7 @@ const moduleReasonsList = computed(() => {
       label: 'Impianto Riscaldamento',
       active: !!(
         d.value?.computed?.impianto?.richiesta &&
+        d.value?.computed?.impianto?.zone_demand &&
         d.value?.computed?.impianto?.source &&
         d.value?.computed?.impianto?.source !== 'OFF' &&
         !d.value?.computed?.gas_emergenza?.enabled
@@ -2884,6 +2885,7 @@ const moduleActiveMap = computed(() => {
   const legnaTimer = Number(d.value?.computed?.caldaia_legna?.timer_remaining_s || 0)
   const impActive = !!(
     d.value?.computed?.impianto?.richiesta &&
+    d.value?.computed?.impianto?.zone_demand &&
     d.value?.computed?.impianto?.source &&
     d.value?.computed?.impianto?.source !== 'OFF' &&
     !d.value?.computed?.gas_emergenza?.enabled
