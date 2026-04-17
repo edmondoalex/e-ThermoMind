@@ -504,3 +504,7 @@
 - Resistenze Volano: fix regressione logica OFF. Ora la condizione di avvio/spegnimento usa la stessa base coerente con la regola (Export vs Possibile), evitando blocco con `Poss 0W` quando `Export` è valido.
 - Resistenze Volano: resa robusta la valutazione `battery_block_w/export_off_w` anche fuori ramo attivo.
 - Versione add-on aggiornata a 0.7.92.
+## 2026-04-17
+- Curva climatica: con `T esterna` non disponibile (`n/d`) il setpoint mandata ora va in fallback fisso a 45.0°C.
+- Diagnostica modulo curva: aggiunto motivo esplicito `T_EXT n/d -> fallback SP 45.0C`.
+- Versione add-on aggiornata a 0.7.93.

@@ -647,6 +647,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     mix_sp = get_num(ent.get("miscelatrice_setpoint"), float(misc_cfg.get("setpoint_c", 45.0)))
     if curve_enabled and curve_setpoint is not None:
         mix_sp = float(curve_setpoint)
+    elif curve_enabled and t_esterna is None:
+        # Requested fallback: if external temperature is unavailable, use 45°C.
+        mix_sp = 45.0
     mix_h = float(misc_cfg.get("hyst_c", 0.5))
     mix_dt_ref = float(misc_cfg.get("dt_ref_c", 10.0))
     mix_dt_min_f = float(misc_cfg.get("dt_min_factor", 0.6))
@@ -983,7 +986,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "curva_climatica": (
                     f"T_EXT {t_esterna:.1f}C -> SP {curve_setpoint:.1f}C"
                     if curve_enabled and curve_setpoint is not None and t_esterna is not None
-                    else "Curva climatica non attiva o senza T_EXT."
+                    else ("T_EXT n/d -> fallback SP 45.0C" if curve_enabled and t_esterna is None else "Curva climatica non attiva.")
                 ),
                 "resistenze_volano": f"{charge_reason} | {power_note}",
                 "energy_easas": f"Extra {easas['extra_safe_w']:.0f}W | Tot {easas['extra_safe_total_w']:.0f}W | Headroom {easas['headroom_w']:.0f}W",
