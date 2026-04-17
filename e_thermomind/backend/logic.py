@@ -397,41 +397,36 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
             volano_to_puffer = True
 
+    battery_block_w = float(res_cfg.get("battery_block_w", 100.0))
+    export_off_w = float(res_cfg.get("export_off_w", -100.0))
+    last_base = _LAST.get("res_base")
+    if export_w > extra_safe_w:
+        effective_power_w = max(0.0, export_w + res_power_w)
+        base_sel = "export"
+    elif last_base == "export" and res_power_w > 0.0:
+        effective_power_w = max(0.0, export_w + res_power_w)
+        base_sel = "export"
+    else:
+        # If resistances are already on, add their power to available
+        # to avoid getting stuck below the next step threshold.
+        effective_power_w = extra_safe_w + (res_power_w if res_power_w > 0.0 else 0.0)
+        base_sel = "possibile"
+
     desired_step = 0
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
-        battery_block_w = float(res_cfg.get("battery_block_w", 100.0))
-        export_off_w = float(res_cfg.get("export_off_w", -100.0))
-        effective_safe_w = extra_safe_w + (res_power_w if res_power_w > 0.0 else 0.0)
         if battery_output_w > battery_block_w:
             desired_step = 0
         elif export_w <= export_off_w:
             desired_step = 0
-        elif effective_safe_w <= 0.0:
+        elif effective_power_w <= 0.0:
             desired_step = 0
         else:
             thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-            # Base selection with memory:
-            # - If Export > Possibile, use Export (net of current resistance power).
-            # - If we previously used Export and a resistance is ON, keep using Export
-            #   to avoid immediate switch to Possibile during transient dips.
-            # - Otherwise use Possibile.
-            last_base = _LAST.get("res_base")
-            if export_w > extra_safe_w:
-                base_power_w = max(0.0, export_w + res_power_w)
-                base_sel = "export"
-            elif last_base == "export" and res_power_w > 0.0:
-                base_power_w = max(0.0, export_w + res_power_w)
-                base_sel = "export"
-            else:
-                # If resistances are already on, add their power to available
-                # to avoid getting stuck below the next step threshold.
-                base_power_w = extra_safe_w + (res_power_w if res_power_w > 0.0 else 0.0)
-                base_sel = "possibile"
-            if base_power_w >= thr[2]:
+            if effective_power_w >= thr[2]:
                 desired_step = 3
-            elif base_power_w >= thr[1]:
+            elif effective_power_w >= thr[1]:
                 desired_step = 2
-            elif base_power_w >= thr[0]:
+            elif effective_power_w >= thr[0]:
                 desired_step = 1
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
@@ -466,7 +461,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         charge_reason = dest_reason
     elif battery_output_w > battery_block_w:
         charge_reason = f"{power_note} | battery_out {battery_output_w:.0f}W > {battery_block_w:.0f}W"
-    elif export_w <= float(res_cfg.get("export_off_w", -100.0)) or (extra_safe_w + (res_power_w if res_power_w > 0.0 else 0.0)) <= 0.0:
+    elif export_w <= export_off_w or effective_power_w <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
     else:
         charge_reason = f"{power_note} | off_delay {off_delay}s | step_up_delay {step_up_delay}s"

@@ -500,3 +500,7 @@
 - Inclusi sensori SAFE energia EASAS/Privato: extra safe, totale, headroom, max charge, export, battery output, temp, soc.
 - Inclusi sensori temperature principali: `t_acs`, `t_puffer`, `t_volano`, `t_solare_mandata`, `t_esterna`, `solare_flow_lmin`.
 - Versione add-on aggiornata a 0.7.91.
+## 2026-04-17
+- Resistenze Volano: fix regressione logica OFF. Ora la condizione di avvio/spegnimento usa la stessa base coerente con la regola (Export vs Possibile), evitando blocco con `Poss 0W` quando `Export` è valido.
+- Resistenze Volano: resa robusta la valutazione `battery_block_w/export_off_w` anche fuori ramo attivo.
+- Versione add-on aggiornata a 0.7.92.
