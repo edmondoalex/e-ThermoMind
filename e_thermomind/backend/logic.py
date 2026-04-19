@@ -498,6 +498,24 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         f"Delay start {vtp_start}s / stop {vtp_stop}s | "
         f"LastVolToPuf={'SI' if last_vol_to_puf else 'NO'}"
     )
+    res_blockers: list[str] = []
+    if not res_cfg.get("enabled", True):
+        res_blockers.append("Modulo OFF")
+    if dest not in ("ACS", "PUFFER"):
+        res_blockers.append(f"Dest={dest}")
+    if vol_max_hit:
+        res_blockers.append("VOL_MAX")
+    if battery_output_w > battery_block_w:
+        res_blockers.append(f"BatteryOut>{battery_block_w:.0f}W")
+    if export_w <= export_off_w:
+        res_blockers.append(f"Export<={export_off_w:.0f}W")
+    if effective_power_w <= 0.0:
+        res_blockers.append("PotenzaEff<=0W")
+    res_diag = (
+        f"stato={'ATTIVO' if step > 0 else 'OFF'} | base={base_sel} | "
+        f"eff={effective_power_w:.0f}W | step={step} | blocchi={','.join(res_blockers) if res_blockers else 'nessuno'}"
+    )
+    transfer_diag = f"Decisione: Dest={dest} ({dest_reason}) | Source={source_to_acs} ({source_reason})"
 
     ent_cfg = cfg.get("entities", {})
     imp_cfg = cfg.get("impianto", {})
@@ -964,31 +982,31 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             },
             "module_reasons": {
                 "solare": (
-                    f"{source_reason} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | Flow {sol_flow:.1f} l/min (min {flow_min_lmin:.1f}) | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C | pv_debounce {int(solar_cfg.get('pv_debounce_s', 300))}s"
+                    f"{transfer_diag} | {source_reason} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | Flow {sol_flow:.1f} l/min (min {flow_min_lmin:.1f}) | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C | pv_debounce {int(solar_cfg.get('pv_debounce_s', 300))}s"
                     if source_to_acs == "SOLAR"
-                    else f"Solare non attivo. T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | Flow {sol_flow:.1f} l/min (min {flow_min_lmin:.1f}) | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C | pv_debounce {int(solar_cfg.get('pv_debounce_s', 300))}s"
+                    else f"Solare non attivo. {transfer_diag} | T_SOL {t_sol:.1f}C | T_ACS {t_acs:.1f}C | Flow {sol_flow:.1f} l/min (min {flow_min_lmin:.1f}) | d_on {solar_delta_on:.1f}C / d_hold {solar_delta_hold:.1f}C | pv_debounce {int(solar_cfg.get('pv_debounce_s', 300))}s"
                 ),
                 "volano_to_acs": (
-                    f"{volano_to_acs_reason}"
+                    f"{transfer_diag} | {volano_to_acs_reason}"
                     if source_to_acs == "VOLANO"
-                    else f"Volano -> ACS non attivo. {volano_to_acs_reason}"
+                    else f"Volano -> ACS non attivo. {transfer_diag} | {volano_to_acs_reason}"
                 ),
                 "puffer_to_acs": (
-                    f"{source_reason} | T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
+                    f"{transfer_diag} | {source_reason} | T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
                     if source_to_acs == "PUFFER"
-                    else f"Puffer -> ACS non attivo. T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
+                    else f"Puffer -> ACS non attivo. {transfer_diag} | T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C | d_start {puf_to_acs_start:.1f}C / d_hold {puf_to_acs_hold:.1f}C | Min {puf_min_acs:.1f}C (+{puf_h_acs:.1f}C)"
                 ),
                 "volano_to_puffer": (
-                    f"{volano_to_puffer_reason}"
+                    f"{transfer_diag} | {volano_to_puffer_reason}"
                     if volano_to_puffer
-                    else f"Volano -> Puffer non attivo. {volano_to_puffer_reason}"
+                    else f"Volano -> Puffer non attivo. {transfer_diag} | {volano_to_puffer_reason}"
                 ),
                 "curva_climatica": (
                     f"T_EXT {t_esterna:.1f}C -> SP {curve_setpoint:.1f}C"
                     if curve_enabled and curve_setpoint is not None and t_esterna is not None
                     else ("T_EXT n/d -> fallback SP 45.0C" if curve_enabled and t_esterna is None else "Curva climatica non attiva.")
                 ),
-                "resistenze_volano": f"{charge_reason} | {power_note}",
+                "resistenze_volano": f"{transfer_diag} | {charge_reason} | {res_diag} | {power_note}",
                 "energy_easas": f"Extra {easas['extra_safe_w']:.0f}W | Tot {easas['extra_safe_total_w']:.0f}W | Headroom {easas['headroom_w']:.0f}W",
                 "energy_privato": f"Extra {privato['extra_safe_w']:.0f}W | Tot {privato['extra_safe_total_w']:.0f}W | Headroom {privato['headroom_w']:.0f}W",
                 "energy_heater_easas": f"ON={easas_heater['on']} | {easas_heater['reason']}",

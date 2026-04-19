@@ -508,3 +508,7 @@
 - Curva climatica: con `T esterna` non disponibile (`n/d`) il setpoint mandata ora va in fallback fisso a 45.0°C.
 - Diagnostica modulo curva: aggiunto motivo esplicito `T_EXT n/d -> fallback SP 45.0C`.
 - Versione add-on aggiornata a 0.7.93.
+## 2026-04-19
+- Diagnostica modulo: spiegazioni resa più chiara con `Decisione: Dest=... | Source=...` in tutte le reason principali (solare/volano/puffer/resistenze).
+- Resistenze Volano: aggiunta diagnostica strutturata `stato/base/eff/step/blocchi` per capire subito perché resta OFF (es. VOL_MAX, Dest=OFF, Export soglia, potenza effettiva, batteria).
+- Versione add-on aggiornata a 0.7.94.
