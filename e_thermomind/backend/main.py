@@ -1995,12 +1995,12 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
 async def _set_climate_hvac_mode(entity_id: str | None, mode: str, reason: str | None = None) -> None:
     if not entity_id or not ha.enabled:
         return
+    current = _get_state(entity_id)
+    if current == mode:
+        return
     prev = last_hvac_cmd.get(entity_id)
     now = time.time()
     if prev and prev[0] == mode and (now - prev[1]) < 30:
-        return
-    current = _get_state(entity_id)
-    if current == mode:
         return
     await ha.call_service_named("climate", "set_hvac_mode", {"entity_id": entity_id, "hvac_mode": mode})
     reason_txt = f" ({reason})" if reason else ""

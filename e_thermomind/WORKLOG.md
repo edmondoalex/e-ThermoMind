@@ -512,3 +512,8 @@
 - Diagnostica modulo: spiegazioni resa più chiara con `Decisione: Dest=... | Source=...` in tutte le reason principali (solare/volano/puffer/resistenze).
 - Resistenze Volano: aggiunta diagnostica strutturata `stato/base/eff/step/blocchi` per capire subito perché resta OFF (es. VOL_MAX, Dest=OFF, Export soglia, potenza effettiva, batteria).
 - Versione add-on aggiornata a 0.7.94.
+## 2026-04-20
+- Impianto: fix affidabilità spegnimento termostati quando `Source=OFF`.
+- `_set_climate_hvac_mode`: corretto ordine controlli (`current state` prima del de-dup 30s) per evitare che un termostato tornato in HEAT venga lasciato acceso durante finestra di dedup.
+- Valvole/pompe restano già forzate OFF nel ramo `no_source`.
+- Versione add-on aggiornata a 0.7.95.
