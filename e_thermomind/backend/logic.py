@@ -26,6 +26,29 @@ def _thr_list(value: Any) -> list[float]:
             out.append(base[idx])
     return out
 
+def _parse_hour_float(value: Any, default: float) -> float:
+    try:
+        v = float(value)
+        if v < 0:
+            return 0.0
+        if v > 23.99:
+            return 23.99
+        return v
+    except Exception:
+        pass
+    try:
+        s = str(value).strip()
+        if ":" in s:
+            hh, mm = s.split(":", 1)
+            h = int(hh)
+            m = int(mm)
+            if h < 0 or h > 23 or m < 0 or m > 59:
+                return default
+            return h + (m / 60.0)
+    except Exception:
+        pass
+    return default
+
 _LAST: Dict[str, Any] = {
     "dest": None,
     "source_to_acs": None,
@@ -390,12 +413,81 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 f"T_PUF {t_puffer:.1f}C | T_ACS {t_acs:.1f}C"
             )
 
+    force_vtp_until = float(runtime_cfg.get("force_volano_puffer_until_ts", 0.0) or 0.0)
+    force_vtp_active = force_vtp_until > now_ts
+    force_vtp_remaining_s = max(0, int(force_vtp_until - now_ts)) if force_vtp_active else 0
+    force_vtp_can_apply = bool(
+        (dest == "ACS")
+        and (source_to_acs == "OFF")
+        and (not vol_max_hit)
+        and (t_volano >= t_puffer + puf_delta_hold)
+        and (t_volano >= vol_min_puf)
+    )
+    force_vtp_reason = "Forzatura OFF."
+
     volano_to_puffer = False
+    evening_dump_active = False
+    evening_dump_reason = ""
     if dest == "PUFFER" and (not vol_max_hit):
         if (t_volano >= t_puffer + puf_delta_start) and (t_volano >= vol_min_puf + vol_h_puf):
             volano_to_puffer = True
         elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
             volano_to_puffer = True
+    # Fine giornata: se ACS resta prioritaria ma nessuna sorgente riesce a prenderla,
+    # scarica il calore del volano nel puffer (tipicamente più freddo) per non sprecarlo.
+    evening_dump_enabled = bool(vol_cfg.get("evening_dump_enabled", True))
+    evening_dump_after_h = _parse_hour_float(vol_cfg.get("evening_dump_after_h", 17.0), 17.0)
+    evening_dump_trigger = str(vol_cfg.get("evening_dump_trigger", "time") or "time").strip().lower()
+    if evening_dump_trigger not in ("time", "entity"):
+        evening_dump_trigger = "time"
+    evening_dump_run_entity = str(vol_cfg.get("evening_dump_run_entity", "") or "").strip()
+    evening_dump_run_state = ha_states.get(evening_dump_run_entity, {}).get("state") if evening_dump_run_entity else None
+    now_loc = time.localtime(now_ts)
+    now_h = now_loc.tm_hour + (now_loc.tm_min / 60.0)
+    if evening_dump_trigger == "entity":
+        evening_window = _is_on_state(evening_dump_run_state)
+    else:
+        evening_window = now_h >= evening_dump_after_h
+    if (
+        (not volano_to_puffer)
+        and evening_dump_enabled
+        and evening_window
+        and (dest == "ACS")
+        and (source_to_acs == "OFF")
+        and (not vol_max_hit)
+    ):
+        if (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
+            volano_to_puffer = True
+            evening_dump_active = True
+            if evening_dump_trigger == "entity":
+                evening_dump_reason = (
+                    f"Dump trigger da entita attivo ({evening_dump_run_entity or 'n/d'}="
+                    f"{evening_dump_run_state or 'n/d'}): ACS non prendibile, scarico VOLANO->PUFFER."
+                )
+            else:
+                evening_dump_reason = (
+                    f"Fine giornata attiva (ora {now_h:.2f}h >= {evening_dump_after_h:.2f}h): "
+                    f"ACS non prendibile, scarico VOLANO->PUFFER."
+                )
+        else:
+            evening_dump_reason = (
+                f"Dump attivo ma soglie non raggiunte: "
+                f"T_VOL {t_volano:.1f}C | T_PUF {t_puffer:.1f}C | "
+                f"d_hold {puf_delta_hold:.1f}C | Min {vol_min_puf:.1f}C"
+            )
+    if force_vtp_active:
+        if force_vtp_can_apply:
+            volano_to_puffer = True
+            force_vtp_reason = (
+                f"Forzatura VOLANO->PUFFER attiva ({force_vtp_remaining_s}s). "
+                f"Dest={dest} | Source={source_to_acs} | T_VOL {t_volano:.1f}C | T_PUF {t_puffer:.1f}C"
+            )
+        else:
+            force_vtp_reason = (
+                f"Forzatura attiva ma non applicabile ({force_vtp_remaining_s}s): "
+                f"Dest={dest} | Source={source_to_acs} | VOL_MAX={'SI' if vol_max_hit else 'NO'} | "
+                f"T_VOL {t_volano:.1f}C | T_PUF {t_puffer:.1f}C"
+            )
 
     battery_block_w = float(res_cfg.get("battery_block_w", 100.0))
     export_off_w = float(res_cfg.get("export_off_w", -100.0))
@@ -496,8 +588,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         f"d_start {puf_delta_start:.1f}C / d_hold {puf_delta_hold:.1f}C | "
         f"Min {vol_min_puf:.1f}C (+{vol_h_puf:.1f}C) | "
         f"Delay start {vtp_start}s / stop {vtp_stop}s | "
-        f"LastVolToPuf={'SI' if last_vol_to_puf else 'NO'}"
+        f"LastVolToPuf={'SI' if last_vol_to_puf else 'NO'} | "
+        f"DumpMode={evening_dump_trigger} | "
+        f"DumpAfter {evening_dump_after_h:.2f}h | DumpNow={'SI' if evening_dump_active else 'NO'} | "
+        f"ForceNow={'SI' if force_vtp_active and force_vtp_can_apply else 'NO'}"
     )
+    if evening_dump_reason:
+        volano_to_puffer_reason = f"{volano_to_puffer_reason} | {evening_dump_reason}"
     res_blockers: list[str] = []
     if not res_cfg.get("enabled", True):
         res_blockers.append("Modulo OFF")
@@ -909,6 +1006,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "can_apply": force_can_apply,
                 "reason": force_reason
             },
+            "force_volano_puffer": {
+                "active": force_vtp_active,
+                "until_ts": force_vtp_until,
+                "remaining_s": force_vtp_remaining_s,
+                "can_apply": force_vtp_can_apply,
+                "reason": force_vtp_reason
+            },
             "miscelatrice": {
                 "enabled": mix_enabled,
                 "setpoint": mix_sp,
@@ -1015,20 +1119,22 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "gas_emergenza": gas_reason,
                 "caldaia_legna": legna_reason,
                 "miscelatrice": mix_reason,
-                "force_acs_puffer": force_reason
+                "force_acs_puffer": force_reason,
+                "force_volano_puffer": force_vtp_reason
             },
             "module_summaries": {
                 "solare": "Regola: attivo se T_SOL >= T_ACS + d_on (o d_hold se già attivo).",
                 "volano_to_acs": "Regola: Dest=ACS e T_VOL >= T_ACS+Δ e T_VOL >= Min.",
-                "volano_to_puffer": "Regola: Dest=PUFFER e T_VOL >= T_PUF+Δ e T_VOL >= Min.",
+                "volano_to_puffer": "Regola: Dest=PUFFER e T_VOL >= T_PUF+Δ e T_VOL >= Min. Fine giornata: se Dest=ACS ma non prendibile, scarica VOLANO su PUFFER dopo orario impostato.",
                 "puffer_to_acs": "Regola: Dest=ACS e T_PUF >= T_ACS+Δ e T_PUF >= Min.",
                 "miscelatrice": "Regola: mantiene ΔT mandata/ritorno verso setpoint con impulsi.",
                 "curva_climatica": "Regola: SP da curva in base a T_EXT.",
                 "impianto": "Regola: quando c'e una fonte calda disponibile, i termostati restano in HEAT. L'impianto parte solo sopra la soglia di avvio; se era gia partito, continua fino alla soglia di mantenimento piu bassa. Pompe e valvole si attivano solo con zone attive.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
-            "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export < -100W OFF secco; batteria scarica step-down.",
-                "force_acs_puffer": "Regola: forzatura temporizzata ACS da PUFFER senza cambiare setpoint."
+                "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export < -100W OFF secco; batteria scarica step-down.",
+                "force_acs_puffer": "Regola: forzatura temporizzata ACS da PUFFER senza cambiare setpoint.",
+                "force_volano_puffer": "Regola: forzatura temporizzata VOLANO->PUFFER o dump automatico (orario/entita RUN) quando ACS e prioritaria ma non prendibile."
             },
             "state": {
                 "last_dest": _LAST.get("dest"),

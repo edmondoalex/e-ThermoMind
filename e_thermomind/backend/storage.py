@@ -137,7 +137,11 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "delta_to_puffer_start_c": 5.0,
     "delta_to_puffer_hold_c": 2.5,
     "min_to_puffer_c": 55.0,
-    "hyst_to_puffer_c": 2.0
+    "hyst_to_puffer_c": 2.0,
+    "evening_dump_enabled": True,
+    "evening_dump_after_h": 17.0,
+    "evening_dump_trigger": "time",
+    "evening_dump_run_entity": ""
   },
   "miscelatrice": {
     "setpoint_c": 45.0,
@@ -250,7 +254,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "ui_poll_ms": 3000,
     "timezone": "Europe/Rome",
     "force_acs_puffer_until_ts": 0.0,
-    "force_acs_puffer_default_minutes": 30
+    "force_acs_puffer_default_minutes": 30,
+    "force_volano_puffer_until_ts": 0.0,
+    "force_volano_puffer_default_minutes": 30
   },
   "mqtt": {
     "enabled": False,
@@ -400,6 +406,7 @@ _NUM_KEYS = {
     "delta_to_puffer_hold_c",
     "min_to_puffer_c",
     "hyst_to_puffer_c",
+    "evening_dump_after_h",
   ],
 }
 
@@ -609,6 +616,16 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
                 1,
                 int(_float(runtime.get("force_acs_puffer_default_minutes"), cfg["runtime"]["force_acs_puffer_default_minutes"])),
             )
+        if "force_volano_puffer_until_ts" in runtime:
+            cfg["runtime"]["force_volano_puffer_until_ts"] = _float(
+                runtime.get("force_volano_puffer_until_ts"),
+                cfg["runtime"]["force_volano_puffer_until_ts"],
+            )
+        if "force_volano_puffer_default_minutes" in runtime:
+            cfg["runtime"]["force_volano_puffer_default_minutes"] = max(
+                1,
+                int(_float(runtime.get("force_volano_puffer_default_minutes"), cfg["runtime"]["force_volano_puffer_default_minutes"])),
+            )
     if cfg.get("runtime", {}).get("force_live_on_startup"):
         cfg["runtime"]["mode"] = "live"
 
@@ -672,6 +689,16 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
         for key in cfg["modules_enabled"].keys():
             if key in modules:
                 cfg["modules_enabled"][key] = bool(modules[key])
+
+    vol = raw.get("volano", {})
+    if isinstance(vol, dict):
+        if "evening_dump_enabled" in vol:
+            cfg["volano"]["evening_dump_enabled"] = bool(vol.get("evening_dump_enabled"))
+        if isinstance(vol.get("evening_dump_trigger"), str):
+            trg = vol.get("evening_dump_trigger", "time").strip().lower()
+            cfg["volano"]["evening_dump_trigger"] = trg if trg in ("time", "entity") else "time"
+        if isinstance(vol.get("evening_dump_run_entity"), str):
+            cfg["volano"]["evening_dump_run_entity"] = vol.get("evening_dump_run_entity", "").strip()
 
     gas = raw.get("gas_emergenza", {})
     if isinstance(gas, dict):
@@ -786,6 +813,15 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             for key in keys:
                 if key in src:
                     cfg[section][key] = _float(src[key], cfg[section][key])
+    vol = payload.get("volano", {})
+    if isinstance(vol, dict):
+        if "evening_dump_enabled" in vol:
+            cfg["volano"]["evening_dump_enabled"] = bool(vol.get("evening_dump_enabled"))
+        if isinstance(vol.get("evening_dump_trigger"), str):
+            trg = vol.get("evening_dump_trigger", "time").strip().lower()
+            cfg["volano"]["evening_dump_trigger"] = trg if trg in ("time", "entity") else "time"
+        if isinstance(vol.get("evening_dump_run_entity"), str):
+            cfg["volano"]["evening_dump_run_entity"] = vol.get("evening_dump_run_entity", "").strip()
     res = payload.get("resistance", {})
     if isinstance(res, dict):
         if "enabled" in res:
@@ -905,6 +941,11 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["runtime"]["force_acs_puffer_default_minutes"] = max(
                 1,
                 int(_float(runtime.get("force_acs_puffer_default_minutes"), cfg["runtime"]["force_acs_puffer_default_minutes"])),
+            )
+        if "force_volano_puffer_default_minutes" in runtime:
+            cfg["runtime"]["force_volano_puffer_default_minutes"] = max(
+                1,
+                int(_float(runtime.get("force_volano_puffer_default_minutes"), cfg["runtime"]["force_volano_puffer_default_minutes"])),
             )
 
     mqtt = payload.get("mqtt", {})

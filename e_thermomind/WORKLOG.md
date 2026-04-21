@@ -525,3 +525,16 @@
 - UI User: aggiunto blocco "Cosa sta facendo adesso (spiegazione semplice)" sotto versione/stato e sopra le temperature.
 - Spiegazione modulo-per-modulo con valori live (Solare, Volano->ACS, Puffer->ACS, Volano->Puffer, Resistenze, Impianto, Miscelatrice, Curva climatica).
 - Versione add-on aggiornata a 0.7.97.
+## 2026-04-21
+- Volano -> Puffer: aggiunta regola fine giornata anti-spreco.
+- Se dopo l'orario impostato (`volano.evening_dump_after_h`, default 17.0) ACS resta prioritaria ma non prendibile (`Dest=ACS` e `Source=OFF`), il volano scarica nel puffer quando le soglie minime sono rispettate.
+- Nuovi parametri volano: `evening_dump_enabled` (default true) e `evening_dump_after_h`.
+- Diagnostica estesa in reason `volano_to_puffer` con stato e motivo della regola fine giornata.
+- Versione add-on aggiornata a 0.7.98.
+## 2026-04-21
+- Volano->Puffer: trigger dump configurabile (`volano.evening_dump_trigger`) con scelta `time` oppure `entity`.
+- Nuovo campo `volano.evening_dump_run_entity` per usare un'entita HA RUN (on/off) come consenso automatico.
+- Nuova forzatura manuale temporizzata VOLANO->PUFFER (`/api/volano/force_puffer` + clear), con timer dedicato in runtime.
+- MQTT/HASS: aggiunte entita sensore `force_volano_puffer_active` e `force_volano_puffer_remaining_s`.
+- UI User (card Volano->Puffer): aggiunti tasti "Scarica in Puffer"/"Stop scarico", durata e scelta trigger orario/entita.
+- Versione add-on aggiornata a 0.7.99.

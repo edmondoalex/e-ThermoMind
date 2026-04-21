@@ -545,6 +545,42 @@
               <div class="v">{{ d?.computed?.flags?.volano_to_puffer ? 'ATTIVO' : 'STOP' }}</div>
             </div>
           </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Forzatura scarico</div>
+              <div class="v">{{ forceVolanoPuffer.active ? 'ATTIVA' : 'OFF' }}</div>
+              <div class="muted">{{ forceVolanoPuffer.reason || '-' }}</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Durata (min)</div>
+              <input type="number" min="1" max="240" step="1" v-model.number="sp.runtime.force_volano_puffer_default_minutes"/>
+              <div class="help">Timer temporaneo: forza VOLANO -> PUFFER.</div>
+            </div>
+            <div class="kpi kpi-center">
+              <button class="ghost toggle on" :disabled="forceVolanoBusy" @click="activateForceVolanoPuffer()">Scarica in Puffer</button>
+              <button class="ghost toggle off" :disabled="forceVolanoBusy" style="margin-top:8px" @click="clearForceVolanoPuffer()">Stop scarico</button>
+              <div class="muted" style="margin-top:6px">Residuo: {{ forceVolanoPuffer.active ? `${forceVolanoPuffer.remaining_s}s` : '-' }}</div>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="kpi kpi-center">
+              <div class="k">Trigger automatico</div>
+              <select v-model="sp.volano.evening_dump_trigger" @change="save">
+                <option value="time">Orario</option>
+                <option value="entity">Entita RUN</option>
+              </select>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Orario avvio dump (h)</div>
+              <input type="number" min="0" max="23.99" step="0.25" v-model.number="sp.volano.evening_dump_after_h" @change="save"/>
+              <div class="help">Usato se trigger = Orario.</div>
+            </div>
+            <div class="kpi kpi-center">
+              <div class="k">Entita RUN (on/off)</div>
+              <input type="text" v-model="sp.volano.evening_dump_run_entity" placeholder="input_boolean.dump_volano_run" @change="save"/>
+              <div class="help">Usata se trigger = Entita RUN.</div>
+            </div>
+          </div>
         </div>
 
         <div v-if="act" class="card inner module-panel" :class="modulePanelClass('solare')">
@@ -2512,6 +2548,7 @@ const actions = ref([])
 const zones = ref([])
 const schedulerStatus = ref(null)
 const forceAcsBusy = ref(false)
+const forceVolanoBusy = ref(false)
 let historySaveTimer = null
 let historyReady = false
 const schedulerDays = [
@@ -2862,6 +2899,7 @@ const flowSolarToAcs = computed(() => d.value?.computed?.source_to_acs === 'SOLA
 const flowVolanoToAcs = computed(() => d.value?.computed?.source_to_acs === 'VOLANO')
 const flowPufferToAcs = computed(() => d.value?.computed?.source_to_acs === 'PUFFER')
 const forceAcsPuffer = computed(() => d.value?.computed?.force_acs_puffer || { active: false, remaining_s: 0, reason: 'Forzatura OFF.' })
+const forceVolanoPuffer = computed(() => d.value?.computed?.force_volano_puffer || { active: false, remaining_s: 0, reason: 'Forzatura OFF.' })
 const flowVolanoToPuffer = computed(() => d.value?.computed?.flags?.volano_to_puffer)
 const flowPufferToVolano = computed(() => false)
 const flowSolarToPuffer = computed(() => false)
@@ -2900,6 +2938,7 @@ const moduleReasonsList = computed(() => {
       active: !!(d.value?.computed?.caldaia_legna?.power || d.value?.computed?.caldaia_legna?.ta || legnaTimer > 0)
     },
     { key: 'force_acs_puffer', label: 'Forzatura ACS da Puffer', active: !!d.value?.computed?.force_acs_puffer?.active },
+    { key: 'force_volano_puffer', label: 'Forzatura Volano -> Puffer', active: !!d.value?.computed?.force_volano_puffer?.active },
     { key: 'gas_emergenza', label: 'Caldaia Gas Emergenza Riscaldamento', active: !!d.value?.computed?.gas_emergenza?.need },
     { key: 'resistenze_volano', label: 'Resistenze Volano', active: step > 0 }
   ]
@@ -3225,13 +3264,15 @@ async function load(){
     delta_puffer_acs: false, delta_volano_acs: false, delta_volano_puffer: false, delta_mandata_ritorno: false, kp_eff: false,
     curva_setpoint: false
   }
-  if (!sp.value?.runtime) sp.value.runtime = { mode: 'dry-run', force_live_on_startup: true, ui_poll_ms: 3000, timezone: 'Europe/Rome', force_acs_puffer_until_ts: 0, force_acs_puffer_default_minutes: 30 }
+  if (!sp.value?.runtime) sp.value.runtime = { mode: 'dry-run', force_live_on_startup: true, ui_poll_ms: 3000, timezone: 'Europe/Rome', force_acs_puffer_until_ts: 0, force_acs_puffer_default_minutes: 30, force_volano_puffer_until_ts: 0, force_volano_puffer_default_minutes: 30 }
   if (typeof sp.value.runtime.force_live_on_startup === 'undefined') sp.value.runtime.force_live_on_startup = true
   if (typeof sp.value.runtime.timezone === 'undefined' || sp.value.runtime.timezone === null) {
     sp.value.runtime.timezone = 'Europe/Rome'
   }
   if (typeof sp.value.runtime.force_acs_puffer_until_ts === 'undefined') sp.value.runtime.force_acs_puffer_until_ts = 0
   if (typeof sp.value.runtime.force_acs_puffer_default_minutes === 'undefined') sp.value.runtime.force_acs_puffer_default_minutes = 30
+  if (typeof sp.value.runtime.force_volano_puffer_until_ts === 'undefined') sp.value.runtime.force_volano_puffer_until_ts = 0
+  if (typeof sp.value.runtime.force_volano_puffer_default_minutes === 'undefined') sp.value.runtime.force_volano_puffer_default_minutes = 30
   for (const [k, v] of Object.entries(histDefaults)) {
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
   }
@@ -3241,10 +3282,14 @@ async function load(){
   if (typeof sp.value.solare.force_night_on_startup === 'undefined') sp.value.solare.force_night_on_startup = true
   if (typeof sp.value.solare.flow_min_lmin === 'undefined') sp.value.solare.flow_min_lmin = 6
   if (!sp.value?.volano) {
-    sp.value.volano = { margin_c: 3, max_c: 60, max_hyst_c: 2, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2 }
+    sp.value.volano = { margin_c: 3, max_c: 60, max_hyst_c: 2, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2, evening_dump_enabled: true, evening_dump_after_h: 17, evening_dump_trigger: 'time', evening_dump_run_entity: '' }
   } else {
     if (typeof sp.value.volano.min_to_puffer_c === 'undefined') sp.value.volano.min_to_puffer_c = 55
     if (typeof sp.value.volano.hyst_to_puffer_c === 'undefined') sp.value.volano.hyst_to_puffer_c = 2
+    if (typeof sp.value.volano.evening_dump_enabled === 'undefined') sp.value.volano.evening_dump_enabled = true
+    if (typeof sp.value.volano.evening_dump_after_h === 'undefined') sp.value.volano.evening_dump_after_h = 17
+    if (typeof sp.value.volano.evening_dump_trigger === 'undefined') sp.value.volano.evening_dump_trigger = 'time'
+    if (typeof sp.value.volano.evening_dump_run_entity === 'undefined') sp.value.volano.evening_dump_run_entity = ''
   }
   if (!sp.value?.energy_profiles) {
     sp.value.energy_profiles = {
@@ -3427,6 +3472,31 @@ async function clearForceAcsPuffer(){
     if (res.ok) await refresh()
   } finally {
     forceAcsBusy.value = false
+  }
+}
+async function activateForceVolanoPuffer(){
+  if (forceVolanoBusy.value) return
+  forceVolanoBusy.value = true
+  try {
+    const mins = Math.max(1, Math.min(240, Number(sp.value?.runtime?.force_volano_puffer_default_minutes || 30)))
+    const res = await fetch('/api/volano/force_puffer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ minutes: mins })
+    })
+    if (res.ok) await refresh()
+  } finally {
+    forceVolanoBusy.value = false
+  }
+}
+async function clearForceVolanoPuffer(){
+  if (forceVolanoBusy.value) return
+  forceVolanoBusy.value = true
+  try {
+    const res = await fetch('/api/volano/force_puffer/clear', { method: 'POST' })
+    if (res.ok) await refresh()
+  } finally {
+    forceVolanoBusy.value = false
   }
 }
 async function saveAll(){

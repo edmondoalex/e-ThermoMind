@@ -507,3 +507,14 @@ Data export: 2026-02-08 (Europe/Rome)
 - Aggiunto nel tab User un pannello descrittivo "a prova di bambino" con stato e motivi numerici per ogni modulo principale.
 - Posizionamento: subito sotto versione/stato, prima dei riquadri temperature.
 - Versione add-on aggiornata a 0.7.97.
+
+## Aggiornamenti 2026-04-21 (scarico volano fine giornata)
+- Implementata logica di scarico VOLANO -> PUFFER a fine giornata per evitare perdita di calore quando ACS è prioritaria ma non prendibile.
+- Parametri: `volano.evening_dump_enabled` (true) e `volano.evening_dump_after_h` (17.0).
+- Versione add-on aggiornata a 0.7.98.
+
+## Aggiornamenti 2026-04-21 (trigger dump + forzatura Volano->Puffer)
+- Implementata scelta trigger automatico dump: `orario` o `entita HA RUN`.
+- Aggiunta forzatura manuale temporizzata VOLANO->PUFFER via API e UI.
+- Esposizione MQTT/HASS delle nuove entita di stato forzatura volano.
+- Versione add-on aggiornata a 0.7.99.

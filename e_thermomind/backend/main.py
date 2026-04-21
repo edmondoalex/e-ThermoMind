@@ -146,6 +146,17 @@ def _force_acs_puffer_status(now_ts: float | None = None) -> dict[str, Any]:
         "remaining_s": max(0, int(until_ts - now)) if active else 0,
     }
 
+def _force_volano_puffer_status(now_ts: float | None = None) -> dict[str, Any]:
+    now = time.time() if now_ts is None else float(now_ts)
+    runtime = cfg.get("runtime", {}) if isinstance(cfg.get("runtime", {}), dict) else {}
+    until_ts = float(runtime.get("force_volano_puffer_until_ts", 0.0) or 0.0)
+    active = until_ts > now
+    return {
+        "active": active,
+        "until_ts": until_ts,
+        "remaining_s": max(0, int(until_ts - now)) if active else 0,
+    }
+
 def _expire_force_acs_puffer(now_ts: float | None = None) -> bool:
     runtime = cfg.get("runtime", {})
     if not isinstance(runtime, dict):
@@ -156,6 +167,19 @@ def _expire_force_acs_puffer(now_ts: float | None = None) -> bool:
         return False
     runtime["force_acs_puffer_until_ts"] = 0.0
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} FORCE_ACS_PUFFER expired")
+    save_config(cfg)
+    return True
+
+def _expire_force_volano_puffer(now_ts: float | None = None) -> bool:
+    runtime = cfg.get("runtime", {})
+    if not isinstance(runtime, dict):
+        return False
+    now = time.time() if now_ts is None else float(now_ts)
+    until_ts = float(runtime.get("force_volano_puffer_until_ts", 0.0) or 0.0)
+    if until_ts <= 0.0 or until_ts > now:
+        return False
+    runtime["force_volano_puffer_until_ts"] = 0.0
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} FORCE_VOLANO_PUFFER expired")
     save_config(cfg)
     return True
 
@@ -252,6 +276,8 @@ def _mqtt_extra_sensor_defs() -> list[dict[str, Any]]:
         {"key": "impianto_blocked_cold", "name": "Impianto Blocco Freddo", "binary": True},
         {"key": "force_acs_puffer_active", "name": "Forzatura ACS da Puffer", "binary": True},
         {"key": "force_acs_puffer_remaining_s", "name": "Forzatura ACS residuo", "unit": "s", "state_class": "measurement"},
+        {"key": "force_volano_puffer_active", "name": "Forzatura Volano -> Puffer", "binary": True},
+        {"key": "force_volano_puffer_remaining_s", "name": "Forzatura Volano->Puffer residuo", "unit": "s", "state_class": "measurement"},
         {"key": "safe_easas_extra_safe_w", "name": "Safe EASAS Extra", "unit": "W", "device_class": "power", "state_class": "measurement"},
         {"key": "safe_easas_extra_total_w", "name": "Safe EASAS Totale", "unit": "W", "device_class": "power", "state_class": "measurement"},
         {"key": "safe_easas_headroom_w", "name": "Safe EASAS Headroom", "unit": "W", "device_class": "power", "state_class": "measurement"},
@@ -275,6 +301,7 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
     computed = (decision or {}).get("computed", {}) or {}
     imp = computed.get("impianto", {}) or {}
     force = computed.get("force_acs_puffer", {}) or {}
+    force_vtp = computed.get("force_volano_puffer", {}) or {}
     easas = computed.get("energy_easas", {}) or {}
     priv = computed.get("energy_privato", {}) or {}
     return {
@@ -295,6 +322,8 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
         "impianto_blocked_cold": bool(imp.get("blocked_cold")),
         "force_acs_puffer_active": bool(force.get("active")),
         "force_acs_puffer_remaining_s": force.get("remaining_s"),
+        "force_volano_puffer_active": bool(force_vtp.get("active")),
+        "force_volano_puffer_remaining_s": force_vtp.get("remaining_s"),
         "safe_easas_extra_safe_w": easas.get("extra_safe_w"),
         "safe_easas_extra_total_w": easas.get("extra_safe_total_w"),
         "safe_easas_headroom_w": easas.get("headroom_w"),
@@ -714,6 +743,7 @@ async def set_config(payload: dict):
 @app.get("/api/decision")
 async def decision():
     _expire_force_acs_puffer()
+    _expire_force_volano_puffer()
     data = compute_decision(cfg, ha.states)
     # scheduler status (ora server + prossimo start)
     sched = cfg.get("scheduler", {}).get("gas", {})
@@ -918,6 +948,7 @@ def _collect_zones(imp: dict) -> list[str]:
 
 async def _build_snapshot() -> dict:
     _expire_force_acs_puffer()
+    _expire_force_volano_puffer()
     data = compute_decision(cfg, ha.states)
     # scheduler status (ora server + prossimo start)
     sched = cfg.get("scheduler", {}).get("gas", {})
@@ -2664,10 +2695,12 @@ async def set_setpoints(payload: dict):
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
     force_until_ts = float((cfg.get("runtime", {}) or {}).get("force_acs_puffer_until_ts", 0.0) or 0.0)
+    force_vtp_until_ts = float((cfg.get("runtime", {}) or {}).get("force_volano_puffer_until_ts", 0.0) or 0.0)
     prev_modules = dict(cfg.get("modules_enabled", {}))
     cfg = apply_setpoints(cfg, payload)
     # Dedicated force endpoint owns this runtime latch: never overwrite from generic setpoints save.
     cfg.setdefault("runtime", {})["force_acs_puffer_until_ts"] = force_until_ts
+    cfg.setdefault("runtime", {})["force_volano_puffer_until_ts"] = force_vtp_until_ts
     # keep module toggles owned by /api/modules (except seasonal block)
     modules, changed = _apply_season_block(prev_modules)
     if changed:
@@ -2738,6 +2771,43 @@ async def clear_force_acs_puffer():
     save_config(cfg)
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} FORCE_ACS_PUFFER OFF")
     return JSONResponse({"ok": True, **_force_acs_puffer_status()})
+
+@app.get("/api/volano/force_puffer")
+async def get_force_volano_puffer():
+    _expire_force_volano_puffer()
+    return JSONResponse(_force_volano_puffer_status())
+
+@app.post("/api/volano/force_puffer")
+async def set_force_volano_puffer(payload: dict):
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    runtime = cfg.setdefault("runtime", {})
+    if not isinstance(runtime, dict):
+        cfg["runtime"] = {}
+        runtime = cfg["runtime"]
+    default_minutes = int(runtime.get("force_volano_puffer_default_minutes", 30) or 30)
+    minutes_raw = payload.get("minutes", default_minutes)
+    try:
+        minutes = int(float(minutes_raw))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid minutes")
+    minutes = max(1, min(240, minutes))
+    until_ts = time.time() + (minutes * 60)
+    runtime["force_volano_puffer_until_ts"] = until_ts
+    save_config(cfg)
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} FORCE_VOLANO_PUFFER ON {minutes}m")
+    return JSONResponse({"ok": True, **_force_volano_puffer_status()})
+
+@app.post("/api/volano/force_puffer/clear")
+async def clear_force_volano_puffer():
+    runtime = cfg.setdefault("runtime", {})
+    if not isinstance(runtime, dict):
+        cfg["runtime"] = {}
+        runtime = cfg["runtime"]
+    runtime["force_volano_puffer_until_ts"] = 0.0
+    save_config(cfg)
+    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} FORCE_VOLANO_PUFFER OFF")
+    return JSONResponse({"ok": True, **_force_volano_puffer_status()})
 
 @app.post("/api/modules")
 async def set_modules(payload: dict, request: Request):
