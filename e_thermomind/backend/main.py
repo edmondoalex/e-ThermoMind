@@ -448,6 +448,31 @@ def _mqtt_publish_discovery() -> int:
     mqtt_discovery_topics.append(season_disc)
     mqtt_state_topics.append(season_state)
 
+    # runtime helper switch: dump volano run
+    dump_obj = "volano_dump_run"
+    dump_state = _mqtt_topic("runtime", dump_obj)
+    dump_cmd = _mqtt_topic("runtime", dump_obj, "set")
+    dump_disc = f"{prefix}/switch/thermomind/{dump_obj}/config"
+    _mqtt_publish(
+        dump_disc,
+        {
+            "name": "Dump Volano RUN",
+            "unique_id": "thermomind_dump_volano_run",
+            "state_topic": dump_state,
+            "command_topic": dump_cmd,
+            "payload_on": "ON",
+            "payload_off": "OFF",
+            "state_on": "ON",
+            "state_off": "OFF",
+            "availability_topic": f"{base_topic}/availability",
+            "device": device,
+            "icon": "mdi:play-circle",
+        },
+        retain=True,
+    )
+    mqtt_discovery_topics.append(dump_disc)
+    mqtt_state_topics.append(dump_state)
+
     # modules enabled (switch) + active (binary_sensor)
     for mod in _mqtt_module_defs():
         key = mod["key"]
@@ -532,6 +557,8 @@ def _mqtt_publish_states(force: bool = False) -> None:
 
     season_val = (cfg.get("impianto", {}) or {}).get("season_mode", "winter")
     _mqtt_publish_value(_mqtt_topic("setpoints", "impianto_season"), season_val, retain=True, force=force)
+    dump_run = bool((cfg.get("runtime", {}) or {}).get("volano_dump_run", False))
+    _mqtt_publish_value(_mqtt_topic("runtime", "volano_dump_run"), "ON" if dump_run else "OFF", retain=True, force=force)
 
     mods = cfg.get("modules_enabled", {}) or {}
     for mod in _mqtt_module_defs():
@@ -602,6 +629,15 @@ def _mqtt_handle_message(topic: str, payload: str) -> None:
             save_config(cfg)
             _mqtt_publish_states(force=True)
         return
+    if parts[0] == "runtime" and parts[-1] == "set":
+        key = parts[1]
+        if key == "volano_dump_run":
+            val = str(payload).strip().lower()
+            on = val in ("on", "1", "true", "yes")
+            cfg.setdefault("runtime", {})["volano_dump_run"] = bool(on)
+            save_config(cfg)
+            _mqtt_publish_states(force=True)
+        return
 
 async def _mqtt_publish_loop() -> None:
     while True:
@@ -641,6 +677,7 @@ async def _mqtt_reconfigure() -> None:
     try:
         mqtt_client.subscribe(_mqtt_topic("setpoints", "+", "set"))
         mqtt_client.subscribe(_mqtt_topic("modules", "+", "set"))
+        mqtt_client.subscribe(_mqtt_topic("runtime", "+", "set"))
     except Exception:
         pass
     _mqtt_publish_discovery()

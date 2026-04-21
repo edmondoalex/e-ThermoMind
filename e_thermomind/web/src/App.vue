@@ -3282,14 +3282,14 @@ async function load(){
   if (typeof sp.value.solare.force_night_on_startup === 'undefined') sp.value.solare.force_night_on_startup = true
   if (typeof sp.value.solare.flow_min_lmin === 'undefined') sp.value.solare.flow_min_lmin = 6
   if (!sp.value?.volano) {
-    sp.value.volano = { margin_c: 3, max_c: 60, max_hyst_c: 2, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2, evening_dump_enabled: true, evening_dump_after_h: 17, evening_dump_trigger: 'time', evening_dump_run_entity: '' }
+    sp.value.volano = { margin_c: 3, max_c: 60, max_hyst_c: 2, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2, evening_dump_enabled: true, evening_dump_after_h: 17, evening_dump_trigger: 'time', evening_dump_run_entity: 'switch.thermomind_dump_volano_run' }
   } else {
     if (typeof sp.value.volano.min_to_puffer_c === 'undefined') sp.value.volano.min_to_puffer_c = 55
     if (typeof sp.value.volano.hyst_to_puffer_c === 'undefined') sp.value.volano.hyst_to_puffer_c = 2
     if (typeof sp.value.volano.evening_dump_enabled === 'undefined') sp.value.volano.evening_dump_enabled = true
     if (typeof sp.value.volano.evening_dump_after_h === 'undefined') sp.value.volano.evening_dump_after_h = 17
     if (typeof sp.value.volano.evening_dump_trigger === 'undefined') sp.value.volano.evening_dump_trigger = 'time'
-    if (typeof sp.value.volano.evening_dump_run_entity === 'undefined') sp.value.volano.evening_dump_run_entity = ''
+    if (typeof sp.value.volano.evening_dump_run_entity === 'undefined' || !sp.value.volano.evening_dump_run_entity) sp.value.volano.evening_dump_run_entity = 'switch.thermomind_dump_volano_run'
   }
   if (!sp.value?.energy_profiles) {
     sp.value.energy_profiles = {

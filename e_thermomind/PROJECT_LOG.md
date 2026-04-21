@@ -518,3 +518,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Aggiunta forzatura manuale temporizzata VOLANO->PUFFER via API e UI.
 - Esposizione MQTT/HASS delle nuove entita di stato forzatura volano.
 - Versione add-on aggiornata a 0.7.99.
+
+## Aggiornamenti 2026-04-21 (entita RUN automatica)
+- Aggiunta entita HA automatica `switch.thermomind_dump_volano_run` tramite MQTT discovery.
+- Collegamento default al trigger dump `Entita RUN` per Volano->Puffer.
+- Versione add-on aggiornata a 0.8.00.

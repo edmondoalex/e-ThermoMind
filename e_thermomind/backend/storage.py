@@ -141,7 +141,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "evening_dump_enabled": True,
     "evening_dump_after_h": 17.0,
     "evening_dump_trigger": "time",
-    "evening_dump_run_entity": ""
+    "evening_dump_run_entity": "switch.thermomind_dump_volano_run"
   },
   "miscelatrice": {
     "setpoint_c": 45.0,
@@ -256,7 +256,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "force_acs_puffer_until_ts": 0.0,
     "force_acs_puffer_default_minutes": 30,
     "force_volano_puffer_until_ts": 0.0,
-    "force_volano_puffer_default_minutes": 30
+    "force_volano_puffer_default_minutes": 30,
+    "volano_dump_run": False
   },
   "mqtt": {
     "enabled": False,
@@ -626,6 +627,10 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
                 1,
                 int(_float(runtime.get("force_volano_puffer_default_minutes"), cfg["runtime"]["force_volano_puffer_default_minutes"])),
             )
+        if "volano_dump_run" in runtime:
+            cfg["runtime"]["volano_dump_run"] = bool(runtime.get("volano_dump_run"))
+        if "volano_dump_run" in runtime:
+            cfg["runtime"]["volano_dump_run"] = bool(runtime.get("volano_dump_run"))
     if cfg.get("runtime", {}).get("force_live_on_startup"):
         cfg["runtime"]["mode"] = "live"
 

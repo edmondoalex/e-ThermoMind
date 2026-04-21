@@ -538,3 +538,8 @@
 - MQTT/HASS: aggiunte entita sensore `force_volano_puffer_active` e `force_volano_puffer_remaining_s`.
 - UI User (card Volano->Puffer): aggiunti tasti "Scarica in Puffer"/"Stop scarico", durata e scelta trigger orario/entita.
 - Versione add-on aggiornata a 0.7.99.
+## 2026-04-21
+- Creata entita RUN automatica via MQTT discovery: `switch.thermomind_dump_volano_run`.
+- Trigger `Entita RUN` per dump Volano->Puffer ora usa di default `switch.thermomind_dump_volano_run`.
+- MQTT: aggiunti topic command/state runtime `thermomind/runtime/volano_dump_run` e subscribe relativo.
+- Versione add-on aggiornata a 0.8.00.
