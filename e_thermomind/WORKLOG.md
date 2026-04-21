@@ -517,3 +517,7 @@
 - `_set_climate_hvac_mode`: corretto ordine controlli (`current state` prima del de-dup 30s) per evitare che un termostato tornato in HEAT venga lasciato acceso durante finestra di dedup.
 - Valvole/pompe restano già forzate OFF nel ramo `no_source`.
 - Versione add-on aggiornata a 0.7.95.
+## 2026-04-21
+- Cleanup backend: rimosso codice morto irraggiungibile in `main.py` dopo `return` (nessun impatto logico).
+- Descrizione modulo Impianto resa più chiara e meno tecnica: esplicitato che parte sopra soglia avvio e resta attivo fino a soglia di mantenimento più bassa.
+- Versione add-on aggiornata a 0.7.96.

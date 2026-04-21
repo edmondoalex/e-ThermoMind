@@ -825,15 +825,6 @@ def _next_start_min(now_min: int, ranges: list[dict]) -> int | None:
     if best is None:
         return None
     return best % 1440
-    if not entity_id:
-        return None
-    raw = ha.states.get(entity_id, {}).get("state")
-    if raw is None:
-        return None
-    try:
-        return float(raw)
-    except Exception:
-        return None
 
 def _gas_sources_ok() -> bool:
     gas_cfg = cfg.get("gas_emergenza", {})

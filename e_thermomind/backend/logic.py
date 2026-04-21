@@ -1024,7 +1024,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "puffer_to_acs": "Regola: Dest=ACS e T_PUF >= T_ACS+Δ e T_PUF >= Min.",
                 "miscelatrice": "Regola: mantiene ΔT mandata/ritorno verso setpoint con impulsi.",
                 "curva_climatica": "Regola: SP da curva in base a T_EXT.",
-                "impianto": "Regola: termostati HEAT se fonte valida; uscite/pompe solo con zone attive.",
+                "impianto": "Regola: quando c'e una fonte calda disponibile, i termostati restano in HEAT. L'impianto parte solo sopra la soglia di avvio; se era gia partito, continua fino alla soglia di mantenimento piu bassa. Pompe e valvole si attivano solo con zone attive.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
             "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export < -100W OFF secco; batteria scarica step-down.",
