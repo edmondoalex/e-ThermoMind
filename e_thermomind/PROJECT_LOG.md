@@ -502,3 +502,8 @@ Data export: 2026-02-08 (Europe/Rome)
 - Cleanup backend: rimosso codice morto irraggiungibile in `backend/main.py` (nessun cambiamento funzionale).
 - Testi modulo Impianto semplificati lato descrizione per spiegare meglio start/mantenimento senza termini troppo tecnici.
 - Versione add-on aggiornata a 0.7.96.
+
+## Aggiornamenti 2026-04-21 (UI spiegazioni semplici)
+- Aggiunto nel tab User un pannello descrittivo "a prova di bambino" con stato e motivi numerici per ogni modulo principale.
+- Posizionamento: subito sotto versione/stato, prima dei riquadri temperature.
+- Versione add-on aggiornata a 0.7.97.

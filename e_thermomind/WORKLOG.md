@@ -521,3 +521,7 @@
 - Cleanup backend: rimosso codice morto irraggiungibile in `main.py` dopo `return` (nessun impatto logico).
 - Descrizione modulo Impianto resa più chiara e meno tecnica: esplicitato che parte sopra soglia avvio e resta attivo fino a soglia di mantenimento più bassa.
 - Versione add-on aggiornata a 0.7.96.
+## 2026-04-21
+- UI User: aggiunto blocco "Cosa sta facendo adesso (spiegazione semplice)" sotto versione/stato e sopra le temperature.
+- Spiegazione modulo-per-modulo con valori live (Solare, Volano->ACS, Puffer->ACS, Volano->Puffer, Resistenze, Impianto, Miscelatrice, Curva climatica).
+- Versione add-on aggiornata a 0.7.97.

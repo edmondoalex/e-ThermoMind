@@ -34,6 +34,20 @@
           <span class="muted">Ultimo aggiornamento: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</span>
         </div>
         <p v-if="status?.runtime_mode !== 'live'" class="muted">Dry-run: nessun comando agli attuatori. Serve per validare la logica.</p>
+        <div v-if="d" class="card inner baby-panel">
+          <div class="row"><strong>Cosa sta facendo adesso (spiegazione semplice)</strong></div>
+          <div class="baby-list">
+            <div v-for="item in moduleBabyList" :key="`baby-${item.key}`" class="baby-item">
+              <div class="baby-head">
+                <span class="baby-name">{{ item.label }}</span>
+                <span class="badge-mini" :class="item.active ? 'active' : 'idle'">
+                  {{ item.active ? 'STA LAVORANDO' : 'FERMO' }}
+                </span>
+              </div>
+              <div class="muted baby-text">{{ item.text }}</div>
+            </div>
+          </div>
+        </div>
 
         <div v-if="d" class="grid">
           <div class="kpi" :class="historyEnabled('t_acs_alto') ? 'clickable' : ''" @click="openHistory('t_acs_alto','T_ACS')">
@@ -2898,6 +2912,97 @@ const moduleReasonsList = computed(() => {
       summary: d.value?.computed?.module_summaries?.[item.key] || ''
     }))
 })
+const moduleBabyList = computed(() => {
+  const c = d.value?.computed || {}
+  const i = d.value?.inputs || {}
+  const imp = c.impianto || {}
+  const flags = c.flags || {}
+  const flowMin = Number(sp.value?.solare?.flow_min_lmin ?? 0)
+  const solOn = c.source_to_acs === 'SOLAR'
+  const volAcsOn = !!flags.volano_to_acs
+  const pufAcsOn = !!flags.puffer_to_acs
+  const volPufOn = !!flags.volano_to_puffer
+  const resStep = Number(c.resistance_step || 0)
+  const resOn = resStep > 0
+  const impOn = !!(imp.richiesta && imp.zone_demand && imp.source && imp.source !== 'OFF')
+  const mixAction = String(c.miscelatrice?.action || 'STOP').toUpperCase()
+  const mixOn = mixAction !== 'STOP'
+  const tAcs = Number(i.t_acs || 0)
+  const tVol = Number(i.t_volano || 0)
+  const tPuf = Number(i.t_puffer || 0)
+  const tSol = Number(i.t_solare_mandata || 0)
+  const solFlow = Number(i.solare_flow_lmin || 0)
+  const dVolAcs = (tVol - tAcs).toFixed(1)
+  const dPufAcs = (tPuf - tAcs).toFixed(1)
+  const dVolPuf = (tVol - tPuf).toFixed(1)
+  const list = [
+    {
+      key: 'solare',
+      label: 'Solare',
+      active: solOn,
+      text: solOn
+        ? `Il solare sta scaldando ACS. T solare ${tSol.toFixed(1)}°C, ACS ${tAcs.toFixed(1)}°C, portata ${solFlow.toFixed(1)} l/min.`
+        : `Il solare ora non scalda ACS. T solare ${tSol.toFixed(1)}°C, ACS ${tAcs.toFixed(1)}°C, portata ${solFlow.toFixed(1)} l/min (min ${flowMin.toFixed(1)}).`
+    },
+    {
+      key: 'volano_to_acs',
+      label: 'Volano -> ACS',
+      active: volAcsOn,
+      text: volAcsOn
+        ? `Il volano sta scaldando ACS. Volano ${tVol.toFixed(1)}°C, ACS ${tAcs.toFixed(1)}°C, differenza +${dVolAcs}°C.`
+        : `Il volano non sta scaldando ACS. Volano ${tVol.toFixed(1)}°C, ACS ${tAcs.toFixed(1)}°C, differenza ${dVolAcs}°C.`
+    },
+    {
+      key: 'puffer_to_acs',
+      label: 'Puffer -> ACS',
+      active: pufAcsOn,
+      text: pufAcsOn
+        ? `Il puffer sta scaldando ACS. Puffer ${tPuf.toFixed(1)}°C, ACS ${tAcs.toFixed(1)}°C, differenza +${dPufAcs}°C.`
+        : `Il puffer non sta scaldando ACS. Puffer ${tPuf.toFixed(1)}°C, ACS ${tAcs.toFixed(1)}°C, differenza ${dPufAcs}°C.`
+    },
+    {
+      key: 'volano_to_puffer',
+      label: 'Volano -> Puffer',
+      active: volPufOn,
+      text: volPufOn
+        ? `Il volano sta scaldando il puffer. Volano ${tVol.toFixed(1)}°C, Puffer ${tPuf.toFixed(1)}°C, differenza +${dVolPuf}°C.`
+        : `Il volano non sta scaldando il puffer. Volano ${tVol.toFixed(1)}°C, Puffer ${tPuf.toFixed(1)}°C, differenza ${dVolPuf}°C.`
+    },
+    {
+      key: 'resistenze_volano',
+      label: 'Resistenze Volano',
+      active: resOn,
+      text: resOn
+        ? `Le resistenze sono accese a step ${resStep}. Export ${Number(i.grid_export_w || 0).toFixed(0)}W, FV ${Number(i.pv_power_w || 0).toFixed(0)}W.`
+        : `Le resistenze sono spente. Export ${Number(i.grid_export_w || 0).toFixed(0)}W, FV ${Number(i.pv_power_w || 0).toFixed(0)}W.`
+    },
+    {
+      key: 'impianto',
+      label: 'Impianto Riscaldamento',
+      active: impOn,
+      text: impOn
+        ? `L'impianto sta lavorando da ${imp.source}. Volano OK ${imp.volano_temp_ok ? 'SI' : 'NO'}, Puffer OK ${imp.puffer_temp_ok ? 'SI' : 'NO'}.`
+        : `Impianto fermo: zone attive ${imp.zone_demand ? 'SI' : 'NO'}, sorgente ${imp.source || 'OFF'}, Volano OK ${imp.volano_temp_ok ? 'SI' : 'NO'}, Puffer OK ${imp.puffer_temp_ok ? 'SI' : 'NO'}.`
+    },
+    {
+      key: 'miscelatrice',
+      label: 'Miscelatrice',
+      active: mixOn,
+      text: mixOn
+        ? `Miscelatrice in azione: ${mixAction}. Mandata ${Number(i.t_mandata_miscelata || 0).toFixed(1)}°C, setpoint ${Number(c.miscelatrice?.setpoint || 0).toFixed(1)}°C.`
+        : `Miscelatrice ferma. Mandata ${Number(i.t_mandata_miscelata || 0).toFixed(1)}°C, setpoint ${Number(c.miscelatrice?.setpoint || 0).toFixed(1)}°C.`
+    },
+    {
+      key: 'curva_climatica',
+      label: 'Curva Climatica',
+      active: !!c.curva_climatica?.enabled,
+      text: c.curva_climatica?.enabled
+        ? `La curva è attiva. Esterna ${Number(i.t_esterna || 0).toFixed(1)}°C, setpoint mandata ${Number(c.curva_climatica?.setpoint || 0).toFixed(1)}°C.`
+        : 'La curva climatica è spenta.'
+    }
+  ]
+  return list
+})
 const moduleActiveMap = computed(() => {
   const flags = d.value?.computed?.flags || {}
   const step = Number(d.value?.computed?.resistance_step || 0)
@@ -3917,6 +4022,12 @@ details.form summary{cursor:pointer;list-style:none}
 .module-label{font-size:12px;font-weight:700;letter-spacing:.3px}
 .module-badges{display:flex;gap:6px;align-items:center}
 .module-state-line{margin-top:4px;font-size:12px;font-weight:800;color:#ffd8d8}
+.baby-panel{margin-top:10px}
+.baby-list{display:grid;gap:8px}
+.baby-item{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.55)}
+.baby-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.baby-name{font-size:12px;font-weight:700;letter-spacing:.2px}
+.baby-text{margin-top:4px;line-height:1.35}
 .module-panel.mod-on{background:linear-gradient(135deg, rgba(34,197,94,.08), rgba(34,197,94,.03))}
 .module-panel.mod-active{background:linear-gradient(135deg, rgba(239,68,68,.10), rgba(239,68,68,.04))}
 .badge-mini{font-size:10px;border:1px solid var(--border);padding:2px 6px;border-radius:999px;color:var(--muted)}
