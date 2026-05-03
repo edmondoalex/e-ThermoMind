@@ -523,3 +523,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - Aggiunta entita HA automatica `switch.thermomind_dump_volano_run` tramite MQTT discovery.
 - Collegamento default al trigger dump `Entita RUN` per Volano->Puffer.
 - Versione add-on aggiornata a 0.8.00.
+
+- [2026-05-03] Branding addon: impostati logo.png e icon.png, versione 0.8.01.

@@ -543,3 +543,5 @@
 - Trigger `Entita RUN` per dump Volano->Puffer ora usa di default `switch.thermomind_dump_volano_run`.
 - MQTT: aggiunti topic command/state runtime `thermomind/runtime/volano_dump_run` e subscribe relativo.
 - Versione add-on aggiornata a 0.8.00.
+
+- [2026-05-03] Add-on: aggiunti logo.png/icon.png e bump versione a 0.8.01.
