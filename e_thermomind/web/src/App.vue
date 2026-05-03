@@ -1,5 +1,10 @@
 <template>
   <div class="wrap">
+    <transition name="splash-fade">
+      <div v-if="showSplash" class="splash-screen">
+        <img src="/logo.png" alt="Splash logo" class="splash-logo" />
+      </div>
+    </transition>
     <header class="top">
       <div class="brand">
         <img :src="brandLogo" alt="e-ThermoMind logo" class="brand-logo" />
@@ -2622,6 +2627,7 @@
 import schemaImg from './assets/centrale-termica.png'
 import brandLogo from './assets/logo.png'
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+const showSplash = ref(true)
 const initialTab = (() => {
   const h = (window.location.hash || '').toLowerCase()
   if (h.includes('scheduler')) return 'scheduler'
@@ -3986,6 +3992,9 @@ function onBlur(){
   if (editingCount.value === 0) startPolling()
 }
 onMounted(async()=>{ 
+  setTimeout(() => {
+    showSplash.value = false
+  }, 3000) // 3 secondi
   const hash = (window.location.hash || '').toLowerCase()
   if (hash.includes('scheduler')) tab.value = 'scheduler'
   if (hash.includes('admin')) tab.value = 'admin'
@@ -4054,6 +4063,36 @@ watch(tab, (val) => {
 :root{--bg:#070a0f;--card:#0b101a;--muted:#9fb0c7;--text:#e8f1ff;--accent:#57e3d6;--accent-2:#7aa7ff;--border:rgba(255,255,255,.08)}
 *{box-sizing:border-box} body{margin:0;font-family:"Space Grotesk","IBM Plex Sans","Trebuchet MS",sans-serif;background:radial-gradient(1200px 500px at 20% -10%, rgba(122,167,255,.08), transparent),radial-gradient(900px 500px at 80% 0%, rgba(87,227,214,.06), transparent),var(--bg);color:var(--text)}
 .wrap{min-height:100vh;display:flex;flex-direction:column}
+.splash-screen{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(255,233,140,.22), rgba(7,10,15,.98) 60%);
+}
+
+.splash-logo{
+  width: min(62vw, 420px);
+  height: auto;
+  filter: drop-shadow(0 0 28px rgba(255,214,82,.45));
+}
+
+.splash-fade-enter-active,
+.splash-fade-leave-active{
+  transition: opacity .6s ease;
+}
+
+.splash-fade-enter-from,
+.splash-fade-leave-to{
+  opacity: 0;
+}
+
+.splash-fade-enter-to,
+.splash-fade-leave-from{
+  opacity: 1;
+}
 .top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,15,22,.85);backdrop-filter:blur(14px);gap:12px}
 .brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.3px;font-size:16px}
 .brand-logo{width:28px;height:28px;object-fit:contain;border-radius:6px;display:block}
