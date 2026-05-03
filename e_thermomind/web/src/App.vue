@@ -3440,6 +3440,9 @@ async function loadModules(){
 async function load(){
   historyReady = false
   const r = await fetch('/api/setpoints'); sp.value = await r.json()
+  if (!sp.value || typeof sp.value !== 'object') sp.value = {}
+  if (!sp.value?.acs) sp.value.acs = { setpoint_c: 50, max_c: 60 }
+  if (!sp.value?.puffer) sp.value.puffer = { setpoint_c: 50, min_to_acs_c: 45, hyst_to_acs_c: 3, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5 }
   if (!sp.value?.timers) {
     sp.value.timers = {
       volano_to_acs_start_s: 5,
