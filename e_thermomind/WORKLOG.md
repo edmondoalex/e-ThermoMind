@@ -557,3 +557,5 @@
 - [2026-05-03] UI mobile tuning + splash centrato (safe-area/dvh). Release 0.8.06.
 
 - [2026-05-03] Fix mount crash UI (sp null/acs): default setpoints iniziali + favicon. Release 0.8.07.
+
+- [2026-05-03] Backend: aggiunta route /favicon.ico (FileResponse) per eliminare 404 browser. Release 0.8.08.
