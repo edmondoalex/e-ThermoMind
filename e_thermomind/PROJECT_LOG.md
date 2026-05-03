@@ -527,3 +527,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-03] Branding addon: impostati logo.png e icon.png, versione 0.8.01.
 
 - [2026-05-03] Release 0.8.02: pubblicato aggiornamento UI con logo in header.
+
+- [2026-05-03] Release 0.8.03: splash screen iniziale Vue (3s) con fade e logo pubblico.

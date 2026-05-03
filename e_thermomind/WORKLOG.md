@@ -547,3 +547,5 @@
 - [2026-05-03] Add-on: aggiunti logo.png/icon.png e bump versione a 0.8.01.
 
 - [2026-05-03] Bump versione addon a 0.8.02 per rilascio aggiornamento UI logo.
+
+- [2026-05-03] UI: aggiunto splash screen 3s con logo (/logo.png). Release 0.8.03.
