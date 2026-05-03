@@ -2,7 +2,7 @@
   <div class="wrap">
     <transition name="splash-fade">
       <div v-if="showSplash" class="splash-screen">
-        <img src="/logo.png" alt="Splash logo" class="splash-logo" />
+        <img :src="brandLogo" alt="Splash logo" class="splash-logo" />
       </div>
     </transition>
     <header class="top">
