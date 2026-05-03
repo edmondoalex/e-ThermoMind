@@ -1,7 +1,10 @@
 <template>
   <div class="wrap">
     <header class="top">
-      <div class="brand">e-ThermoMind</div>
+      <div class="brand">
+        <img :src="brandLogo" alt="e-ThermoMind logo" class="brand-logo" />
+        <span>e-ThermoMind</span>
+      </div>
       <div class="top-actions">
         <button class="action-btn" @click="refresh">Aggiorna</button>
         <button class="action-btn" @click="saveAll">Salva tutto</button>
@@ -14,6 +17,7 @@
       <nav class="tabs">
         <button :class="{active: tab==='user'}" @click="tab='user'">User</button>
         <button :class="{active: tab==='admin'}" @click="tab='admin'">Admin</button>
+        <button :class="{active: tab==='guide'}" @click="tab='guide'">Guida</button>
         <button :class="{active: tab==='energy'}" @click="tab='energy'">Energy</button>
         <button :class="{active: tab==='scheduler'}" @click="tab='scheduler'">Scheduler</button>
       </nav>
@@ -1529,7 +1533,97 @@
           </div>
         </section>
 
-        <section v-else class="card">
+        <section v-else-if="tab==='guide'" class="card guide-page">
+          <h2>Guida Completa Add-on (passo passo)</h2>
+          <p class="muted">Pagina pensata per capire tutto da zero, con parole semplici e motivi reali letti in tempo reale.</p>
+
+          <div class="guide-hero">
+            <div class="guide-chip">Versione: {{ status?.version || '-' }}</div>
+            <div class="guide-chip">Modalita: {{ status?.runtime_mode || '-' }}</div>
+            <div class="guide-chip" :class="status?.ha_connected ? 'guide-chip-ok' : 'guide-chip-off'">
+              HA: {{ status?.ha_connected ? 'Online' : 'Offline' }}
+            </div>
+            <div class="guide-chip">Ultimo update: {{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</div>
+          </div>
+
+          <div class="guide-grid">
+            <div class="guide-block">
+              <h3>1) Cosa devi sapere subito</h3>
+              <ol class="guide-list">
+                <li>Il sistema guarda prima ACS (acqua sanitaria), poi puffer/impianto.</li>
+                <li>Ogni modulo ha due stati: abilitato (puo lavorare) ed esecuzione (sta lavorando adesso).</li>
+                <li>Le pompe/valvole partono solo quando la logica trova le condizioni giuste.</li>
+                <li>Le soglie Start servono per partire; le soglie Hold servono per restare attivo senza on/off continui.</li>
+              </ol>
+            </div>
+
+            <div class="guide-block">
+              <h3>2) Legenda colori (veloce)</h3>
+              <div class="guide-legend">
+                <div class="legend-row"><span class="legend-pill legend-green">VERDE</span><span>Sta lavorando ora.</span></div>
+                <div class="legend-row"><span class="legend-pill legend-red">ROSSO</span><span>Abilitato ma fermo ora.</span></div>
+                <div class="legend-row"><span class="legend-pill legend-gray">GRIGIO</span><span>Modulo spento/disabilitato.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-block">
+            <h3>3) Decisione principale adesso</h3>
+            <div class="guide-live">
+              <div><strong>Destinazione:</strong> {{ d?.computed?.dest || '-' }}</div>
+              <div><strong>Motivo destinazione:</strong> {{ d?.computed?.dest_reason || '-' }}</div>
+              <div><strong>Sorgente scelta per ACS:</strong> {{ d?.computed?.source_to_acs || '-' }}</div>
+              <div><strong>Motivo sorgente:</strong> {{ d?.computed?.source_reason || '-' }}</div>
+            </div>
+            <div class="help">Queste 4 righe spiegano la decisione "madre" del ciclo corrente.</div>
+          </div>
+
+          <div class="guide-block">
+            <h3>4) Modulo per modulo - cosa fa e perche</h3>
+            <div class="guide-mod-grid">
+              <div v-for="m in guideModuleCards" :key="`guide-${m.key}`" class="guide-mod-card">
+                <div class="guide-mod-head">
+                  <strong>{{ m.label }}</strong>
+                  <span class="badge-mini" :class="m.active ? 'active' : 'idle'">
+                    {{ m.active ? 'IN ESECUZIONE' : 'NON IN ESECUZIONE' }}
+                  </span>
+                </div>
+                <div class="guide-row"><span class="guide-k">Cosa fa:</span> <span>{{ m.what }}</span></div>
+                <div class="guide-row"><span class="guide-k">Quando parte:</span> <span>{{ m.start }}</span></div>
+                <div class="guide-row"><span class="guide-k">Quando si ferma:</span> <span>{{ m.stop }}</span></div>
+                <div class="guide-row"><span class="guide-k">Adesso perche:</span> <span>{{ m.nowReason }}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-grid">
+            <div class="guide-block">
+              <h3>5) Esempio pratico con numeri live</h3>
+              <div class="guide-live">
+                <div>T_ACS: {{ fmtTemp(d?.inputs?.t_acs) }}</div>
+                <div>T_Puffer: {{ fmtTemp(d?.inputs?.t_puffer) }}</div>
+                <div>T_Volano: {{ fmtTemp(d?.inputs?.t_volano) }}</div>
+                <div>T_Solare: {{ fmtTemp(d?.inputs?.t_solare_mandata) }}</div>
+                <div>Export rete: {{ fmtW(d?.inputs?.grid_export_w) }}</div>
+              </div>
+              <div class="help">Leggi questi valori insieme ai blocchi modulo: capisci in 10 secondi cosa sta succedendo.</div>
+            </div>
+
+            <div class="guide-block">
+              <h3>6) Dove mettere mano in Admin</h3>
+              <ol class="guide-list">
+                <li>`ACS`: setpoint e limite massimo sanitario.</li>
+                <li>`Volano/Puffer`: minimi, delta start/hold e isteresi.</li>
+                <li>`Impianto`: soglie riscaldamento e tempi pompe.</li>
+                <li>`Solare`: portata minima, delta start/hold, giorno-notte.</li>
+                <li>`Resistenze`: soglie export e ritardi step.</li>
+              </ol>
+              <div class="help">Regola una cosa alla volta, salva, osserva 2-3 minuti e poi fai il passo successivo.</div>
+            </div>
+          </div>
+        </section>
+
+        <section v-else-if="tab==='admin'" class="card">
           <h2>Admin (v0.2)</h2>
         <p class="muted">Setpoint interni e mapping e-manager.</p>
         <div class="statusline">
@@ -2526,11 +2620,13 @@
 
 <script setup>
 import schemaImg from './assets/centrale-termica.png'
+import brandLogo from './assets/logo.png'
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 const initialTab = (() => {
   const h = (window.location.hash || '').toLowerCase()
   if (h.includes('scheduler')) return 'scheduler'
   if (h.includes('admin')) return 'admin'
+  if (h.includes('guide')) return 'guide'
   if (h.includes('energy')) return 'energy'
   return 'user'
 })()
@@ -3041,6 +3137,100 @@ const moduleBabyList = computed(() => {
     }
   ]
   return list
+})
+const guideModuleCards = computed(() => {
+  const c = d.value?.computed || {}
+  const mr = c.module_reasons || {}
+  const imp = c.impianto || {}
+  const flags = c.flags || {}
+  const step = Number(c.resistance_step || 0)
+  const mixAction = String(c.miscelatrice?.action || 'STOP').toUpperCase()
+  const map = [
+    {
+      key: 'solare',
+      label: 'Solare',
+      active: c.source_to_acs === 'SOLAR',
+      what: 'Scalda ACS usando il circuito solare.',
+      start: 'Parte se il solare e piu caldo di ACS e la portata e sufficiente.',
+      stop: 'Si ferma se il delta temperatura scende o la portata e bassa.'
+    },
+    {
+      key: 'volano_to_acs',
+      label: 'Volano -> ACS',
+      active: !!flags.volano_to_acs,
+      what: 'Passa calore dal volano alla sanitaria.',
+      start: 'Parte se ACS ha bisogno e volano e abbastanza caldo.',
+      stop: 'Si ferma se delta o temperatura volano non bastano.'
+    },
+    {
+      key: 'puffer_to_acs',
+      label: 'Puffer -> ACS',
+      active: !!flags.puffer_to_acs,
+      what: 'Passa calore dal puffer alla sanitaria.',
+      start: 'Parte se ACS ha bisogno e puffer supera soglie minime.',
+      stop: 'Si ferma quando il margine verso ACS non e piu sufficiente.'
+    },
+    {
+      key: 'volano_to_puffer',
+      label: 'Volano -> Puffer',
+      active: !!flags.volano_to_puffer,
+      what: 'Trasferisce calore dal volano al puffer.',
+      start: 'Parte quando destinazione e PUFFER e il volano e piu caldo.',
+      stop: 'Si ferma quando il delta con puffer non regge piu.'
+    },
+    {
+      key: 'resistenze_volano',
+      label: 'Resistenze Volano',
+      active: step > 0,
+      what: 'Usa surplus FV per scaldare il volano a step.',
+      start: 'Parte quando la potenza disponibile supera la soglia richiesta.',
+      stop: 'Si ferma con potenza bassa o condizioni di blocco.'
+    },
+    {
+      key: 'impianto',
+      label: 'Impianto Riscaldamento',
+      active: !!(imp.richiesta && imp.zone_demand && imp.source && imp.source !== 'OFF'),
+      what: 'Gestisce termostati, valvole e pompe dei piani.',
+      start: 'Parte con richiesta zone e fonte valida (volano/puffer).',
+      stop: 'Si ferma senza richiesta zone o senza fonte valida.'
+    },
+    {
+      key: 'miscelatrice',
+      label: 'Miscelatrice',
+      active: mixAction !== 'STOP',
+      what: 'Regola la mandata con impulsi alza/abbassa.',
+      start: 'Parte quando impianto e attivo e c e errore su setpoint mandata.',
+      stop: 'Si ferma quando e dentro la banda di isteresi.'
+    },
+    {
+      key: 'curva_climatica',
+      label: 'Curva climatica',
+      active: !!c.curva_climatica?.enabled,
+      what: 'Calcola setpoint mandata dalla temperatura esterna.',
+      start: 'Funziona sempre se modulo abilitato.',
+      stop: 'Si ferma solo se il modulo viene spento.'
+    },
+    {
+      key: 'gas_emergenza',
+      label: 'Gas emergenza',
+      active: !!c.gas_emergenza?.need,
+      what: 'Accende la caldaia gas solo in emergenza.',
+      start: 'Parte quando le zone chiedono calore ma le altre sorgenti sono fredde.',
+      stop: 'Si ferma quando volano o puffer tornano sopra le soglie.'
+    },
+    {
+      key: 'caldaia_legna',
+      label: 'Caldaia legna',
+      active: !!(c.caldaia_legna?.power || c.caldaia_legna?.ta),
+      what: 'Gestisce alimentazione e TA della caldaia legna.',
+      start: 'Parte seguendo soglie minime e timer di controllo.',
+      stop: 'Si ferma quando non servono piu condizioni di carico.'
+    }
+  ]
+  return map.map((m) => ({
+    ...m,
+    nowReason: mr[m.key] || 'Nessun dettaglio disponibile al momento.'
+  }))
 })
 const moduleActiveMap = computed(() => {
   const flags = d.value?.computed?.flags || {}
@@ -3799,6 +3989,7 @@ onMounted(async()=>{
   const hash = (window.location.hash || '').toLowerCase()
   if (hash.includes('scheduler')) tab.value = 'scheduler'
   if (hash.includes('admin')) tab.value = 'admin'
+  if (hash.includes('guide')) tab.value = 'guide'
   if (hash.includes('energy')) tab.value = 'energy'
   if (hash.includes('user')) tab.value = 'user'
   await loadAll(); 
@@ -3809,6 +4000,7 @@ onMounted(async()=>{
     const h = (window.location.hash || '').toLowerCase()
     if (h.includes('scheduler')) tab.value = 'scheduler'
     else if (h.includes('admin')) tab.value = 'admin'
+    else if (h.includes('guide')) tab.value = 'guide'
     else if (h.includes('energy')) tab.value = 'energy'
     else if (h.includes('user')) tab.value = 'user'
   })
@@ -3863,7 +4055,8 @@ watch(tab, (val) => {
 *{box-sizing:border-box} body{margin:0;font-family:"Space Grotesk","IBM Plex Sans","Trebuchet MS",sans-serif;background:radial-gradient(1200px 500px at 20% -10%, rgba(122,167,255,.08), transparent),radial-gradient(900px 500px at 80% 0%, rgba(87,227,214,.06), transparent),var(--bg);color:var(--text)}
 .wrap{min-height:100vh;display:flex;flex-direction:column}
 .top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,15,22,.85);backdrop-filter:blur(14px);gap:12px}
-.brand{font-weight:800;letter-spacing:.3px;font-size:16px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.3px;font-size:16px}
+.brand-logo{width:28px;height:28px;object-fit:contain;border-radius:6px;display:block}
 .tabs{display:flex;align-items:center;gap:8px}
 .tabs button{background:rgba(14,20,30,.9);color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:10px;cursor:pointer;font-size:12px}
 .tabs button.active{border-color:var(--accent);color:#dffaf3;background:rgba(20,38,45,.95)}
@@ -4098,6 +4291,29 @@ details.form summary{cursor:pointer;list-style:none}
 .baby-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .baby-name{font-size:12px;font-weight:700;letter-spacing:.2px}
 .baby-text{margin-top:4px;line-height:1.35}
+.guide-page{display:grid;gap:12px}
+.guide-hero{display:flex;flex-wrap:wrap;gap:8px}
+.guide-chip{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text)}
+.guide-chip-ok{background:rgba(34,197,94,.16);border-color:rgba(34,197,94,.45)}
+.guide-chip-off{background:rgba(148,163,184,.14)}
+.guide-grid{display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:900px){.guide-grid{grid-template-columns:1fr 1fr}}
+.guide-block{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(10,15,22,.56)}
+.guide-block h3{margin:0 0 8px 0;font-size:16px}
+.guide-list{margin:0;padding-left:20px;display:grid;gap:6px;color:#d8e4f6}
+.guide-legend{display:grid;gap:8px}
+.legend-row{display:flex;align-items:center;gap:8px;color:#d8e4f6}
+.legend-pill{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;border:1px solid var(--border)}
+.legend-green{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45);color:#d4ffe5}
+.legend-red{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.45);color:#ffd4d4}
+.legend-gray{background:rgba(148,163,184,.15);border-color:rgba(148,163,184,.35);color:#d5deec}
+.guide-live{display:grid;gap:4px;color:#d8e4f6;line-height:1.4}
+.guide-mod-grid{display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:920px){.guide-mod-grid{grid-template-columns:1fr 1fr}}
+.guide-mod-card{border:1px solid var(--border);border-radius:12px;padding:10px;background:rgba(8,13,20,.7)}
+.guide-mod-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.guide-row{display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:12px;line-height:1.35;color:#d8e4f6;margin-bottom:4px}
+.guide-k{color:#9fb0c7;font-weight:700}
 .module-panel.mod-on{background:linear-gradient(135deg, rgba(34,197,94,.08), rgba(34,197,94,.03))}
 .module-panel.mod-active{background:linear-gradient(135deg, rgba(239,68,68,.10), rgba(239,68,68,.04))}
 .badge-mini{font-size:10px;border:1px solid var(--border);padding:2px 6px;border-radius:999px;color:var(--muted)}
