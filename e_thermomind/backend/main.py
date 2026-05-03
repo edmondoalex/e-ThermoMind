@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from typing import Any
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .storage import load_config, save_config, normalize_config, apply_setpoints, apply_entities, apply_actuators
@@ -761,6 +761,13 @@ app.mount("/assets", StaticFiles(directory="/app/static/assets"), name="assets")
 async def ui():
     with open("/app/static/index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(f.read())
+
+@app.get("/favicon.ico")
+async def favicon():
+    p = Path("/app/static/favicon.ico")
+    if p.exists():
+        return FileResponse(str(p))
+    raise HTTPException(status_code=404, detail="favicon.ico not found")
 
 @app.get("/api/config")
 async def get_config():
