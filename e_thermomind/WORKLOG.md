@@ -555,3 +555,5 @@
 - [2026-05-03] Fix UI crash: fallback per sp.acs/sp.puffer null in load() (Vue). Release 0.8.05.
 
 - [2026-05-03] UI mobile tuning + splash centrato (safe-area/dvh). Release 0.8.06.
+
+- [2026-05-03] Fix mount crash UI (sp null/acs): default setpoints iniziali + favicon. Release 0.8.07.

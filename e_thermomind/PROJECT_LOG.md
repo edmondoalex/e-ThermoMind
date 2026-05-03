@@ -535,3 +535,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-03] Release 0.8.05: risolto TypeError reading 'acs' con default setpoints difensivi.
 
 - [2026-05-03] Release 0.8.06: migliorata responsività smartphone e centratura splash screen.
+
+- [2026-05-03] Release 0.8.07: risolto TypeError su sp.acs all'avvio e aggiunto favicon.
