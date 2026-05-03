@@ -2658,6 +2658,8 @@ const pollMs = ref(3000)
 const actions = ref([])
 const zones = ref([])
 const schedulerStatus = ref(null)
+const apiOffline = ref(false)
+let lastApiErrorTs = 0
 const forceAcsBusy = ref(false)
 const forceVolanoBusy = ref(false)
 let historySaveTimer = null
@@ -3433,22 +3435,36 @@ const curveYTicks = computed(() => {
   }
 async function refresh(){
   if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0 || manualEditHold.value) return
-  const r = await fetch('/api/decision'); d.value = await r.json()
-  zones.value = d.value?.zones || []
-  schedulerStatus.value = d.value?.scheduler_status || null
-  updateHistoryFromDecision(d.value)
-  const s = await fetch('/api/status'); status.value = await s.json()
-  const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
-  await loadActuators()
-  await load()
-  lastUpdate.value = new Date()
+  try {
+    const r = await fetch('/api/decision'); d.value = await r.json()
+    zones.value = d.value?.zones || []
+    schedulerStatus.value = d.value?.scheduler_status || null
+    updateHistoryFromDecision(d.value)
+    const s = await fetch('/api/status'); status.value = await s.json()
+    const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
+    await loadActuators()
+    await load()
+    lastUpdate.value = new Date()
+    apiOffline.value = false
+  } catch {
+    apiOffline.value = true
+  }
 }
 async function loadModules(){
   const r = await fetch('/api/modules'); modules.value = await r.json()
 }
 async function load(){
   historyReady = false
-  const r = await fetch('/api/setpoints'); sp.value = await r.json()
+  let payload = null
+  try {
+    const r = await fetch('/api/setpoints')
+    payload = await r.json()
+    apiOffline.value = false
+  } catch {
+    apiOffline.value = true
+    return
+  }
+  sp.value = payload
   if (!sp.value || typeof sp.value !== 'object') sp.value = {}
   if (!sp.value?.acs) sp.value.acs = { setpoint_c: 50, max_c: 60 }
   if (!sp.value?.puffer) sp.value.puffer = { setpoint_c: 50, min_to_acs_c: 45, hyst_to_acs_c: 3, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5 }
@@ -3613,6 +3629,7 @@ function saveEnergyDebounced(){
 }
 function saveHistoryDebounced(){
   if (!historyReady) return
+  if (apiOffline.value) return
   if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0 || manualEditHold.value) return
   if (historySaveTimer) clearTimeout(historySaveTimer)
   historySaveTimer = setTimeout(() => { save() }, 300)
@@ -3622,6 +3639,7 @@ async function loadActuators(){
   const r = await fetch('/api/actuators'); act.value = await r.json()
 }
   async function save(){
+    if (apiOffline.value) return
     applyCurveText()
     if (sp.value?.energy_profiles) {
       for (const key of ['easas', 'privato']) {
@@ -3641,17 +3659,27 @@ async function loadActuators(){
         }
       }
     }
-    await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
-    manualEditHold.value = false
-    if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0) {
-      await load()
-    } else {
-      await refresh()
+    try {
+      await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
+      apiOffline.value = false
+      manualEditHold.value = false
+      if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0) {
+        await load()
+      } else {
+        await refresh()
+      }
+      if (sp.value?.runtime?.ui_poll_ms) {
+        pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
+        startPolling()
+      }
+    } catch (e) {
+      apiOffline.value = true
+      const now = Date.now()
+      if (now - lastApiErrorTs > 5000) {
+        console.warn('API non raggiungibile: salvataggio sospeso finché il backend non torna online.')
+        lastApiErrorTs = now
+      }
     }
-    if (sp.value?.runtime?.ui_poll_ms) {
-    pollMs.value = Number(sp.value.runtime.ui_poll_ms) || 3000
-    startPolling()
-  }
 }
 async function resetLegnaForcedOff(){
   await fetch('/api/legna/reset_startup', { method: 'POST' })
