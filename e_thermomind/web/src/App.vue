@@ -4065,20 +4065,28 @@ watch(tab, (val) => {
 <style>
 :root{--bg:#070a0f;--card:#0b101a;--muted:#9fb0c7;--text:#e8f1ff;--accent:#57e3d6;--accent-2:#7aa7ff;--border:rgba(255,255,255,.08)}
 *{box-sizing:border-box} body{margin:0;font-family:"Space Grotesk","IBM Plex Sans","Trebuchet MS",sans-serif;background:radial-gradient(1200px 500px at 20% -10%, rgba(122,167,255,.08), transparent),radial-gradient(900px 500px at 80% 0%, rgba(87,227,214,.06), transparent),var(--bg);color:var(--text)}
-.wrap{min-height:100vh;display:flex;flex-direction:column}
+.wrap{min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 .splash-screen{
   position: fixed;
   inset: 0;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   background: radial-gradient(circle at center, rgba(255,233,140,.22), rgba(7,10,15,.98) 60%);
 }
 
 .splash-logo{
   width: min(62vw, 420px);
+  max-width: 92vw;
   height: auto;
+  display: block;
+  margin: 0 auto;
   filter: drop-shadow(0 0 28px rgba(255,214,82,.45));
 }
 
@@ -4150,8 +4158,16 @@ details.form summary{cursor:pointer;list-style:none}
 @media(max-width:640px){
   .top{flex-wrap:wrap;gap:10px;padding:10px 12px}
   .brand{flex:1 1 100%;font-size:16px}
+  .tabs{width:100%;overflow:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:0 0 auto;white-space:nowrap}
   .top-actions{flex:1 1 100%}
   .top-actions .action-btn{flex:1 1 46%;min-width:120px;text-align:center}
+  .main{padding:12px}
+  .card{padding:14px;border-radius:16px}
+  .grid{grid-template-columns:1fr}
+  .kpi{padding:9px}
+  .splash-logo{width:min(78vw,360px)}
 }
 .setpoint-grid{column-count:1;column-gap:12px}
 .setpoint-grid .section{column-span:all}

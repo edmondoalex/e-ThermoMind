@@ -551,3 +551,7 @@
 - [2026-05-03] UI: aggiunto splash screen 3s con logo (/logo.png). Release 0.8.03.
 
 - [2026-05-03] Fix splash logo su ingress HA: usato asset bundlato (:src=brandLogo). Release 0.8.04.
+
+- [2026-05-03] Fix UI crash: fallback per sp.acs/sp.puffer null in load() (Vue). Release 0.8.05.
+
+- [2026-05-03] UI mobile tuning + splash centrato (safe-area/dvh). Release 0.8.06.
