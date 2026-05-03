@@ -2638,7 +2638,16 @@ const initialTab = (() => {
 })()
 const tab = ref(initialTab)
 const d = ref(null)
-const sp = ref(null)
+const sp = ref({
+  acs: { setpoint_c: 50, max_c: 60 },
+  puffer: { setpoint_c: 50, min_to_acs_c: 45, hyst_to_acs_c: 3, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5 },
+  volano: { margin_c: 3, max_c: 60, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2, evening_dump_trigger: 'time', evening_dump_after_h: 17, evening_dump_run_entity: 'switch.thermomind_dump_volano_run' },
+  impianto: { source_mode: 'AUTO', pdc_ready: false, puffer_ready: true, season_mode: 'winter', volano_min_c: 35, puffer_min_c: 35 },
+  runtime: { mode: 'dry-run', force_live_on_startup: true, ui_poll_ms: 3000, timezone: 'Europe/Rome', force_acs_puffer_default_minutes: 30, force_volano_puffer_default_minutes: 30 },
+  solare: { mode: 'auto', force_night_on_startup: true, flow_min_lmin: 6 },
+  curva_climatica: { slope: 0, offset: 0, min_c: 40, max_c: 60 },
+  miscelatrice: { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, force_impulse_s: 3 }
+})
 const ent = ref(null)
 const act = ref(null)
 const status = ref(null)
