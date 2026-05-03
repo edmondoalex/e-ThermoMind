@@ -525,3 +525,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - Versione add-on aggiornata a 0.8.00.
 
 - [2026-05-03] Branding addon: impostati logo.png e icon.png, versione 0.8.01.
+
+- [2026-05-03] Release 0.8.02: pubblicato aggiornamento UI con logo in header.

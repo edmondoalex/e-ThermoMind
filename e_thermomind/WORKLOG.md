@@ -545,3 +545,5 @@
 - Versione add-on aggiornata a 0.8.00.
 
 - [2026-05-03] Add-on: aggiunti logo.png/icon.png e bump versione a 0.8.01.
+
+- [2026-05-03] Bump versione addon a 0.8.02 per rilascio aggiornamento UI logo.
