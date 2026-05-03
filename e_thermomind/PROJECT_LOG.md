@@ -529,3 +529,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-03] Release 0.8.02: pubblicato aggiornamento UI con logo in header.
 
 - [2026-05-03] Release 0.8.03: splash screen iniziale Vue (3s) con fade e logo pubblico.
+
+- [2026-05-03] Release 0.8.04: corretto path splash logo per compatibilità ingress Home Assistant.
