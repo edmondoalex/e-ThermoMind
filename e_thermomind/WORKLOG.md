@@ -559,3 +559,5 @@
 - [2026-05-03] Fix mount crash UI (sp null/acs): default setpoints iniziali + favicon. Release 0.8.07.
 
 - [2026-05-03] Backend: aggiunta route /favicon.ico (FileResponse) per eliminare 404 browser. Release 0.8.08.
+
+- [2026-05-03] Frontend resilienza offline: blocco autosave quando API down + try/catch su refresh/load/save. Release 0.8.09.

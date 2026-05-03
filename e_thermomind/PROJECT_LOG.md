@@ -539,3 +539,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-03] Release 0.8.07: risolto TypeError su sp.acs all'avvio e aggiunto favicon.
 
 - [2026-05-03] Release 0.8.08: fix definitivo favicon.ico 404 con endpoint dedicato FastAPI.
+
+- [2026-05-03] Release 0.8.09: evitato flood errori ERR_CONNECTION_REFUSED con gestione offline UI.
