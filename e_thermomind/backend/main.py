@@ -2825,6 +2825,14 @@ async def get_force_volano_puffer():
 async def set_force_volano_puffer(payload: dict):
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Invalid payload")
+    _expire_force_volano_puffer()
+    decision = compute_decision(cfg, ha.states)
+    force_state = (decision.get("computed", {}) or {}).get("force_volano_puffer", {}) or {}
+    if not bool(force_state.get("can_apply")):
+        return JSONResponse(
+            {"ok": False, **_force_volano_puffer_status(), "reason": force_state.get("reason", "Forzatura non applicabile.")},
+            status_code=409,
+        )
     runtime = cfg.setdefault("runtime", {})
     if not isinstance(runtime, dict):
         cfg["runtime"] = {}

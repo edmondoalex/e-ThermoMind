@@ -563,3 +563,5 @@
 - [2026-05-03] Frontend resilienza offline: blocco autosave quando API down + try/catch su refresh/load/save. Release 0.8.09.
 
 - [2026-05-20] Logica sorgenti ACS: i moduli disabilitati non possono piu selezionare `source_to_acs`; se Volano->ACS e spento, il dump serale Volano->Puffer puo partire con ACS non prendibile. Release 0.8.10.
+
+- [2026-05-20] Regole moduli OFF: le decisioni escludono i moduli disabilitati; VOL_MAX non blocca piu scarichi Volano->ACS/Volano->Puffer, blocca solo carica/resistenze. Forzatura Volano->Puffer rifiutata se non applicabile e bottone disabilitato. Release 0.8.11.

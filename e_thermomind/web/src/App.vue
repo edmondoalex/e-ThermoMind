@@ -566,7 +566,7 @@
               <div class="help">Timer temporaneo: forza VOLANO -> PUFFER.</div>
             </div>
             <div class="kpi kpi-center">
-              <button class="ghost toggle on" :disabled="forceVolanoBusy" @click="activateForceVolanoPuffer()">Scarica in Puffer</button>
+              <button class="ghost toggle on" :disabled="forceVolanoBusy || !forceVolanoPuffer.can_apply" @click="activateForceVolanoPuffer()">Scarica in Puffer</button>
               <button class="ghost toggle off" :disabled="forceVolanoBusy" style="margin-top:8px" @click="clearForceVolanoPuffer()">Stop scarico</button>
               <div class="muted" style="margin-top:6px">Residuo: {{ forceVolanoPuffer.active ? `${forceVolanoPuffer.remaining_s}s` : '-' }}</div>
             </div>
@@ -3720,7 +3720,7 @@ async function activateForceVolanoPuffer(){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ minutes: mins })
     })
-    if (res.ok) await refresh()
+    await refresh()
   } finally {
     forceVolanoBusy.value = false
   }

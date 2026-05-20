@@ -81,6 +81,14 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     res_cfg = cfg.get("resistance", {})
     curve_cfg = cfg.get("curva_climatica", {})
     modules_enabled = cfg.get("modules_enabled", {})
+    resistenze_enabled = modules_enabled.get("resistenze_volano", True)
+    solare_enabled = modules_enabled.get("solare", True)
+    volano_to_acs_enabled = modules_enabled.get("volano_to_acs", True)
+    volano_to_puffer_enabled = modules_enabled.get("volano_to_puffer", True)
+    puffer_to_acs_enabled = modules_enabled.get("puffer_to_acs", True)
+    impianto_enabled = modules_enabled.get("impianto", True)
+    pdc_enabled = modules_enabled.get("pdc", True)
+    miscelatrice_enabled = modules_enabled.get("miscelatrice", True)
     curve_enabled = modules_enabled.get("curva_climatica", True)
     gas_cfg = cfg.get("gas_emergenza", {})
     gas_enabled = modules_enabled.get("gas_emergenza", False)
@@ -370,20 +378,16 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     puf_min_acs = float(puf_cfg.get("min_to_acs_c", 60.0))
     puf_h_acs = float(puf_cfg.get("hyst_to_acs_c", 5.0))
     last_vol_to_puf = bool(_LAST.get("volano_to_puffer"))
-    solar_enabled = modules_enabled.get("solare", True)
-    volano_to_acs_enabled = modules_enabled.get("volano_to_acs", True)
-    puffer_to_acs_enabled = modules_enabled.get("puffer_to_acs", True)
-
-    if solar_enabled and solar_flow_ok and (t_sol >= t_acs + solar_delta_on) and (t_acs < acs_sp) and (not acs_max_hit):
+    if solare_enabled and solar_flow_ok and (t_sol >= t_acs + solar_delta_on) and (t_acs < acs_sp) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}°C >= T_ACS+delta {t_acs + solar_delta_on:.1f}°C"
-    elif solar_enabled and solar_flow_ok and last_source == "SOLAR" and (t_sol >= t_acs + solar_delta_hold) and (t_acs < acs_sp) and (not acs_max_hit):
+    elif solare_enabled and solar_flow_ok and last_source == "SOLAR" and (t_sol >= t_acs + solar_delta_hold) and (t_acs < acs_sp) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}°C >= T_ACS+delta_hold {t_acs + solar_delta_hold:.1f}°C"
-    elif volano_to_acs_enabled and dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit) and (t_volano >= vol_min_acs + vol_h_acs):
+    elif volano_to_acs_enabled and dest == "ACS" and (t_volano >= t_acs + delta_start) and (t_volano >= vol_min_acs + vol_h_acs):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}°C >= T_ACS+{delta_start:.1f}°C ({t_acs + delta_start:.1f}°C)"
-    elif volano_to_acs_enabled and dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (not vol_max_hit) and (t_volano >= vol_min_acs):
+    elif volano_to_acs_enabled and dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (t_volano >= vol_min_acs):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}°C >= T_ACS+{delta_hold:.1f}°C ({t_acs + delta_hold:.1f}°C)"
     elif puffer_to_acs_enabled and dest == "ACS" and (t_puffer >= t_acs + puf_to_acs_start) and (t_puffer >= puf_min_acs + puf_h_acs):
@@ -395,7 +399,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     else:
         source_to_acs = "OFF"
         disabled = []
-        if not solar_enabled:
+        if not solare_enabled:
             disabled.append("SOLARE")
         if not volano_to_acs_enabled:
             disabled.append("VOLANO->ACS")
@@ -408,7 +412,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     force_until = float(runtime_cfg.get("force_acs_puffer_until_ts", 0.0) or 0.0)
     force_active = force_until > now_ts
     force_remaining_s = max(0, int(force_until - now_ts)) if force_active else 0
-    force_can_apply = bool(dest == "ACS" and (not acs_max_hit) and (t_puffer > t_acs))
+    force_can_apply = bool(puffer_to_acs_enabled and dest == "ACS" and (not acs_max_hit) and (t_puffer > t_acs))
     force_reason = "Forzatura OFF."
     if force_active:
         if force_can_apply:
@@ -429,18 +433,24 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     force_vtp_active = force_vtp_until > now_ts
     force_vtp_remaining_s = max(0, int(force_vtp_until - now_ts)) if force_vtp_active else 0
     force_vtp_can_apply = bool(
-        (dest == "ACS")
-        and (source_to_acs == "OFF")
-        and (not vol_max_hit)
+        volano_to_puffer_enabled
+        and (not puf_max_hit)
         and (t_volano >= t_puffer + puf_delta_hold)
         and (t_volano >= vol_min_puf)
     )
     force_vtp_reason = "Forzatura OFF."
+    if not force_vtp_active and not force_vtp_can_apply:
+        force_vtp_reason = (
+            f"Forzatura OFF: non applicabile. "
+            f"Modulo={'ON' if volano_to_puffer_enabled else 'OFF'} | Dest={dest} | Source={source_to_acs} | "
+            f"PUF_MAX={'SI' if puf_max_hit else 'NO'} | T_VOL {t_volano:.1f}C | T_PUF {t_puffer:.1f}C | "
+            f"serve T_VOL >= T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C)"
+        )
 
     volano_to_puffer = False
     evening_dump_active = False
     evening_dump_reason = ""
-    if dest == "PUFFER" and (not vol_max_hit):
+    if volano_to_puffer_enabled and dest == "PUFFER" and (not puf_max_hit):
         if (t_volano >= t_puffer + puf_delta_start) and (t_volano >= vol_min_puf + vol_h_puf):
             volano_to_puffer = True
         elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
@@ -462,11 +472,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         evening_window = now_h >= evening_dump_after_h
     if (
         (not volano_to_puffer)
+        and volano_to_puffer_enabled
         and evening_dump_enabled
         and evening_window
         and (dest == "ACS")
         and (source_to_acs == "OFF")
-        and (not vol_max_hit)
+        and (not puf_max_hit)
     ):
         if (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
             volano_to_puffer = True
@@ -497,7 +508,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         else:
             force_vtp_reason = (
                 f"Forzatura attiva ma non applicabile ({force_vtp_remaining_s}s): "
-                f"Dest={dest} | Source={source_to_acs} | VOL_MAX={'SI' if vol_max_hit else 'NO'} | "
+                f"Dest={dest} | Source={source_to_acs} | PUF_MAX={'SI' if puf_max_hit else 'NO'} | "
                 f"T_VOL {t_volano:.1f}C | T_PUF {t_puffer:.1f}C"
             )
 
@@ -517,7 +528,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         base_sel = "possibile"
 
     desired_step = 0
-    if dest in ("ACS", "PUFFER") and (not vol_max_hit) and res_cfg.get("enabled", True):
+    resistance_enabled = resistenze_enabled and res_cfg.get("enabled", True)
+    if dest in ("ACS", "PUFFER") and (not vol_max_hit) and resistance_enabled:
         if battery_output_w > battery_block_w:
             desired_step = 0
         elif export_w <= export_off_w:
@@ -539,7 +551,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     step_down_delay = int(_f(res_cfg.get("step_down_delay_s", off_delay), off_delay))
     last_step = int(_LAST.get("res_step", 0) or 0)
     last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
-    if desired_step > last_step:
+    if not resistance_enabled:
+        step = 0
+    elif desired_step > last_step:
         if now_ts - last_step_ts >= step_up_delay:
             step = min(desired_step, last_step + 1)
         else:
@@ -559,7 +573,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             f"Avail {available_w:.0f}W (Export {export_w:.0f}W | "
             f"Tot {extra_safe_total_w:.0f}W | Poss {extra_safe_w:.0f}W | FV {pv_power_w:.0f}W)"
         )
-    if vol_max_hit:
+    if not resistance_enabled:
+        charge_reason = f"{power_note} | Modulo resistenze OFF"
+    elif vol_max_hit:
         charge_reason = f"VOLANO_MAX: {t_volano:.1f}°C >= {vol_max:.1f}°C"
     elif dest == "OFF":
         charge_reason = dest_reason
@@ -595,7 +611,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         f"LastSource={last_source or 'None'}"
     )
     volano_to_puffer_reason = (
-        f"Dest={dest} | VOL_MAX={'SI' if vol_max_hit else 'NO'} | "
+        f"Dest={dest} | PUF_MAX={'SI' if puf_max_hit else 'NO'} | "
         f"T_VOL {t_volano:.1f}C | T_PUF {t_puffer:.1f}C | "
         f"d_start {puf_delta_start:.1f}C / d_hold {puf_delta_hold:.1f}C | "
         f"Min {vol_min_puf:.1f}C (+{vol_h_puf:.1f}C) | "
@@ -608,7 +624,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if evening_dump_reason:
         volano_to_puffer_reason = f"{volano_to_puffer_reason} | {evening_dump_reason}"
     res_blockers: list[str] = []
-    if not res_cfg.get("enabled", True):
+    if not resistance_enabled:
         res_blockers.append("Modulo OFF")
     if dest not in ("ACS", "PUFFER"):
         res_blockers.append(f"Dest={dest}")
@@ -635,9 +651,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     sel_state = ha_states.get(sel_eid, {}).get("state") if sel_eid else imp_cfg.get("source_mode", "AUTO")
     req_state = ha_states.get(req_eid, {}).get("state") if req_eid else ("on" if imp_cfg.get("richiesta_heat") else "off")
-    pdc_ready = _is_on_state(ha_states.get(pdc_eid, {}).get("state") if pdc_eid else ("on" if imp_cfg.get("pdc_ready") else "off"))
-    vol_ready = _is_on_state(ha_states.get(vol_eid, {}).get("state") if vol_eid else ("on" if imp_cfg.get("volano_ready") else "off"))
-    pdc_vol_ready = pdc_ready or vol_ready
+    pdc_ready = pdc_enabled and _is_on_state(ha_states.get(pdc_eid, {}).get("state") if pdc_eid else ("on" if imp_cfg.get("pdc_ready") else "off"))
+    vol_ready = pdc_enabled and _is_on_state(ha_states.get(vol_eid, {}).get("state") if vol_eid else ("on" if imp_cfg.get("volano_ready") else "off"))
+    pdc_vol_ready = pdc_enabled and (pdc_ready or vol_ready)
     puf_ready = _is_on_state(ha_states.get(ent_cfg.get("source_puffer_ready"), {}).get("state")) if ent_cfg.get("source_puffer_ready") else bool(imp_cfg.get("puffer_ready", True))
     # richiesta: se esiste un'entitÃ , usa quella; altrimenti deriva dai termostati
     zones_pt = imp_cfg.get("zones_pt", []) or []
@@ -683,7 +699,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         source_req_on = bool(puf_ready and puf_ok)
     else:
         source_req_on = bool((pdc_vol_ready and vol_ok) or (puf_ready and puf_ok))
-    req_on = bool(source_req_on)
+    req_on = bool(impianto_enabled and source_req_on)
     if season_mode == "summer":
         req_on = False
 
@@ -696,7 +712,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             source = "OFF"
         source_override = True
 
-    if not source_override:
+    if not impianto_enabled:
+        source = "OFF"
+    elif not source_override:
         if sel_norm == "AUTO" or (
             (sel_norm == "PDC" and (not pdc_vol_ready or not vol_ok)) or
             (sel_norm == "PUFFER" and (not puf_ready or not puf_ok))
@@ -785,12 +803,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     mix_kp_eff = float(misc_cfg.get("kp", 2.0))
     if mix_dt_ref > 0:
         mix_kp_eff = mix_kp_eff * max(mix_dt_min_f, min(mix_dt_max_f, mix_dt / mix_dt_ref))
-    mix_enabled = cfg.get("modules_enabled", {}).get("miscelatrice", True)
+    mix_enabled = miscelatrice_enabled
     mix_action = "STOP"
     mix_reason = "Miscelatrice non attiva."
     mix_delay_info = f"pause {int(misc_cfg.get('pause_s', 5))}s | min_imp {int(misc_cfg.get('min_imp_s', 1))}s | max_imp {int(misc_cfg.get('max_imp_s', 8))}s"
     if mix_enabled:
-        if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        if gas_enabled:
             mix_action = "ALZA"
             mix_reason = f"Gas attivo: miscelatrice ALZA fissa. | {mix_delay_info}"
         else:
@@ -804,13 +822,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 mix_action = "ABBASSA"
                 mix_reason = f"T_MAND {t_mandata_mix:.1f}°C > SP {mix_sp:.1f}°C | dT {mix_dt:.1f}°C | KpEff {mix_kp_eff:.2f} | {mix_delay_info}"
 
-    gas_enabled = cfg.get("modules_enabled", {}).get("gas_emergenza", False)
     blocked_cold = req_on and (source == "OFF")
-    imp_active = req_on and zone_demand_on and (source != "OFF") and (not blocked_cold) and (not gas_enabled)
-    miscelatrice_on = imp_active and cfg.get("modules_enabled", {}).get("miscelatrice", True)
+    imp_active = impianto_enabled and req_on and zone_demand_on and (source != "OFF") and (not blocked_cold) and (not gas_enabled)
+    miscelatrice_on = imp_active and miscelatrice_enabled
     if not miscelatrice_on:
         mix_action = "STOP"
-        if cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        if gas_enabled:
             mix_reason = f"Impianto inattivo. Alza fisso per caldaia a GAS emergenza. | {mix_delay_info}"
         else:
             mix_reason = f"Impianto inattivo. | {mix_delay_info}"
@@ -821,7 +838,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     auto_heat_min_off = int(imp_cfg.get("auto_heat_min_off_s", 60))
     impianto_delay_info = f"pump_start {pump_start_delay}s | pump_stop {pump_stop_delay}s | auto_heat_on {auto_heat_min_on}s | auto_heat_off {auto_heat_min_off}s"
 
-    if season_mode == "summer":
+    if not impianto_enabled:
+        impianto_reason = "Modulo impianto OFF."
+    elif season_mode == "summer":
         impianto_reason = "Estate: riscaldamento bloccato."
     elif gas_enabled:
         impianto_reason = "Gas emergenza attivo: impianto inattivo."
