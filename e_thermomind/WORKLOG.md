@@ -561,3 +561,5 @@
 - [2026-05-03] Backend: aggiunta route /favicon.ico (FileResponse) per eliminare 404 browser. Release 0.8.08.
 
 - [2026-05-03] Frontend resilienza offline: blocco autosave quando API down + try/catch su refresh/load/save. Release 0.8.09.
+
+- [2026-05-20] Logica sorgenti ACS: i moduli disabilitati non possono piu selezionare `source_to_acs`; se Volano->ACS e spento, il dump serale Volano->Puffer puo partire con ACS non prendibile. Release 0.8.10.

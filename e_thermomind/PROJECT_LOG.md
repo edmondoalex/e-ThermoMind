@@ -541,3 +541,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-03] Release 0.8.08: fix definitivo favicon.ico 404 con endpoint dedicato FastAPI.
 
 - [2026-05-03] Release 0.8.09: evitato flood errori ERR_CONNECTION_REFUSED con gestione offline UI.
+
+- [2026-05-20] Release 0.8.10: corretto blocco dump Volano->Puffer quando Volano->ACS e disabilitato; `source_to_acs` ora rispetta i moduli abilitati.

@@ -80,11 +80,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     vol_cfg = cfg.get("volano", {})
     res_cfg = cfg.get("resistance", {})
     curve_cfg = cfg.get("curva_climatica", {})
-    curve_enabled = cfg.get("modules_enabled", {}).get("curva_climatica", True)
+    modules_enabled = cfg.get("modules_enabled", {})
+    curve_enabled = modules_enabled.get("curva_climatica", True)
     gas_cfg = cfg.get("gas_emergenza", {})
-    gas_enabled = cfg.get("modules_enabled", {}).get("gas_emergenza", False)
+    gas_enabled = modules_enabled.get("gas_emergenza", False)
     legna_cfg = cfg.get("caldaia_legna", {})
-    legna_enabled = cfg.get("modules_enabled", {}).get("caldaia_legna", False)
+    legna_enabled = modules_enabled.get("caldaia_legna", False)
 
     def get_num(eid: str | None, default: float = 0.0) -> float:
         if not eid:
@@ -369,28 +370,39 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     puf_min_acs = float(puf_cfg.get("min_to_acs_c", 60.0))
     puf_h_acs = float(puf_cfg.get("hyst_to_acs_c", 5.0))
     last_vol_to_puf = bool(_LAST.get("volano_to_puffer"))
+    solar_enabled = modules_enabled.get("solare", True)
+    volano_to_acs_enabled = modules_enabled.get("volano_to_acs", True)
+    puffer_to_acs_enabled = modules_enabled.get("puffer_to_acs", True)
 
-    if solar_flow_ok and (t_sol >= t_acs + solar_delta_on) and (t_acs < acs_sp) and (not acs_max_hit):
+    if solar_enabled and solar_flow_ok and (t_sol >= t_acs + solar_delta_on) and (t_acs < acs_sp) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}°C >= T_ACS+delta {t_acs + solar_delta_on:.1f}°C"
-    elif solar_flow_ok and last_source == "SOLAR" and (t_sol >= t_acs + solar_delta_hold) and (t_acs < acs_sp) and (not acs_max_hit):
+    elif solar_enabled and solar_flow_ok and last_source == "SOLAR" and (t_sol >= t_acs + solar_delta_hold) and (t_acs < acs_sp) and (not acs_max_hit):
         source_to_acs = "SOLAR"
         source_reason = f"T_SOL {t_sol:.1f}°C >= T_ACS+delta_hold {t_acs + solar_delta_hold:.1f}°C"
-    elif dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit) and (t_volano >= vol_min_acs + vol_h_acs):
+    elif volano_to_acs_enabled and dest == "ACS" and (t_volano >= t_acs + delta_start) and (not vol_max_hit) and (t_volano >= vol_min_acs + vol_h_acs):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}°C >= T_ACS+{delta_start:.1f}°C ({t_acs + delta_start:.1f}°C)"
-    elif dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (not vol_max_hit) and (t_volano >= vol_min_acs):
+    elif volano_to_acs_enabled and dest == "ACS" and last_source == "VOLANO" and (t_volano >= t_acs + delta_hold) and (not vol_max_hit) and (t_volano >= vol_min_acs):
         source_to_acs = "VOLANO"
         source_reason = f"T_VOL {t_volano:.1f}°C >= T_ACS+{delta_hold:.1f}°C ({t_acs + delta_hold:.1f}°C)"
-    elif dest == "ACS" and (t_puffer >= t_acs + puf_to_acs_start) and (t_puffer >= puf_min_acs + puf_h_acs):
+    elif puffer_to_acs_enabled and dest == "ACS" and (t_puffer >= t_acs + puf_to_acs_start) and (t_puffer >= puf_min_acs + puf_h_acs):
         source_to_acs = "PUFFER"
         source_reason = f"T_PUF {t_puffer:.1f}°C >= T_ACS+delta {t_acs + puf_to_acs_start:.1f}°C"
-    elif dest == "ACS" and last_source == "PUFFER" and (t_puffer >= t_acs + puf_to_acs_hold) and (t_puffer >= puf_min_acs):
+    elif puffer_to_acs_enabled and dest == "ACS" and last_source == "PUFFER" and (t_puffer >= t_acs + puf_to_acs_hold) and (t_puffer >= puf_min_acs):
         source_to_acs = "PUFFER"
         source_reason = f"T_PUF {t_puffer:.1f}°C >= T_ACS+delta_hold {t_acs + puf_to_acs_hold:.1f}°C"
     else:
         source_to_acs = "OFF"
-        source_reason = "Nessuna sorgente selezionata (v0.1)."
+        disabled = []
+        if not solar_enabled:
+            disabled.append("SOLARE")
+        if not volano_to_acs_enabled:
+            disabled.append("VOLANO->ACS")
+        if not puffer_to_acs_enabled:
+            disabled.append("PUFFER->ACS")
+        disabled_txt = f" Moduli OFF: {', '.join(disabled)}." if disabled else ""
+        source_reason = f"Nessuna sorgente selezionata (v0.1).{disabled_txt}"
 
     runtime_cfg = cfg.get("runtime", {})
     force_until = float(runtime_cfg.get("force_acs_puffer_until_ts", 0.0) or 0.0)
