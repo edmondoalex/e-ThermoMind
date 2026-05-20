@@ -549,3 +549,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-20] Release 0.8.12: dump automatico Volano->Puffer a VOL_MAX per creare headroom FV e priorita reale alla forzatura manuale scarico puffer.
 
 - [2026-05-20] Release 0.8.13: Volano->Puffer autonomo con modulo ON quando ACS non usa il volano; ACS mantiene priorita se Volano->ACS e attivo e richiesto.
+
+- [2026-05-20] Release 0.8.14: aggiunta pagina ALLARMI con layout operativo e allarmi chiari su blocchi ACS, puffer saturo, forzature, resistenze manuali e watchdog ACS da volano.

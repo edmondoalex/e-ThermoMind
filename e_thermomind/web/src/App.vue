@@ -24,6 +24,7 @@
         <button :class="{active: tab==='admin'}" @click="tab='admin'">Admin</button>
         <button :class="{active: tab==='guide'}" @click="tab='guide'">Guida</button>
         <button :class="{active: tab==='energy'}" @click="tab='energy'">Energy</button>
+        <button :class="{active: tab==='alarms'}" @click="tab='alarms'">ALLARMI</button>
         <button :class="{active: tab==='scheduler'}" @click="tab='scheduler'">Scheduler</button>
       </nav>
     </header>
@@ -1149,6 +1150,51 @@
           </div>
         </div>
       </section>
+
+        <section v-else-if="tab==='alarms'" class="card alarms-page">
+          <div class="alarms-hero">
+            <div>
+              <h2>ALLARMI</h2>
+              <div class="muted">Diagnostica degli incastri tra priorita ACS, scarico volano, puffer e resistenze.</div>
+            </div>
+            <div class="alarm-score" :class="activeAlarms.length ? 'hot' : 'calm'">
+              <div class="alarm-score-value">{{ activeAlarms.length }}</div>
+              <div class="alarm-score-label">{{ activeAlarms.length === 1 ? 'allarme attivo' : 'allarmi attivi' }}</div>
+            </div>
+          </div>
+          <div class="alarm-summary-grid">
+            <div class="alarm-summary">
+              <div class="k">Source ACS</div>
+              <div class="v">{{ d?.computed?.source_to_acs || '-' }}</div>
+            </div>
+            <div class="alarm-summary">
+              <div class="k">Volano -> Puffer</div>
+              <div class="v">{{ d?.computed?.flags?.volano_to_puffer ? 'ATTIVO' : 'STOP' }}</div>
+            </div>
+            <div class="alarm-summary">
+              <div class="k">Step resistenze</div>
+              <div class="v">{{ d?.computed?.resistance_step ?? '-' }}/3</div>
+            </div>
+            <div class="alarm-summary">
+              <div class="k">Aggiornamento</div>
+              <div class="v small-v">{{ lastUpdate ? lastUpdate.toLocaleTimeString() : '-' }}</div>
+            </div>
+          </div>
+          <div class="alarms-list">
+            <div v-for="alarm in alarmsList" :key="alarm.key" class="alarm-card" :class="alarm.active ? `alarm-${alarm.level}` : 'alarm-idle'">
+              <div class="alarm-head">
+                <div>
+                  <div class="alarm-title">{{ alarm.title }}</div>
+                  <div class="muted">{{ alarm.subtitle }}</div>
+                </div>
+                <span class="badge" :class="alarm.active ? alarm.level : 'ok'">{{ alarm.active ? alarm.label : 'OK' }}</span>
+              </div>
+              <div class="alarm-body">{{ alarm.message }}</div>
+              <div class="reason-box">{{ alarm.detail }}</div>
+              <div class="alarm-actions">{{ alarm.action }}</div>
+            </div>
+          </div>
+        </section>
 
         <section v-else-if="tab==='scheduler'" class="card">
           <h2>Scheduler</h2>
@@ -2634,6 +2680,7 @@ const initialTab = (() => {
   if (h.includes('admin')) return 'admin'
   if (h.includes('guide')) return 'guide'
   if (h.includes('energy')) return 'energy'
+  if (h.includes('alarms') || h.includes('allarmi')) return 'alarms'
   return 'user'
 })()
 const tab = ref(initialTab)
@@ -3013,6 +3060,95 @@ const flowVolanoToAcs = computed(() => d.value?.computed?.source_to_acs === 'VOL
 const flowPufferToAcs = computed(() => d.value?.computed?.source_to_acs === 'PUFFER')
 const forceAcsPuffer = computed(() => d.value?.computed?.force_acs_puffer || { active: false, remaining_s: 0, reason: 'Forzatura OFF.' })
 const forceVolanoPuffer = computed(() => d.value?.computed?.force_volano_puffer || { active: false, remaining_s: 0, reason: 'Forzatura OFF.' })
+function isOnState(value){
+  return String(value || '').trim().toLowerCase() === 'on'
+}
+function trendDelta(values, count = 8){
+  if (!Array.isArray(values) || values.length < 3) return null
+  const tail = values.slice(-count).filter(v => Number.isFinite(Number(v))).map(Number)
+  if (tail.length < 3) return null
+  return tail[tail.length - 1] - tail[0]
+}
+const alarmsList = computed(() => {
+  const c = d.value?.computed || {}
+  const i = d.value?.inputs || {}
+  const flags = c.flags || {}
+  const forceVtp = c.force_volano_puffer || {}
+  const r6On = isOnState(act.value?.r6_valve_pdc_to_integrazione_acs?.state)
+  const r13On = isOnState(act.value?.r13_pump_pdc_to_acs_puffer?.state)
+  const vtaPhysical = r6On && r13On
+  const sourceVolano = c.source_to_acs === 'VOLANO'
+  const acsTrend = trendDelta(history.value.t_acs, 10)
+  const acsNotRising = sourceVolano && acsTrend !== null && acsTrend < 0.2
+  const pufferMax = !!c.safety?.puffer_max_hit
+  const volanoMax = !!c.safety?.volano_max_hit
+  const acsSatisfied = !c.acs_need
+  const resStep = Number(c.resistance_step || 0)
+  const resActualOn = ['r22_resistenza_1_volano_pdc', 'r23_resistenza_2_volano_pdc', 'r24_resistenza_3_volano_pdc', 'generale_resistenze_volano_pdc']
+    .some(key => isOnState(act.value?.[key]?.state))
+  const resManualMismatch = resActualOn && resStep === 0
+  const vtpForceActive = !!forceVtp.active && !!forceVtp.can_apply
+  const acsPhysicalStuck = sourceVolano && !vtaPhysical
+  const watchdogRisk = sourceVolano && (!vtaPhysical || acsNotRising)
+  return [
+    {
+      key: 'acs_volano_physical',
+      level: 'danger',
+      label: 'BLOCCO',
+      active: acsPhysicalStuck,
+      title: 'ACS richiede ma Volano -> ACS non trasferisce fisicamente',
+      subtitle: `Source ACS: ${c.source_to_acs || '-'} | R6 ${r6On ? 'ON' : 'OFF'} | R13 ${r13On ? 'ON' : 'OFF'}`,
+      message: 'La logica ha scelto il volano per scaldare ACS. Se la valvola R6 o la pompa R13 non sono realmente ON, ACS non riceve calore e la priorita ACS puo tenere bloccato Volano -> Puffer.',
+      detail: c.module_reasons?.volano_to_acs || 'Nessun dettaglio Volano -> ACS disponibile.',
+      action: 'Controlla R6 e R13, ritardi start/stop e stato reale degli attuatori. Se ACS non sale, serve sbloccare la priorita o correggere il comando fisico.'
+    },
+    {
+      key: 'puffer_max_no_sink',
+      level: 'warn',
+      label: 'SATURO',
+      active: pufferMax && volanoMax && acsSatisfied,
+      title: 'Puffer a massimo senza sink termico utile',
+      subtitle: `Puffer ${fmtTemp(i.t_puffer)} | Volano ${fmtTemp(i.t_volano)} | ACS ${fmtTemp(i.t_acs)}`,
+      message: 'Il puffer ha raggiunto il massimo configurato. Se anche ACS e soddisfatta e il volano e pieno, non c e un accumulo dove scaricare energia: le resistenze restano ferme e il sistema non assorbe altro FV termico.',
+      detail: `PUF_MAX=${pufferMax ? 'SI' : 'NO'} | VOL_MAX=${volanoMax ? 'SI' : 'NO'} | ACS need=${c.acs_need ? 'SI' : 'NO'} | Res step=${resStep}`,
+      action: 'Verifica soglie puffer.max_c e volano.max_c. Se vuoi piu accumulo, serve abbassare priorita ACS solo quando possibile o aumentare capacita/soglie in modo sicuro.'
+    },
+    {
+      key: 'force_vtp_priority',
+      level: 'warn',
+      label: 'FORZATURA',
+      active: vtpForceActive,
+      title: 'Forzatura manuale Volano -> Puffer attiva',
+      subtitle: `Residuo ${Number(forceVtp.remaining_s || 0)}s | can_apply=${forceVtp.can_apply ? 'SI' : 'NO'}`,
+      message: 'La forzatura Volano -> Puffer ha priorita live quando applicabile. Questo puo interrompere temporaneamente ACS anche se ACS avrebbe priorita automatica.',
+      detail: forceVtp.reason || 'Forzatura senza dettaglio disponibile.',
+      action: 'Usala solo quando vuoi davvero scaricare il volano nel puffer. Se ACS deve restare prioritaria, premi Stop scarico.'
+    },
+    {
+      key: 'manual_resistances_auto_off',
+      level: 'warn',
+      label: 'AUTO-OFF',
+      active: resManualMismatch,
+      title: 'Resistenze accese manualmente ma logica a step 0',
+      subtitle: `Step logico ${resStep} | Attuatori resistenze ${resActualOn ? 'ON' : 'OFF'}`,
+      message: 'I click sui riquadri resistenze non sono un override manuale permanente. Se la logica calcola step 0, il ciclo automatico puo spegnerle.',
+      detail: c.module_reasons?.resistenze_volano || 'Nessun dettaglio resistenze disponibile.',
+      action: 'Controlla blocchi come VOL_MAX, batteria in scarica, export sotto soglia, modulo resistenze OFF o potenza utile insufficiente.'
+    },
+    {
+      key: 'acs_volano_watchdog',
+      level: 'danger',
+      label: 'WATCHDOG',
+      active: watchdogRisk,
+      title: 'Watchdog consigliato: priorita ACS da volano potenzialmente incastrata',
+      subtitle: acsTrend === null ? 'Storico ACS non ancora sufficiente' : `Trend ACS ultimi campioni: ${acsTrend.toFixed(2)}C`,
+      message: 'Se source_to_acs resta VOLANO troppo a lungo, ma ACS non sale o gli attuatori non risultano ON, la priorita ACS puo bloccare Volano -> Puffer. Questo allarme segnala la condizione da proteggere con watchdog automatico.',
+      detail: `source_to_acs=${c.source_to_acs || '-'} | R6=${r6On ? 'ON' : 'OFF'} | R13=${r13On ? 'ON' : 'OFF'} | ACS trend=${acsTrend === null ? 'n/d' : acsTrend.toFixed(2) + 'C'}`,
+      action: 'Protezione futura: dopo un tempo massimo senza trasferimento reale o senza aumento ACS, liberare la priorita e permettere Volano -> Puffer.'
+    }
+  ]
+})
+const activeAlarms = computed(() => alarmsList.value.filter(a => a.active))
 const flowVolanoToPuffer = computed(() => d.value?.computed?.flags?.volano_to_puffer)
 const flowPufferToVolano = computed(() => false)
 const flowSolarToPuffer = computed(() => false)
@@ -4040,6 +4176,7 @@ onMounted(async()=>{
   if (hash.includes('admin')) tab.value = 'admin'
   if (hash.includes('guide')) tab.value = 'guide'
   if (hash.includes('energy')) tab.value = 'energy'
+  if (hash.includes('alarms') || hash.includes('allarmi')) tab.value = 'alarms'
   if (hash.includes('user')) tab.value = 'user'
   await loadAll(); 
   startPolling();
@@ -4051,6 +4188,7 @@ onMounted(async()=>{
     else if (h.includes('admin')) tab.value = 'admin'
     else if (h.includes('guide')) tab.value = 'guide'
     else if (h.includes('energy')) tab.value = 'energy'
+    else if (h.includes('alarms') || h.includes('allarmi')) tab.value = 'alarms'
     else if (h.includes('user')) tab.value = 'user'
   })
   focusInHandler = (e) => {
@@ -4150,6 +4288,31 @@ watch(tab, (val) => {
 .main{padding:18px;max-width:1100px;margin:0 auto;width:100%}
 .card{background:linear-gradient(180deg, rgba(11,16,26,.98), rgba(9,14,22,.98));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.38)}
 .card.inner{margin-top:14px}
+.alarms-page{border-radius:18px}
+.alarms-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:4px 2px 16px;border-bottom:1px solid var(--border)}
+.alarms-hero h2{margin:0 0 6px;font-size:28px}
+.alarm-score{min-width:132px;min-height:96px;border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(12,18,26,.68)}
+.alarm-score.hot{border-color:rgba(239,68,68,.55);background:linear-gradient(180deg, rgba(127,29,29,.35), rgba(12,18,26,.72))}
+.alarm-score.calm{border-color:rgba(87,227,214,.45);background:linear-gradient(180deg, rgba(20,83,45,.28), rgba(12,18,26,.72))}
+.alarm-score-value{font-size:42px;line-height:1;font-weight:800}
+.alarm-score-label{margin-top:6px;color:var(--muted);font-size:12px}
+.alarm-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+@media(min-width:820px){.alarm-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.alarm-summary{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:rgba(3,7,18,.42)}
+.alarm-summary .small-v{font-size:16px}
+.alarms-list{display:grid;grid-template-columns:1fr;gap:12px}
+.alarm-card{border:1px solid var(--border);border-radius:12px;padding:14px;background:rgba(8,13,22,.72);position:relative;overflow:hidden}
+.alarm-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:rgba(148,163,184,.5)}
+.alarm-card.alarm-warn{border-color:rgba(250,204,21,.35);background:linear-gradient(180deg, rgba(113,63,18,.18), rgba(8,13,22,.74))}
+.alarm-card.alarm-warn::before{background:#facc15}
+.alarm-card.alarm-danger{border-color:rgba(239,68,68,.42);background:linear-gradient(180deg, rgba(127,29,29,.22), rgba(8,13,22,.74))}
+.alarm-card.alarm-danger::before{background:#ef4444}
+.alarm-card.alarm-idle{opacity:.82}
+.alarm-card.alarm-idle::before{background:rgba(87,227,214,.45)}
+.alarm-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+.alarm-title{font-size:16px;font-weight:800;margin-bottom:3px}
+.alarm-body{line-height:1.45;margin:8px 0 10px;color:#dfe9f8}
+.alarm-actions{margin-top:10px;color:#bdeee8;border-top:1px solid var(--border);padding-top:10px;font-size:13px;line-height:1.35}
 .muted{color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 @media(min-width:760px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -4265,6 +4428,8 @@ details.form summary{cursor:pointer;list-style:none}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:#0b1f1c;background:var(--accent)}
 .badge.off{color:#f5f7fa;background:#3b3f46}
+.badge.warn{color:#231500;background:#facc15;border-color:rgba(250,204,21,.55)}
+.badge.danger{color:#fff;background:#ef4444;border-color:rgba(239,68,68,.65)}
 .badge.warn-blink{color:#0b1f1c;background:#ff6b6b;border-color:rgba(255,107,107,.6);animation:none}
 .presence{display:inline-block;margin-right:6px}
 .presence-ok{color:#22c55e}
