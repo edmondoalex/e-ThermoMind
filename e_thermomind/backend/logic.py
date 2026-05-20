@@ -448,36 +448,24 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         )
 
     volano_to_puffer = False
+    auto_volano_puffer_active = False
+    auto_volano_puffer_reason = ""
     evening_dump_active = False
     evening_dump_reason = ""
-    volano_max_dump_active = False
-    volano_max_dump_reason = ""
-    if volano_to_puffer_enabled and dest == "PUFFER" and (not puf_max_hit):
+    if volano_to_puffer_enabled and (source_to_acs == "OFF") and (not puf_max_hit):
         if (t_volano >= t_puffer + puf_delta_start) and (t_volano >= vol_min_puf + vol_h_puf):
             volano_to_puffer = True
+            auto_volano_puffer_active = True
+            auto_volano_puffer_reason = (
+                f"Auto VOLANO->PUFFER: modulo ON e delta utile. "
+                f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_start:.1f}C ({t_puffer + puf_delta_start:.1f}C)."
+            )
         elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
             volano_to_puffer = True
-    # Se il volano e' pieno, scaricalo nel puffer per liberare capacita'
-    # di accumulo. VOL_MAX deve bloccare le cariche, non gli scarichi.
-    if (
-        (not volano_to_puffer)
-        and volano_to_puffer_enabled
-        and vol_max_hit
-        and (source_to_acs == "OFF")
-        and (not puf_max_hit)
-    ):
-        if (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
-            volano_to_puffer = True
-            volano_max_dump_active = True
-            volano_max_dump_reason = (
-                f"VOL_MAX attivo: scarico VOLANO->PUFFER per liberare capacita. "
+            auto_volano_puffer_active = True
+            auto_volano_puffer_reason = (
+                f"Auto hold VOLANO->PUFFER: modulo ON e delta mantenimento. "
                 f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C)."
-            )
-        else:
-            volano_max_dump_reason = (
-                f"VOL_MAX attivo ma puffer non scaricabile: "
-                f"T_VOL {t_volano:.1f}C | T_PUF {t_puffer:.1f}C | "
-                f"serve T_VOL >= T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C)"
             )
     # Fine giornata: se ACS resta prioritaria ma nessuna sorgente riesce a prenderla,
     # scarica il calore del volano nel puffer (tipicamente più freddo) per non sprecarlo.
@@ -641,13 +629,13 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         f"Min {vol_min_puf:.1f}C (+{vol_h_puf:.1f}C) | "
         f"Delay start {vtp_start}s / stop {vtp_stop}s | "
         f"LastVolToPuf={'SI' if last_vol_to_puf else 'NO'} | "
+        f"AutoNow={'SI' if auto_volano_puffer_active else 'NO'} | "
         f"DumpMode={evening_dump_trigger} | "
         f"DumpAfter {evening_dump_after_h:.2f}h | DumpNow={'SI' if evening_dump_active else 'NO'} | "
-        f"DumpMax={'SI' if volano_max_dump_active else 'NO'} | "
         f"ForceNow={'SI' if force_vtp_active and force_vtp_can_apply else 'NO'}"
     )
-    if volano_max_dump_reason:
-        volano_to_puffer_reason = f"{volano_to_puffer_reason} | {volano_max_dump_reason}"
+    if auto_volano_puffer_reason:
+        volano_to_puffer_reason = f"{volano_to_puffer_reason} | {auto_volano_puffer_reason}"
     if evening_dump_reason:
         volano_to_puffer_reason = f"{volano_to_puffer_reason} | {evening_dump_reason}"
     res_blockers: list[str] = []
@@ -1183,7 +1171,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "module_summaries": {
                 "solare": "Regola: attivo se T_SOL >= T_ACS + d_on (o d_hold se già attivo).",
                 "volano_to_acs": "Regola: Dest=ACS e T_VOL >= T_ACS+Δ e T_VOL >= Min.",
-                "volano_to_puffer": "Regola: Dest=PUFFER e T_VOL >= T_PUF+Δ e T_VOL >= Min. Fine giornata: se Dest=ACS ma non prendibile, scarica VOLANO su PUFFER dopo orario impostato.",
+                "volano_to_puffer": "Regola: se modulo ON e ACS non sta usando il volano (ACS soddisfatta oppure Volano->ACS OFF/non selezionabile), scarica VOLANO su PUFFER quando T_VOL >= T_PUF+Δ e T_VOL >= Min.",
                 "puffer_to_acs": "Regola: Dest=ACS e T_PUF >= T_ACS+Δ e T_PUF >= Min.",
                 "miscelatrice": "Regola: mantiene ΔT mandata/ritorno verso setpoint con impulsi.",
                 "curva_climatica": "Regola: SP da curva in base a T_EXT.",

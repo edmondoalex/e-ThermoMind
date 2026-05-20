@@ -567,3 +567,5 @@
 - [2026-05-20] Regole moduli OFF: le decisioni escludono i moduli disabilitati; VOL_MAX non blocca piu scarichi Volano->ACS/Volano->Puffer, blocca solo carica/resistenze. Forzatura Volano->Puffer rifiutata se non applicabile e bottone disabilitato. Release 0.8.11.
 
 - [2026-05-20] Volano pieno: se VOL_MAX blocca le resistenze e il puffer puo ricevere calore, parte automaticamente Volano->Puffer per liberare capacita. La forzatura manuale Volano->Puffer ora ha priorita live sugli altri trasferimenti quando applicabile. Release 0.8.12.
+
+- [2026-05-20] Correzione dump Volano->Puffer: rimosso trigger speciale VOL_MAX; il modulo parte autonomamente quando Volano->ACS non sta usando il volano (ACS soddisfatta o modulo spento/non selezionabile) e T_VOL supera T_PUF con delta utile. Release 0.8.13.

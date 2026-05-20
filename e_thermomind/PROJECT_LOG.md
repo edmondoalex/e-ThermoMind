@@ -547,3 +547,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-20] Release 0.8.11: gating completo dei moduli OFF nelle decisioni, scarico volano non bloccato da VOL_MAX, e forzatura Volano->Puffer senza countdown se non applicabile.
 
 - [2026-05-20] Release 0.8.12: dump automatico Volano->Puffer a VOL_MAX per creare headroom FV e priorita reale alla forzatura manuale scarico puffer.
+
+- [2026-05-20] Release 0.8.13: Volano->Puffer autonomo con modulo ON quando ACS non usa il volano; ACS mantiene priorita se Volano->ACS e attivo e richiesto.
