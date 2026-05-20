@@ -565,3 +565,5 @@
 - [2026-05-20] Logica sorgenti ACS: i moduli disabilitati non possono piu selezionare `source_to_acs`; se Volano->ACS e spento, il dump serale Volano->Puffer puo partire con ACS non prendibile. Release 0.8.10.
 
 - [2026-05-20] Regole moduli OFF: le decisioni escludono i moduli disabilitati; VOL_MAX non blocca piu scarichi Volano->ACS/Volano->Puffer, blocca solo carica/resistenze. Forzatura Volano->Puffer rifiutata se non applicabile e bottone disabilitato. Release 0.8.11.
+
+- [2026-05-20] Volano pieno: se VOL_MAX blocca le resistenze e il puffer puo ricevere calore, parte automaticamente Volano->Puffer per liberare capacita. La forzatura manuale Volano->Puffer ora ha priorita live sugli altri trasferimenti quando applicabile. Release 0.8.12.

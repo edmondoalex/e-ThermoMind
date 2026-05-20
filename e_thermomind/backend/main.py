@@ -1718,6 +1718,7 @@ async def _apply_transfer_live(decision_data: dict) -> None:
 
     flags = decision_data.get("computed", {}).get("flags", {})
     force_acs_puffer = (decision_data.get("computed", {}) or {}).get("force_acs_puffer", {}) or {}
+    force_volano_puffer = (decision_data.get("computed", {}) or {}).get("force_volano_puffer", {}) or {}
     modules = cfg.get("modules_enabled", {})
     act = cfg.get("actuators", {})
 
@@ -1727,6 +1728,7 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     r14 = act.get("r14_pump_puffer_to_acs")
 
     force_puf_acs = bool(force_acs_puffer.get("active")) and bool(force_acs_puffer.get("can_apply"))
+    force_vol_puf = bool(force_volano_puffer.get("active")) and bool(force_volano_puffer.get("can_apply"))
     if not (modules.get("volano_to_acs", True) or modules.get("volano_to_puffer", True) or modules.get("puffer_to_acs", True) or force_puf_acs):
         await _set_valve_only(r6, False)
         await _set_valve_only(r7, False)
@@ -1739,7 +1741,11 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     want_vol_puf = bool(flags.get("volano_to_puffer")) and modules.get("volano_to_puffer", True)
     want_puf_acs = (bool(flags.get("puffer_to_acs")) and modules.get("puffer_to_acs", True)) or force_puf_acs
 
-    if force_puf_acs:
+    if force_vol_puf:
+        want_vol_acs = False
+        want_vol_puf = modules.get("volano_to_puffer", True)
+        want_puf_acs = False
+    elif force_puf_acs:
         want_vol_acs = False
         want_vol_puf = False
     elif want_vol_acs:

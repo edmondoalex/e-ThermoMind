@@ -545,3 +545,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-20] Release 0.8.10: corretto blocco dump Volano->Puffer quando Volano->ACS e disabilitato; `source_to_acs` ora rispetta i moduli abilitati.
 
 - [2026-05-20] Release 0.8.11: gating completo dei moduli OFF nelle decisioni, scarico volano non bloccato da VOL_MAX, e forzatura Volano->Puffer senza countdown se non applicabile.
+
+- [2026-05-20] Release 0.8.12: dump automatico Volano->Puffer a VOL_MAX per creare headroom FV e priorita reale alla forzatura manuale scarico puffer.
