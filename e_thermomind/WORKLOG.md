@@ -571,3 +571,5 @@
 - [2026-05-20] Correzione dump Volano->Puffer: rimosso trigger speciale VOL_MAX; il modulo parte autonomamente quando Volano->ACS non sta usando il volano (ACS soddisfatta o modulo spento/non selezionabile) e T_VOL supera T_PUF con delta utile. Release 0.8.13.
 
 - [2026-05-20] UI: nuova pagina ALLARMI con dashboard diagnostica, riepilogo stato, card allarmi spiegate e azioni consigliate per incastri ACS/Volano/Puffer/Resistenze. Release 0.8.14.
+
+- [2026-05-20] Allarmi avanzati: aggiunti controlli su attuatori incoerenti, R13, FV non usato, resa trasferimenti, config mancanti e solare tutto chiuso. Solare OFF ora segue la modalita giorno/notte e lascia sempre una via aperta. Release 0.8.15.

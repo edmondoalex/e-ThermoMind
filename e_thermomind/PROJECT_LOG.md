@@ -551,3 +551,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-20] Release 0.8.13: Volano->Puffer autonomo con modulo ON quando ACS non usa il volano; ACS mantiene priorita se Volano->ACS e attivo e richiesto.
 
 - [2026-05-20] Release 0.8.14: aggiunta pagina ALLARMI con layout operativo e allarmi chiari su blocchi ACS, puffer saturo, forzature, resistenze manuali e watchdog ACS da volano.
+
+- [2026-05-20] Release 0.8.15: allarmi aggiuntivi per coerenza attuatori, R13, FV/resistenze, resa trasferimenti, configurazione e solare tutto chiuso; il modulo solare OFF mantiene una via aperta seguendo la modalita configurata.

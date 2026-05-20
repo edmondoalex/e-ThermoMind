@@ -3075,7 +3075,13 @@ const alarmsList = computed(() => {
   const flags = c.flags || {}
   const forceVtp = c.force_volano_puffer || {}
   const r6On = isOnState(act.value?.r6_valve_pdc_to_integrazione_acs?.state)
+  const r7On = isOnState(act.value?.r7_valve_pdc_to_integrazione_puffer?.state)
+  const r14On = isOnState(act.value?.r14_pump_puffer_to_acs?.state)
   const r13On = isOnState(act.value?.r13_pump_pdc_to_acs_puffer?.state)
+  const r8On = isOnState(act.value?.r8_valve_solare_notte_low_temp?.state)
+  const r9On = isOnState(act.value?.r9_valve_solare_normal_funz?.state)
+  const r10On = isOnState(act.value?.r10_valve_solare_precedenza_acs?.state)
+  const vtpForceActive = !!forceVtp.active && !!forceVtp.can_apply
   const vtaPhysical = r6On && r13On
   const sourceVolano = c.source_to_acs === 'VOLANO'
   const acsTrend = trendDelta(history.value.t_acs, 10)
@@ -3086,11 +3092,116 @@ const alarmsList = computed(() => {
   const resStep = Number(c.resistance_step || 0)
   const resActualOn = ['r22_resistenza_1_volano_pdc', 'r23_resistenza_2_volano_pdc', 'r24_resistenza_3_volano_pdc', 'generale_resistenze_volano_pdc']
     .some(key => isOnState(act.value?.[key]?.state))
+  const missingRequired = [
+    ['volano_to_acs', 'r6_valve_pdc_to_integrazione_acs'],
+    ['volano_to_acs', 'r13_pump_pdc_to_acs_puffer'],
+    ['volano_to_puffer', 'r7_valve_pdc_to_integrazione_puffer'],
+    ['volano_to_puffer', 'r13_pump_pdc_to_acs_puffer'],
+    ['puffer_to_acs', 'r14_pump_puffer_to_acs'],
+    ['resistenze_volano', 'r22_resistenza_1_volano_pdc'],
+    ['resistenze_volano', 'generale_resistenze_volano_pdc']
+  ].filter(([moduleKey, actKey]) => modules.value?.[moduleKey] !== false && !act.value?.[actKey]?.entity_id)
+  const wantedActuators = [
+    { key: 'R6', wanted: !!flags.volano_to_acs, actual: r6On },
+    { key: 'R7', wanted: !!flags.volano_to_puffer || vtpForceActive, actual: r7On },
+    { key: 'R13', wanted: !!flags.volano_to_acs || !!flags.volano_to_puffer || vtpForceActive, actual: r13On },
+    { key: 'R14', wanted: !!flags.puffer_to_acs || !!c.force_acs_puffer?.active, actual: r14On }
+  ]
+  const requestedButOff = wantedActuators.filter(x => x.wanted && !x.actual).map(x => x.key)
+  const onButLogicStop = wantedActuators.filter(x => !x.wanted && x.actual).map(x => x.key)
+  const r13Conflict = r13On && ((r6On && r7On) || (r13On && r14On))
+  const usefulPv = Number(i.extra_safe_w || 0) >= Number(sp.value?.resistance?.thresholds_w?.[0] || 1000) || Number(i.grid_export_w || 0) >= Number(sp.value?.resistance?.thresholds_w?.[0] || 1000)
+  const pvAvailableResOff = usefulPv && modules.value?.resistenze_volano !== false && resStep === 0 && !c.safety?.volano_max_hit
+  const pufferTrend = trendDelta(history.value.t_puffer, 10)
+  const acsDestTrend = trendDelta(history.value.t_acs, 10)
+  const transferNoRise =
+    (!!flags.volano_to_puffer && pufferTrend !== null && pufferTrend < 0.2) ||
+    (!!flags.volano_to_acs && acsDestTrend !== null && acsDestTrend < 0.2) ||
+    (!!flags.puffer_to_acs && acsDestTrend !== null && acsDestTrend < 0.2)
   const resManualMismatch = resActualOn && resStep === 0
-  const vtpForceActive = !!forceVtp.active && !!forceVtp.can_apply
   const acsPhysicalStuck = sourceVolano && !vtaPhysical
   const watchdogRisk = sourceVolano && (!vtaPhysical || acsNotRising)
+  const solarAllClosed = !r8On && !r9On && !r10On
   return [
+    {
+      key: 'solar_all_closed',
+      level: 'danger',
+      label: 'SOLARE',
+      active: solarAllClosed,
+      title: 'Solare con tutte le vie chiuse',
+      subtitle: `R8 ${r8On ? 'ON' : 'OFF'} | R9 ${r9On ? 'ON' : 'OFF'} | R10 ${r10On ? 'ON' : 'OFF'} | Modulo ${modules.value?.solare ? 'ON' : 'OFF'} | Modalita ${sp.value?.solare?.mode || 'auto'}`,
+      message: 'Il circuito solare non deve restare con R8, R9 e R10 tutte chiuse. Anche con modulo solare OFF deve rimanere aperta una via idraulica secondo la modalita configurata, per evitare ristagno e sovratemperatura nei pannelli.',
+      detail: modules.value?.solare === false
+        ? 'Modulo solare OFF: la logica deve disabilitare la precedenza ACS, ma lasciare aperta R8 in notte fissa/notte oppure R9 in giorno.'
+        : 'Modulo solare ON: R10 puo chiudere R8/R9 solo quando la precedenza ACS solare e realmente attiva.',
+      action: 'Controlla subito gli stati fisici R8/R9/R10. Se sono tutte OFF, apri manualmente una via e verifica il comando HA o il rele.'
+    },
+    {
+      key: 'actuator_requested_off',
+      level: 'danger',
+      label: 'ATTUATORE',
+      active: requestedButOff.length > 0,
+      title: 'Attuatore richiesto ma fisicamente OFF',
+      subtitle: requestedButOff.length ? `Mancano ON: ${requestedButOff.join(', ')}` : 'Tutti gli attuatori richiesti risultano coerenti',
+      message: 'La logica sta chiedendo un trasferimento o una pompa, ma uno o piu attuatori associati non risultano accesi. Questo puo creare un incastro: la decisione sembra attiva, ma l acqua non circola davvero.',
+      detail: `Volano->ACS=${flags.volano_to_acs ? 'SI' : 'NO'} | Volano->Puffer=${flags.volano_to_puffer ? 'SI' : 'NO'} | Puffer->ACS=${flags.puffer_to_acs ? 'SI' : 'NO'} | R6=${r6On ? 'ON' : 'OFF'} R7=${r7On ? 'ON' : 'OFF'} R13=${r13On ? 'ON' : 'OFF'} R14=${r14On ? 'ON' : 'OFF'}`,
+      action: 'Verifica rele, entita HA, ritardi start e automazioni esterne. Se il comando non arriva, la logica va in attesa ma il circuito resta fermo.'
+    },
+    {
+      key: 'actuator_on_logic_stop',
+      level: 'warn',
+      label: 'COERENZA',
+      active: onButLogicStop.length > 0,
+      title: 'Attuatore ON mentre la logica lo vuole fermo',
+      subtitle: onButLogicStop.length ? `ON fuori logica: ${onButLogicStop.join(', ')}` : 'Nessun attuatore fuori logica',
+      message: 'Un rele risulta acceso anche se il relativo percorso non e richiesto. Puo essere un comando manuale, un override esterno o un rele rimasto nello stato precedente.',
+      detail: `R6=${r6On ? 'ON' : 'OFF'} R7=${r7On ? 'ON' : 'OFF'} R13=${r13On ? 'ON' : 'OFF'} R14=${r14On ? 'ON' : 'OFF'}`,
+      action: 'Controlla se hai attivato manualmente il rele, se ci sono automazioni HA esterne o se il modulo e spento ma il rele e rimasto ON.'
+    },
+    {
+      key: 'r13_conflict',
+      level: 'danger',
+      label: 'CONFLITTO',
+      active: r13Conflict,
+      title: 'Conflitto pompa comune R13 o valvole incompatibili',
+      subtitle: `R6 ${r6On ? 'ON' : 'OFF'} | R7 ${r7On ? 'ON' : 'OFF'} | R13 ${r13On ? 'ON' : 'OFF'} | R14 ${r14On ? 'ON' : 'OFF'}`,
+      message: 'R13 e una pompa comune ai trasferimenti da volano. Se le valvole non corrispondono al percorso scelto, o R13 lavora insieme a un circuito incompatibile, il flusso puo andare dove non deve.',
+      detail: `Volano->ACS=${flags.volano_to_acs ? 'SI' : 'NO'} | Volano->Puffer=${flags.volano_to_puffer ? 'SI' : 'NO'} | Puffer->ACS=${flags.puffer_to_acs ? 'SI' : 'NO'}`,
+      action: 'R6 e R7 non devono essere ON insieme. Verifica anche che R14 non lavori in parallelo a R13 se i circuiti non lo permettono.'
+    },
+    {
+      key: 'pv_available_res_off',
+      level: 'warn',
+      label: 'FV NON USATO',
+      active: pvAvailableResOff,
+      title: 'FV disponibile ma resistenze ferme',
+      subtitle: `Export ${fmtW(i.grid_export_w)} | Possibile ${fmtW(i.extra_safe_w)} | Step ${resStep}`,
+      message: 'C e potenza FV utile, il modulo resistenze e ON e il volano non e a massimo, ma la logica tiene le resistenze a step 0.',
+      detail: c.module_reasons?.resistenze_volano || 'Nessun dettaglio resistenze disponibile.',
+      action: 'Controlla soglie step, batteria in scarica, export_off_w, extra_safe_w e potenza effettiva. Questo allarme aiuta a capire perche l energia non entra nel volano.'
+    },
+    {
+      key: 'transfer_active_no_rise',
+      level: 'warn',
+      label: 'RESA',
+      active: transferNoRise,
+      title: 'Trasferimento attivo ma temperatura destinazione non sale',
+      subtitle: `Trend ACS ${acsDestTrend === null ? 'n/d' : acsDestTrend.toFixed(2) + 'C'} | Trend puffer ${pufferTrend === null ? 'n/d' : pufferTrend.toFixed(2) + 'C'}`,
+      message: 'Un trasferimento risulta attivo, ma la temperatura della destinazione non cresce negli ultimi campioni. Puo indicare pompa ferma, aria, valvola sbagliata o sonda non rappresentativa.',
+      detail: `Volano->ACS=${flags.volano_to_acs ? 'SI' : 'NO'} | Volano->Puffer=${flags.volano_to_puffer ? 'SI' : 'NO'} | Puffer->ACS=${flags.puffer_to_acs ? 'SI' : 'NO'}`,
+      action: 'Controlla fisicamente portata, valvole, pompe e sonde. Se il trend resta piatto per molti minuti serve un watchdog automatico.'
+    },
+    {
+      key: 'missing_config',
+      level: 'danger',
+      label: 'CONFIG',
+      active: missingRequired.length > 0,
+      title: 'Modulo ON ma attuatori o sensori essenziali mancanti',
+      subtitle: missingRequired.length ? missingRequired.map(([m, a]) => `${m}:${a}`).join(' | ') : 'Configurazione minima presente',
+      message: 'Un modulo e abilitato ma manca almeno una entita attuatore necessaria. La logica puo calcolare correttamente, ma il comando fisico non puo essere eseguito.',
+      detail: 'Controllo configurazione attuatori principali per trasferimenti e resistenze.',
+      action: 'Completa la mappatura in Admin oppure spegni il modulo finche gli attuatori non sono configurati.'
+    },
     {
       key: 'acs_volano_physical',
       level: 'danger',

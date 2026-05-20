@@ -1794,16 +1794,6 @@ async def _apply_solar_live(decision_data: dict) -> None:
         return
     if not ha.enabled:
         return
-    if not cfg.get("modules_enabled", {}).get("solare", True):
-        act = cfg.get("actuators", {})
-        r8 = act.get("r8_valve_solare_notte_low_temp")
-        r9 = act.get("r9_valve_solare_normal_funz")
-        r10 = act.get("r10_valve_solare_precedenza_acs")
-        await _set_actuator(r8, False)
-        await _set_actuator(r9, False)
-        await _set_actuator(r10, False)
-        return
-
     sol_cfg = cfg.get("solare", {})
     mode = sol_cfg.get("mode", "auto")
     force_night = bool(sol_cfg.get("force_night_on_startup"))
@@ -1818,6 +1808,14 @@ async def _apply_solar_live(decision_data: dict) -> None:
     for eid in (r8, r9, r10):
         if eid:
             manual_overrides.pop(eid, None)
+
+    if not cfg.get("modules_enabled", {}).get("solare", True):
+        # Fail-safe idraulico: modulo solare OFF disabilita solo la logica ACS,
+        # ma mantiene una via aperta seguendo la modalita giorno/notte configurata.
+        await _set_actuator(r10, False)
+        await _set_actuator(r8, bool(night))
+        await _set_actuator(r9, not bool(night))
+        return
 
     # Cutback: se ACS o solare troppo caldi
     ent = cfg.get("entities", {})
