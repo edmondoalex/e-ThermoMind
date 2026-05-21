@@ -555,3 +555,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-20] Release 0.8.15: allarmi aggiuntivi per coerenza attuatori, R13, FV/resistenze, resa trasferimenti, configurazione e solare tutto chiuso; il modulo solare OFF mantiene una via aperta seguendo la modalita configurata.
 
 - [2026-05-21] Release 0.8.16: aggiunto controllo Puffer MAX in UI/Admin e setpoint MQTT/HA per regolare la soglia puffer_max_hit.
+
+- [2026-05-21] Release 0.8.17: corretto Volano->Puffer automatico, non richiede piu source_to_acs=OFF ma solo che source_to_acs non sia VOLANO.

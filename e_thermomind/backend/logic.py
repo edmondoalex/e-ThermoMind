@@ -452,19 +452,20 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     auto_volano_puffer_reason = ""
     evening_dump_active = False
     evening_dump_reason = ""
-    if volano_to_puffer_enabled and (source_to_acs == "OFF") and (not puf_max_hit):
+    volano_busy_for_acs = source_to_acs == "VOLANO"
+    if volano_to_puffer_enabled and (not volano_busy_for_acs) and (not puf_max_hit):
         if (t_volano >= t_puffer + puf_delta_start) and (t_volano >= vol_min_puf + vol_h_puf):
             volano_to_puffer = True
             auto_volano_puffer_active = True
             auto_volano_puffer_reason = (
-                f"Auto VOLANO->PUFFER: modulo ON e delta utile. "
+                f"Auto VOLANO->PUFFER: modulo ON, volano non impegnato su ACS e delta utile. "
                 f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_start:.1f}C ({t_puffer + puf_delta_start:.1f}C)."
             )
         elif last_vol_to_puf and (t_volano >= t_puffer + puf_delta_hold) and (t_volano >= vol_min_puf):
             volano_to_puffer = True
             auto_volano_puffer_active = True
             auto_volano_puffer_reason = (
-                f"Auto hold VOLANO->PUFFER: modulo ON e delta mantenimento. "
+                f"Auto hold VOLANO->PUFFER: modulo ON, volano non impegnato su ACS e delta mantenimento. "
                 f"T_VOL {t_volano:.1f}C >= T_PUF+{puf_delta_hold:.1f}C ({t_puffer + puf_delta_hold:.1f}C)."
             )
     # Fine giornata: se ACS resta prioritaria ma nessuna sorgente riesce a prenderla,
