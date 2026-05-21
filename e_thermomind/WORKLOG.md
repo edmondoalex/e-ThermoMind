@@ -573,3 +573,5 @@
 - [2026-05-20] UI: nuova pagina ALLARMI con dashboard diagnostica, riepilogo stato, card allarmi spiegate e azioni consigliate per incastri ACS/Volano/Puffer/Resistenze. Release 0.8.14.
 
 - [2026-05-20] Allarmi avanzati: aggiunti controlli su attuatori incoerenti, R13, FV non usato, resa trasferimenti, config mancanti e solare tutto chiuso. Solare OFF ora segue la modalita giorno/notte e lascia sempre una via aperta. Release 0.8.15.
+
+- [2026-05-21] UI/HA: esposto Puffer MAX nei setpoint rapidi, in Admin Puffer e nei setpoint MQTT/HA. Release 0.8.16.

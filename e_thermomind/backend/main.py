@@ -237,6 +237,7 @@ def _mqtt_setpoint_defs() -> list[dict[str, Any]]:
         {"key": "volano_max", "name": "Volano MAX", "section": "volano", "field": "max_c", "min": 40, "max": 95, "step": 0.5},
         {"key": "volano_min_to_acs", "name": "Volano min -> ACS", "section": "volano", "field": "min_to_acs_c", "min": 35, "max": 75, "step": 0.5},
         {"key": "puffer_setpoint", "name": "Puffer setpoint", "section": "puffer", "field": "setpoint_c", "min": 40, "max": 90, "step": 0.5},
+        {"key": "puffer_max", "name": "Puffer MAX", "section": "puffer", "field": "max_c", "min": 50, "max": 90, "step": 0.5},
         {"key": "puffer_min_to_acs", "name": "Puffer min -> ACS", "section": "puffer", "field": "min_to_acs_c", "min": 40, "max": 80, "step": 0.5},
         {"key": "impianto_volano_min", "name": "Impianto volano min", "section": "impianto", "field": "volano_min_c", "min": 35, "max": 80, "step": 0.5},
         {"key": "impianto_puffer_min", "name": "Impianto puffer min", "section": "impianto", "field": "puffer_min_c", "min": 35, "max": 80, "step": 0.5},

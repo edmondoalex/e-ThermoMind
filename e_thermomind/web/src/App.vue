@@ -264,6 +264,14 @@
 
             <div class="section">Puffer</div>
             <div class="field">
+              <label>Puffer MAX (C)</label>
+              <div class="slider-row">
+                <input type="range" min="50" max="90" step="0.5" v-model.number="sp.puffer.max_c" @change="save" />
+                <span class="slider-value">{{ fmtNum(sp?.puffer?.max_c) }} C</span>
+              </div>
+              <div class="help">Sicurezza: sopra questo valore blocca lo scarico Volano -> Puffer.</div>
+            </div>
+            <div class="field">
               <label>Setpoint (°C)</label>
               <div class="slider-row">
                 <input type="range" min="40" max="90" step="0.5" v-model.number="sp.puffer.setpoint_c" @change="save" />
@@ -1772,6 +1780,7 @@
 
           <div class="set-section">
             <div class="section-title">Puffer</div>
+            <div class="field"><label>Puffer MAX (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.max_c"/><div class="help">Sicurezza: sopra questo valore blocca lo scarico Volano -> Puffer.</div></div>
             <div class="field"><label>Puffer setpoint (C)</label><input type="number" step="0.5" v-model.number="sp.puffer.setpoint_c"/><div class="help">Target puffer quando ACS e ok.</div></div>
             <div class="field"><label>Puffer min → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.min_to_acs_c"/><div class="help">Minimo puffer per poter scaldare ACS.</div></div>
             <div class="field"><label>Puffer isteresi → ACS (°C)</label><input type="number" step="0.5" v-model.number="sp.puffer.hyst_to_acs_c"/><div class="help">Isteresi per evitare ON/OFF continui su ACS.</div></div>
@@ -2687,7 +2696,7 @@ const tab = ref(initialTab)
 const d = ref(null)
 const sp = ref({
   acs: { setpoint_c: 50, max_c: 60 },
-  puffer: { setpoint_c: 50, min_to_acs_c: 45, hyst_to_acs_c: 3, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5 },
+  puffer: { setpoint_c: 50, max_c: 75, min_to_acs_c: 45, hyst_to_acs_c: 3, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5 },
   volano: { margin_c: 3, max_c: 60, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2, evening_dump_trigger: 'time', evening_dump_after_h: 17, evening_dump_run_entity: 'switch.thermomind_dump_volano_run' },
   impianto: { source_mode: 'AUTO', pdc_ready: false, puffer_ready: true, season_mode: 'winter', volano_min_c: 35, puffer_min_c: 35 },
   runtime: { mode: 'dry-run', force_live_on_startup: true, ui_poll_ms: 3000, timezone: 'Europe/Rome', force_acs_puffer_default_minutes: 30, force_volano_puffer_default_minutes: 30 },
@@ -3761,6 +3770,11 @@ async function load(){
     if (typeof sp.value.volano.evening_dump_after_h === 'undefined') sp.value.volano.evening_dump_after_h = 17
     if (typeof sp.value.volano.evening_dump_trigger === 'undefined') sp.value.volano.evening_dump_trigger = 'time'
     if (typeof sp.value.volano.evening_dump_run_entity === 'undefined' || !sp.value.volano.evening_dump_run_entity) sp.value.volano.evening_dump_run_entity = 'switch.thermomind_dump_volano_run'
+  }
+  if (!sp.value?.puffer) {
+    sp.value.puffer = { setpoint_c: 55, off_hyst_c: 1, max_c: 75, max_hyst_c: 3, min_to_acs_c: 60, hyst_to_acs_c: 5, delta_to_acs_start_c: 3, delta_to_acs_hold_c: 1.5 }
+  } else {
+    if (typeof sp.value.puffer.max_c === 'undefined') sp.value.puffer.max_c = 75
   }
   if (!sp.value?.energy_profiles) {
     sp.value.energy_profiles = {
