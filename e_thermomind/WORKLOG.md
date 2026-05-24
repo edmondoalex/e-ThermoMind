@@ -577,3 +577,5 @@
 - [2026-05-21] UI/HA: esposto Puffer MAX nei setpoint rapidi, in Admin Puffer e nei setpoint MQTT/HA. Release 0.8.16.
 
 - [2026-05-21] Logica: Volano->Puffer automatico ora parte anche con ACS servita dal puffer; viene bloccato solo se ACS sta usando il volano. Release 0.8.17.
+
+- [2026-05-24] Semantica moduli OFF: automatico escluso e attuatori lasciati al manuale; eccezione solare che continua a mantenere una via aperta notte/giorno. Release 0.8.18.

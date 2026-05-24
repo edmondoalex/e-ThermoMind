@@ -557,3 +557,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-21] Release 0.8.16: aggiunto controllo Puffer MAX in UI/Admin e setpoint MQTT/HA per regolare la soglia puffer_max_hit.
 
 - [2026-05-21] Release 0.8.17: corretto Volano->Puffer automatico, non richiede piu source_to_acs=OFF ma solo che source_to_acs non sia VOLANO.
+
+- [2026-05-24] Release 0.8.18: i moduli OFF non forzano piu gli attuatori spenti, lasciando il comando manuale; solare OFF resta fail-safe su valvola notte/giorno.

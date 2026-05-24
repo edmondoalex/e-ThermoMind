@@ -1521,15 +1521,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         _log_dry_run(decision_data)
         return
     if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
-        if not resistenze_disabled_forced:
-            act = cfg.get("actuators", {})
-            r22 = act.get("r22_resistenza_1_volano_pdc")
-            r23 = act.get("r23_resistenza_2_volano_pdc")
-            r24 = act.get("r24_resistenza_3_volano_pdc")
-            rg = act.get("generale_resistenze_volano_pdc")
-            for ent in (r22, r23, r24, rg):
-                await _set_resistance(ent, False)
-            resistenze_disabled_forced = True
+        resistenze_disabled_forced = False
         return
     resistenze_disabled_forced = False
     act = cfg.get("actuators", {})
@@ -1731,11 +1723,6 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     force_puf_acs = bool(force_acs_puffer.get("active")) and bool(force_acs_puffer.get("can_apply"))
     force_vol_puf = bool(force_volano_puffer.get("active")) and bool(force_volano_puffer.get("can_apply"))
     if not (modules.get("volano_to_acs", True) or modules.get("volano_to_puffer", True) or modules.get("puffer_to_acs", True) or force_puf_acs):
-        await _set_valve_only(r6, False)
-        await _set_valve_only(r7, False)
-        await _set_pump_only("volano_to_acs", r13, False)
-        await _set_pump_only("volano_to_puffer", r13, False)
-        await _set_pump_only("puffer_to_acs", r14, False)
         return
 
     want_vol_acs = bool(flags.get("volano_to_acs")) and modules.get("volano_to_acs", True)
@@ -1779,15 +1766,26 @@ async def _apply_transfer_live(decision_data: dict) -> None:
 
     if want_vol_acs:
         await _set_transfer_pair("volano_to_acs", r6, r13, True, vta_start, vta_stop)
-        await _set_valve_only(r7, False)
+        if modules.get("volano_to_puffer", True):
+            await _set_valve_only(r7, False)
     elif want_vol_puf:
-        await _set_valve_only(r6, False)
+        if modules.get("volano_to_acs", True):
+            await _set_valve_only(r6, False)
         await _set_transfer_pair("volano_to_puffer", r7, r13, True, vtp_start, vtp_stop)
     else:
-        await _set_transfer_pair("volano_to_acs", r6, r13, False, vta_start, vta_stop)
-        await _set_transfer_pair("volano_to_puffer", r7, r13, False, vtp_start, vtp_stop)
+        if modules.get("volano_to_acs", True):
+            if modules.get("volano_to_puffer", True):
+                await _set_transfer_pair("volano_to_acs", r6, r13, False, vta_start, vta_stop)
+            else:
+                await _set_valve_only(r6, False)
+        if modules.get("volano_to_puffer", True):
+            if modules.get("volano_to_acs", True):
+                await _set_transfer_pair("volano_to_puffer", r7, r13, False, vtp_start, vtp_stop)
+            else:
+                await _set_valve_only(r7, False)
 
-    await _set_pump_only("puffer_to_acs", r14, want_puf_acs)
+    if modules.get("puffer_to_acs", True) or force_puf_acs:
+        await _set_pump_only("puffer_to_acs", r14, want_puf_acs)
 
 async def _apply_solar_live(decision_data: dict) -> None:
     global solar_watchdog_last_log
@@ -1905,9 +1903,6 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         miscelatrice_last_action = "ALZA"
         return
     if not cfg.get("modules_enabled", {}).get("miscelatrice", True):
-        act = cfg.get("actuators", {})
-        await _set_actuator(act.get("r16_cmd_miscelatrice_alza"), False)
-        await _set_actuator(act.get("r17_cmd_miscelatrice_abbassa"), False)
         return
 
     ent = cfg.get("entities", {})
@@ -2146,25 +2141,6 @@ async def _apply_impianto_live() -> None:
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO gas_emergenza OFF -> start_only")
     if not cfg.get("modules_enabled", {}).get("impianto", True):
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO module OFF state={cfg.get('modules_enabled', {})}")
-        ent = cfg.get("entities", {})
-        act = cfg.get("actuators", {})
-        imp = cfg.get("impianto", {})
-        r4 = act.get("r4_valve_impianto_da_puffer")
-        r5 = act.get("r5_valve_impianto_da_pdc")
-        r31 = act.get("r31_valve_impianto_da_volano")
-        r12 = act.get("r12_pump_mandata_piani")
-        r11 = act.get("r11_pump_mandata_laboratorio")
-        clima = ent.get("puffer_consenso_riscaldamento_piani")
-        off_centralina = ent.get("off_centralina_termoregolazione")
-        for z in _collect_zones(imp):
-            await _set_climate_hvac_mode(z, "off", "IMPIANTO module OFF")
-        await _set_pump_delayed("impianto:pump", r12, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-        await _set_pump_delayed("impianto:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-        await _set_actuator(r4, False)
-        await _set_actuator(r5, False)
-        await _set_actuator(r31, False)
-        await _set_climate_hvac_mode(clima, "off", "IMPIANTO module OFF")
-        await _set_actuator(off_centralina, True)
         return
 
     ent = cfg.get("entities", {})
@@ -2389,35 +2365,14 @@ async def _apply_gas_emergenza_live() -> None:
     ta = act.get("gas_boiler_ta")
     r21 = act.get("r21_libero")
 
+    if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        return
+
     # R21 GAS MISC OFF: aperta in normale, chiusa solo durante gas emergenza attivo
     if _gas_emergenza_active():
         await _set_actuator_force(r21, False, "gas_emergenza active")
     else:
         await _set_actuator_force(r21, True, "gas_emergenza inactive")
-
-    if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
-        await _set_actuator(power, False)
-        await _set_actuator(ta, False)
-        # se impianto attivo: non toccare attuatori condivisi
-        if cfg.get("modules_enabled", {}).get("impianto", True):
-            return
-        r2 = act.get("r2_valve_comparto_mandata_imp_pt")
-        r3 = act.get("r3_valve_comparto_mandata_imp_m1p")
-        r1 = act.get("r1_valve_comparto_laboratorio")
-        r11 = act.get("r11_pump_mandata_laboratorio")
-        r16 = act.get("r16_cmd_miscelatrice_alza")
-        r17 = act.get("r17_cmd_miscelatrice_abbassa")
-        if r2: await _set_actuator(r2, False)
-        if r3: await _set_actuator(r3, False)
-        if r1: await _set_actuator(r1, False)
-        await _set_pump_delayed("gas:lab_pump", r11, False, imp.get("pump_start_delay_s", 9), imp.get("pump_stop_delay_s", 0))
-        if r16: await _set_actuator(r16, False)
-        if r17: await _set_actuator(r17, False)
-        # non toccare i termostati se impianto ? attivo (evita conflitti)
-        if not cfg.get("modules_enabled", {}).get("impianto", True):
-            for z in (gas_cfg.get("zones") or []):
-                await _set_climate_hvac_mode(z, "off", "GAS module OFF")
-        return
 
     zones = gas_cfg.get("zones", [])
     if not isinstance(zones, list):
@@ -2535,23 +2490,6 @@ async def _apply_caldaia_legna_live() -> None:
                 cfg["caldaia_legna"]["forced_off"] = False
                 cfg["caldaia_legna"]["startup_deadline_ts"] = 0.0
                 save_config(cfg)
-        try:
-            now = time.time()
-            if now - legna_watchdog_last_log >= 120:
-                act_on = []
-                for key, ent_id in (("power", power), ("ta", ta)):
-                    if _state_is_on(ent_id):
-                        act_on.append(key)
-                if act_on:
-                    _log_action(
-                        f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG LEGNA "
-                        f"act_on={act_on} enabled=False"
-                    )
-                    legna_watchdog_last_log = now
-        except Exception:
-            pass
-        await _set_actuator(power, False)
-        await _set_actuator(ta, False)
         return
 
     if caldaia_legna_state.get("forced_off"):
