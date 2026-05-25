@@ -581,3 +581,4 @@
 - [2026-05-24] Semantica moduli OFF: automatico escluso e attuatori lasciati al manuale; eccezione solare che continua a mantenere una via aperta notte/giorno. Release 0.8.18.
 
 - [2026-05-25] Solare fail-safe: aggiunto watchdog backend permanente per impedire R8/R9/R10 tutte chiuse anche con modulo ON/OFF, reboot o aggiornamento. La modalita solare selezionata resta persistente; notte fissa viene usata solo come fallback di emergenza quando tutte le vie sono chiuse. Aggiunti allarmi backend di coerenza modalita/valvole. Release 0.8.19.
+- [2026-05-25] MQTT Allarmi: aggiunta sezione topic 	hermomind/alarms/... con sensore riepilogo e binary_sensor diagnostico per ogni allarme della pagina ALLARMI, incluso Solare MAX. Release 0.8.20.

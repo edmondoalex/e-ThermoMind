@@ -264,6 +264,25 @@ def _mqtt_module_defs() -> list[dict[str, str]]:
     ]
 
 def _mqtt_extra_sensor_defs() -> list[dict[str, Any]]:
+    alarm_sensor_defs = [
+        {"key": "alarm_active", "name": "Allarme Attivo", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "alarm_count", "name": "Numero Allarmi", "unit": "allarmi", "state_class": "measurement", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "alarm_summary", "name": "Riepilogo Allarmi", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "alarm_solar_temp_max", "name": "Allarme Solare Temperatura Max", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "alarm_solar_mode_mismatch", "name": "Allarme Solare Modalita Non Coerente", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "solar_all_closed", "name": "Allarme Solare Vie Chiuse", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "actuator_requested_off", "name": "Allarme Attuatore Richiesto OFF", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "actuator_on_logic_stop", "name": "Allarme Attuatore ON Fuori Logica", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "r13_conflict", "name": "Allarme Conflitto R13", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "pv_available_res_off", "name": "Allarme FV Disponibile Resistenze Ferme", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "transfer_active_no_rise", "name": "Allarme Trasferimento Senza Aumento", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "missing_config", "name": "Allarme Configurazione Mancante", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "acs_volano_physical", "name": "Allarme ACS Volano Fisico", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "puffer_max_no_sink", "name": "Allarme Puffer Max Senza Sink", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "force_vtp_priority", "name": "Allarme Forzatura Volano Puffer", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "manual_resistances_auto_off", "name": "Allarme Resistenze Manuali Auto OFF", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "acs_volano_watchdog", "name": "Allarme Watchdog ACS Volano", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+    ]
     return [
         {"key": "t_acs", "name": "T ACS", "unit": "°C", "device_class": "temperature"},
         {"key": "t_puffer", "name": "T Puffer", "unit": "°C", "device_class": "temperature"},
@@ -300,7 +319,7 @@ def _mqtt_extra_sensor_defs() -> list[dict[str, Any]]:
         {"key": "safe_privato_battery_output_w", "name": "Safe Privato Battery Output", "unit": "W", "device_class": "power", "state_class": "measurement"},
         {"key": "safe_privato_temp_c", "name": "Safe Privato Temp Batt", "unit": "°C", "device_class": "temperature", "state_class": "measurement"},
         {"key": "safe_privato_soc_pct", "name": "Safe Privato SoC", "unit": "%", "state_class": "measurement"},
-    ]
+    ] + alarm_sensor_defs
 
 def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
     inputs = (decision or {}).get("inputs", {}) or {}
@@ -310,6 +329,99 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
     force_vtp = computed.get("force_volano_puffer", {}) or {}
     easas = computed.get("energy_easas", {}) or {}
     priv = computed.get("energy_privato", {}) or {}
+    alarms = _build_backend_alarms()
+    alarm_keys = {str(a.get("key") or "") for a in alarms if isinstance(a, dict)}
+    alarm_titles = [str(a.get("title") or a.get("key") or "").strip() for a in alarms if isinstance(a, dict)]
+    flags = computed.get("flags", {}) or {}
+    modules = cfg.get("modules_enabled", {}) or {}
+    act = cfg.get("actuators", {}) or {}
+    r6_on = _state_is_on(act.get("r6_valve_pdc_to_integrazione_acs"))
+    r7_on = _state_is_on(act.get("r7_valve_pdc_to_integrazione_puffer"))
+    r13_on = _state_is_on(act.get("r13_pump_pdc_to_acs_puffer"))
+    r14_on = _state_is_on(act.get("r14_pump_puffer_to_acs"))
+    r8_on = _state_is_on(act.get("r8_valve_solare_notte_low_temp"))
+    r9_on = _state_is_on(act.get("r9_valve_solare_normal_funz"))
+    r10_on = _state_is_on(act.get("r10_valve_solare_precedenza_acs"))
+    res_actual_on = any(
+        _state_is_on(act.get(key))
+        for key in (
+            "r22_resistenza_1_volano_pdc",
+            "r23_resistenza_2_volano_pdc",
+            "r24_resistenza_3_volano_pdc",
+            "generale_resistenze_volano_pdc",
+        )
+    )
+    vtp_force_active = bool(force_vtp.get("active")) and bool(force_vtp.get("can_apply"))
+    wanted = {
+        "r6": bool(flags.get("volano_to_acs")),
+        "r7": bool(flags.get("volano_to_puffer")) or vtp_force_active,
+        "r13": bool(flags.get("volano_to_acs")) or bool(flags.get("volano_to_puffer")) or vtp_force_active,
+        "r14": bool(flags.get("puffer_to_acs")) or bool(force.get("active")),
+    }
+    actual = {"r6": r6_on, "r7": r7_on, "r13": r13_on, "r14": r14_on}
+    actuator_requested_off = any(wanted[key] and not actual[key] for key in wanted)
+    actuator_on_logic_stop = any((not wanted[key]) and actual[key] for key in wanted)
+    r13_conflict = r13_on and ((r6_on and r7_on) or r14_on)
+    threshold0 = 1000.0
+    try:
+        thresholds = cfg.get("resistance", {}).get("thresholds_w") or []
+        if thresholds:
+            threshold0 = float(thresholds[0])
+    except Exception:
+        threshold0 = 1000.0
+    useful_pv = float(inputs.get("extra_safe_w") or 0.0) >= threshold0 or float(inputs.get("grid_export_w") or 0.0) >= threshold0
+    pv_available_res_off = useful_pv and modules.get("resistenze_volano") is not False and int(computed.get("resistance_step") or 0) == 0 and not bool((computed.get("safety") or {}).get("volano_max_hit"))
+    missing_required = any(
+        modules.get(module_key) is not False and not act.get(act_key)
+        for module_key, act_key in (
+            ("volano_to_acs", "r6_valve_pdc_to_integrazione_acs"),
+            ("volano_to_acs", "r13_pump_pdc_to_acs_puffer"),
+            ("volano_to_puffer", "r7_valve_pdc_to_integrazione_puffer"),
+            ("volano_to_puffer", "r13_pump_pdc_to_acs_puffer"),
+            ("puffer_to_acs", "r14_pump_puffer_to_acs"),
+            ("resistenze_volano", "r22_resistenza_1_volano_pdc"),
+            ("resistenze_volano", "generale_resistenze_volano_pdc"),
+        )
+    )
+    source_volano = computed.get("source_to_acs") == "VOLANO"
+    vta_physical = r6_on and r13_on
+    acs_volano_physical = source_volano and not vta_physical
+    puffer_max_no_sink = bool((computed.get("safety") or {}).get("puffer_max_hit")) and bool((computed.get("safety") or {}).get("volano_max_hit")) and not bool(computed.get("acs_need"))
+    manual_resistances_auto_off = res_actual_on and int(computed.get("resistance_step") or 0) == 0
+    alarm_values = {
+        "alarm_solar_temp_max": "backend_solar_temp_max" in alarm_keys,
+        "alarm_solar_mode_mismatch": "backend_solar_mode_mismatch" in alarm_keys,
+        "solar_all_closed": (not r8_on and not r9_on and not r10_on) or ("backend_solar_all_closed" in alarm_keys),
+        "actuator_requested_off": actuator_requested_off,
+        "actuator_on_logic_stop": actuator_on_logic_stop,
+        "r13_conflict": r13_conflict,
+        "pv_available_res_off": pv_available_res_off,
+        "transfer_active_no_rise": False,
+        "missing_config": missing_required,
+        "acs_volano_physical": acs_volano_physical,
+        "puffer_max_no_sink": puffer_max_no_sink,
+        "force_vtp_priority": vtp_force_active,
+        "manual_resistances_auto_off": manual_resistances_auto_off,
+        "acs_volano_watchdog": acs_volano_physical,
+    }
+    active_alarm_titles = list(alarm_titles)
+    ui_alarm_names = {
+        "solar_all_closed": "Solare con tutte le vie chiuse",
+        "actuator_requested_off": "Attuatore richiesto ma fisicamente OFF",
+        "actuator_on_logic_stop": "Attuatore ON mentre la logica lo vuole fermo",
+        "r13_conflict": "Conflitto pompa comune R13 o valvole incompatibili",
+        "pv_available_res_off": "FV disponibile ma resistenze ferme",
+        "transfer_active_no_rise": "Trasferimento attivo ma temperatura destinazione non sale",
+        "missing_config": "Modulo ON ma attuatori o sensori essenziali mancanti",
+        "acs_volano_physical": "ACS richiede ma Volano -> ACS non trasferisce fisicamente",
+        "puffer_max_no_sink": "Puffer a massimo senza sink termico utile",
+        "force_vtp_priority": "Forzatura manuale Volano -> Puffer attiva",
+        "manual_resistances_auto_off": "Resistenze accese manualmente ma logica a step 0",
+        "acs_volano_watchdog": "Watchdog ACS da volano potenzialmente incastrata",
+    }
+    for key, title in ui_alarm_names.items():
+        if alarm_values.get(key) and title not in active_alarm_titles:
+            active_alarm_titles.append(title)
     return {
         "t_acs": inputs.get("t_acs"),
         "t_puffer": inputs.get("t_puffer"),
@@ -326,6 +438,12 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
         "impianto_richiesta": bool(imp.get("richiesta")),
         "impianto_zone_demand": bool(imp.get("zone_demand")),
         "impianto_blocked_cold": bool(imp.get("blocked_cold")),
+        "alarm_active": bool(active_alarm_titles),
+        "alarm_count": len(active_alarm_titles),
+        "alarm_summary": "OK" if not active_alarm_titles else " | ".join(active_alarm_titles),
+        "alarm_solar_temp_max": alarm_values["alarm_solar_temp_max"],
+        "alarm_solar_mode_mismatch": alarm_values["alarm_solar_mode_mismatch"],
+        **alarm_values,
         "force_acs_puffer_active": bool(force.get("active")),
         "force_acs_puffer_remaining_s": force.get("remaining_s"),
         "force_volano_puffer_active": bool(force_vtp.get("active")),
@@ -367,6 +485,10 @@ def _mqtt_publish_value(topic: str, value, retain: bool = True, force: bool = Fa
         return
     mqtt_last_values[topic] = data
     _mqtt_publish(topic, data, retain=retain)
+
+def _mqtt_extra_sensor_topic(sdef: dict[str, Any]) -> str:
+    group = str(sdef.get("group") or "sensors").strip().strip("/") or "sensors"
+    return _mqtt_topic(group, str(sdef["key"]))
 
 def _mqtt_active_map(decision: dict) -> dict[str, bool]:
     computed = decision.get("computed", {}) if isinstance(decision, dict) else {}
@@ -524,7 +646,7 @@ def _mqtt_publish_discovery() -> int:
     # extra read-only sensors (logic + safe + key temperatures)
     for sdef in _mqtt_extra_sensor_defs():
         key = sdef["key"]
-        state_topic = _mqtt_topic("sensors", key)
+        state_topic = _mqtt_extra_sensor_topic(sdef)
         disc_topic = f"{prefix}/{'binary_sensor' if sdef.get('binary') else 'sensor'}/thermomind/{key}/config"
         payload = {
             "name": sdef["name"],
@@ -542,6 +664,8 @@ def _mqtt_publish_discovery() -> int:
             payload["device_class"] = sdef["device_class"]
         if sdef.get("state_class"):
             payload["state_class"] = sdef["state_class"]
+        if sdef.get("entity_category"):
+            payload["entity_category"] = sdef["entity_category"]
         _mqtt_publish(disc_topic, payload, retain=True)
         mqtt_discovery_topics.append(disc_topic)
         mqtt_state_topics.append(state_topic)
@@ -582,7 +706,7 @@ def _mqtt_publish_states(force: bool = False) -> None:
             val = "ON" if bool(val) else "OFF"
         elif val is None:
             val = ""
-        _mqtt_publish_value(_mqtt_topic("sensors", key), val, retain=True, force=force)
+        _mqtt_publish_value(_mqtt_extra_sensor_topic(sdef), val, retain=True, force=force)
 
 def _mqtt_clear_discovery() -> int:
     if not mqtt_client:
@@ -744,8 +868,23 @@ def _build_backend_alarms() -> list[dict[str, Any]]:
     r8_on = _state_is_on(r8)
     r9_on = _state_is_on(r9)
     r10_on = _state_is_on(r10)
+    ent = cfg.get("entities", {})
+    t_sol = _get_num(ent.get("t_solare_mandata"))
+    sol_max = float(cfg.get("solare", {}).get("max_c", 90.0))
     mode = str(cfg.get("solare", {}).get("mode", "auto")).strip().lower() or "auto"
     night = _solar_selected_night_path()
+
+    if t_sol is not None and t_sol >= sol_max:
+        alarms.append({
+            "key": "backend_solar_temp_max",
+            "level": "danger",
+            "label": "SOLARE",
+            "title": "Temperatura solare oltre limite",
+            "subtitle": f"T_SOL {t_sol:.1f}C >= limite {sol_max:.1f}C",
+            "message": "La temperatura solare ha superato il massimo impostato in Admin.",
+            "detail": "Il limite usa Admin -> Solare -> Solare MAX. In questa condizione la precedenza ACS R10 viene bloccata dal cutback.",
+            "action": "Controlla circolazione, pompa, aria nel circuito e stato reale delle valvole solari.",
+        })
 
     if not (r8_on or r9_on or r10_on):
         alarms.append({
