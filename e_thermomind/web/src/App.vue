@@ -30,7 +30,12 @@
     </header>
 
     <main class="main">
-      <section v-if="tab==='user'" class="card">
+      <section v-if="tab==='user'" class="card status-card">
+        <button v-if="activeAlarms.length" class="alarm-float" @click="tab='alarms'" title="Vai alla pagina ALLARMI">
+          <span class="alarm-float-icon">!</span>
+          <span class="alarm-float-text">ALLARMI</span>
+          <span class="alarm-float-count">{{ activeAlarms.length }}</span>
+        </button>
         <h2>Stato (v0.2)</h2>
         <div class="statusline">
           <span class="muted">v{{ status?.version || '-' }}</span>
@@ -4426,6 +4431,12 @@ watch(tab, (val) => {
 .main{padding:18px;max-width:1100px;margin:0 auto;width:100%}
 .card{background:linear-gradient(180deg, rgba(11,16,26,.98), rgba(9,14,22,.98));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.38)}
 .card.inner{margin-top:14px}
+.status-card{position:relative}
+.alarm-float{position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:8px;border:1px solid rgba(239,68,68,.62);background:rgba(127,29,29,.88);color:#fff;border-radius:999px;padding:7px 10px;min-height:34px;font-weight:800;font-size:12px;letter-spacing:0;cursor:pointer;box-shadow:0 0 0 1px rgba(239,68,68,.16),0 10px 24px rgba(239,68,68,.18)}
+.alarm-float:hover{background:rgba(153,27,27,.95);border-color:rgba(248,113,113,.86)}
+.alarm-float-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;background:#fff;color:#991b1b;font-weight:900;line-height:1}
+.alarm-float-text{white-space:nowrap}
+.alarm-float-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:999px;background:#ef4444;color:#fff;padding:0 6px}
 .alarms-page{border-radius:18px}
 .alarms-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:4px 2px 16px;border-bottom:1px solid var(--border)}
 .alarms-hero h2{margin:0 0 6px;font-size:28px}

@@ -12,8 +12,9 @@ RUN mkdir -p /app/static && cp -r /opt/web/dist/* /app/static/
 WORKDIR /app
 COPY backend /app/backend
 COPY config.yaml /app/config.yaml
+COPY logging.json /app/logging.json
 
 RUN pip install --no-cache-dir fastapi uvicorn[standard] aiohttp pydantic pydantic-settings paho-mqtt
 
 EXPOSE 8099
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8099"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8099", "--log-config", "/app/logging.json"]

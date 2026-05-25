@@ -583,3 +583,4 @@
 - [2026-05-25] Solare fail-safe: aggiunto watchdog backend permanente per impedire R8/R9/R10 tutte chiuse anche con modulo ON/OFF, reboot o aggiornamento. La modalita solare selezionata resta persistente; notte fissa viene usata solo come fallback di emergenza quando tutte le vie sono chiuse. Aggiunti allarmi backend di coerenza modalita/valvole. Release 0.8.19.
 - [2026-05-25] MQTT Allarmi: aggiunta sezione topic thermomind/alarms/... con sensore riepilogo e binary_sensor diagnostico per ogni allarme della pagina ALLARMI, incluso Solare MAX. Release 0.8.20.
 - [2026-05-25] Allarmi Resistenze: aggiunto allarme pagina/MQTT `resistances_decision_mismatch` quando il modulo ha deciso OFF ed e nel countdown di spegnimento ma le resistenze risultano ancora fisicamente ON. Release 0.8.21.
+- [2026-05-25] UI/Log: aggiunto pulsante allarmi in alto a destra nella card Stato quando ci sono allarmi attivi; configurato logging Uvicorn/access log con data e ora. Release 0.8.22.
