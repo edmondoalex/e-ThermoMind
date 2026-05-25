@@ -1964,13 +1964,6 @@
               </select>
             </div>
             <div class="field">
-              <label class="inline">
-                <input type="checkbox" v-model="sp.solare.force_night_on_startup" @change="save"/>
-                <span>Forza NOTTE al riavvio</span>
-              </label>
-              <div class="help">Se attivo, il solare torna in NOTTE dopo ogni riavvio.</div>
-            </div>
-            <div class="field">
               <label>FV entity (W) per giorno/notte</label>
               <input type="text" v-model="sp.solare.pv_entity" placeholder="sensor.zcs_easas_1_activepower_pv_ext"/>
               <div class="help">Sensore FV usato per decidere giorno/notte.</div>
@@ -2700,7 +2693,7 @@ const sp = ref({
   volano: { margin_c: 3, max_c: 60, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2, evening_dump_trigger: 'time', evening_dump_after_h: 17, evening_dump_run_entity: 'switch.thermomind_dump_volano_run' },
   impianto: { source_mode: 'AUTO', pdc_ready: false, puffer_ready: true, season_mode: 'winter', volano_min_c: 35, puffer_min_c: 35 },
   runtime: { mode: 'dry-run', force_live_on_startup: true, ui_poll_ms: 3000, timezone: 'Europe/Rome', force_acs_puffer_default_minutes: 30, force_volano_puffer_default_minutes: 30 },
-  solare: { mode: 'auto', force_night_on_startup: true, flow_min_lmin: 6 },
+  solare: { mode: 'auto', flow_min_lmin: 6 },
   curva_climatica: { slope: 0, offset: 0, min_c: 40, max_c: 60 },
   miscelatrice: { setpoint_c: 45, hyst_c: 0.5, kp: 2, min_imp_s: 1, max_imp_s: 8, pause_s: 5, dt_ref_c: 10, dt_min_factor: 0.6, dt_max_factor: 1.4, force_impulse_s: 3 }
 })
@@ -3082,6 +3075,11 @@ const alarmsList = computed(() => {
   const c = d.value?.computed || {}
   const i = d.value?.inputs || {}
   const flags = c.flags || {}
+  const backendAlarms = Array.isArray(c.alarms)
+    ? c.alarms
+        .filter(a => a && a.key !== 'backend_solar_all_closed')
+        .map(a => ({ ...a, active: true }))
+    : []
   const forceVtp = c.force_volano_puffer || {}
   const r6On = isOnState(act.value?.r6_valve_pdc_to_integrazione_acs?.state)
   const r7On = isOnState(act.value?.r7_valve_pdc_to_integrazione_puffer?.state)
@@ -3132,6 +3130,7 @@ const alarmsList = computed(() => {
   const watchdogRisk = sourceVolano && (!vtaPhysical || acsNotRising)
   const solarAllClosed = !r8On && !r9On && !r10On
   return [
+    ...backendAlarms,
     {
       key: 'solar_all_closed',
       level: 'danger',
@@ -3757,9 +3756,8 @@ async function load(){
     if (typeof sp.value.history[k] === 'undefined') sp.value.history[k] = v
   }
   if (!sp.value?.solare) {
-    sp.value.solare = { mode: 'auto', force_night_on_startup: true, delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300, flow_min_lmin: 6 }
+    sp.value.solare = { mode: 'auto', delta_on_c: 5, delta_hold_c: 2.5, max_c: 90, pv_entity: '', pv_day_w: 1000, pv_night_w: 300, pv_debounce_s: 300, flow_min_lmin: 6 }
   }
-  if (typeof sp.value.solare.force_night_on_startup === 'undefined') sp.value.solare.force_night_on_startup = true
   if (typeof sp.value.solare.flow_min_lmin === 'undefined') sp.value.solare.flow_min_lmin = 6
   if (!sp.value?.volano) {
     sp.value.volano = { margin_c: 3, max_c: 60, max_hyst_c: 2, min_to_acs_c: 50, hyst_to_acs_c: 5, delta_to_acs_start_c: 5, delta_to_acs_hold_c: 2.5, delta_to_puffer_start_c: 5, delta_to_puffer_hold_c: 2.5, min_to_puffer_c: 55, hyst_to_puffer_c: 2, evening_dump_enabled: true, evening_dump_after_h: 17, evening_dump_trigger: 'time', evening_dump_run_entity: 'switch.thermomind_dump_volano_run' }
