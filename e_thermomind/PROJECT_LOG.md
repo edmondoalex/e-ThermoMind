@@ -561,4 +561,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-24] Release 0.8.18: i moduli OFF non forzano piu gli attuatori spenti, lasciando il comando manuale; solare OFF resta fail-safe su valvola notte/giorno.
 
 - [2026-05-25] Release 0.8.19: solare fail-safe con watchdog backend permanente; R8/R9/R10 non possono restare tutte chiuse con modulo acceso/spento, reboot o aggiornamento. La modalita selezionata resta persistente; notte fissa e solo fallback di emergenza. Aggiunti allarmi backend di coerenza modalita/valvole.
-- [2026-05-25] Release 0.8.20: pubblicati in MQTT/Home Assistant tutti gli allarmi della pagina ALLARMI nella sezione 	hermomind/alarms/..., con riepilogo e binary_sensor diagnostici per automazioni/notifiche.
+- [2026-05-25] Release 0.8.20: pubblicati in MQTT/Home Assistant tutti gli allarmi della pagina ALLARMI nella sezione thermomind/alarms/..., con riepilogo e binary_sensor diagnostici per automazioni/notifiche.
+- [2026-05-25] Release 0.8.21: aggiunto allarme `resistances_decision_mismatch` per disallineamento tra decisione modulo resistenze e stato fisico durante countdown spegnimento.

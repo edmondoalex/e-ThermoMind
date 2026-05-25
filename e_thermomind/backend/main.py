@@ -275,6 +275,7 @@ def _mqtt_extra_sensor_defs() -> list[dict[str, Any]]:
         {"key": "actuator_on_logic_stop", "name": "Allarme Attuatore ON Fuori Logica", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
         {"key": "r13_conflict", "name": "Allarme Conflitto R13", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
         {"key": "pv_available_res_off", "name": "Allarme FV Disponibile Resistenze Ferme", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
+        {"key": "resistances_decision_mismatch", "name": "Allarme Resistenze Disallineate", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
         {"key": "transfer_active_no_rise", "name": "Allarme Trasferimento Senza Aumento", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
         {"key": "missing_config", "name": "Allarme Configurazione Mancante", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
         {"key": "acs_volano_physical", "name": "Allarme ACS Volano Fisico", "binary": True, "device_class": "problem", "group": "alarms", "entity_category": "diagnostic"},
@@ -351,6 +352,12 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
             "generale_resistenze_volano_pdc",
         )
     )
+    shutdown_countdown_s = int(computed.get("resistance_shutdown_countdown_s") or 0)
+    if shutdown_countdown_s <= 0 and resistenze_export_off_start > 0.0:
+        export_off_w_probe = float(cfg.get("resistance", {}).get("export_off_w", -100.0))
+        if modules.get("resistenze_volano") is not False and res_actual_on and float(inputs.get("grid_export_w") or 0.0) <= export_off_w_probe:
+            delay_s = int(cfg.get("resistance", {}).get("step_down_delay_s", cfg.get("resistance", {}).get("off_delay_s", 5)))
+            shutdown_countdown_s = max(0, int(delay_s - (time.time() - resistenze_export_off_start)))
     vtp_force_active = bool(force_vtp.get("active")) and bool(force_vtp.get("can_apply"))
     wanted = {
         "r6": bool(flags.get("volano_to_acs")),
@@ -371,6 +378,8 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
         threshold0 = 1000.0
     useful_pv = float(inputs.get("extra_safe_w") or 0.0) >= threshold0 or float(inputs.get("grid_export_w") or 0.0) >= threshold0
     pv_available_res_off = useful_pv and modules.get("resistenze_volano") is not False and int(computed.get("resistance_step") or 0) == 0 and not bool((computed.get("safety") or {}).get("volano_max_hit"))
+    export_off_w = float(cfg.get("resistance", {}).get("export_off_w", -100.0))
+    resistances_decision_mismatch = modules.get("resistenze_volano") is not False and res_actual_on and shutdown_countdown_s > 0
     missing_required = any(
         modules.get(module_key) is not False and not act.get(act_key)
         for module_key, act_key in (
@@ -396,6 +405,7 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
         "actuator_on_logic_stop": actuator_on_logic_stop,
         "r13_conflict": r13_conflict,
         "pv_available_res_off": pv_available_res_off,
+        "resistances_decision_mismatch": resistances_decision_mismatch,
         "transfer_active_no_rise": False,
         "missing_config": missing_required,
         "acs_volano_physical": acs_volano_physical,
@@ -411,6 +421,7 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
         "actuator_on_logic_stop": "Attuatore ON mentre la logica lo vuole fermo",
         "r13_conflict": "Conflitto pompa comune R13 o valvole incompatibili",
         "pv_available_res_off": "FV disponibile ma resistenze ferme",
+        "resistances_decision_mismatch": "Resistenze disallineate dalla decisione del modulo",
         "transfer_active_no_rise": "Trasferimento attivo ma temperatura destinazione non sale",
         "missing_config": "Modulo ON ma attuatori o sensori essenziali mancanti",
         "acs_volano_physical": "ACS richiede ma Volano -> ACS non trasferisce fisicamente",
@@ -1799,6 +1810,8 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         "r23": step >= 2,
         "r24": step >= 3,
     }
+    computed = decision_data.setdefault("computed", {})
+    computed["resistance_shutdown_countdown_s"] = 0
     try:
         if step == 0:
             now = time.time()
@@ -1822,7 +1835,9 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         if resistenze_export_off_start == 0.0:
             resistenze_export_off_start = now
         export_off_delay = int(cfg.get("resistance", {}).get("step_down_delay_s", cfg.get("resistance", {}).get("off_delay_s", 5)))
-        if now - resistenze_export_off_start < export_off_delay:
+        remaining_s = max(0, int(export_off_delay - (now - resistenze_export_off_start)))
+        if remaining_s > 0:
+            decision_data.setdefault("computed", {})["resistance_shutdown_countdown_s"] = remaining_s
             # wait for debounce
             return
         any_on = False
@@ -1936,7 +1951,6 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         actual_step = 2
     elif _get_state(r22) == "on":
         actual_step = 1
-    computed = decision_data.setdefault("computed", {})
     computed["resistance_step"] = actual_step if actual_step > 0 else computed.get("resistance_step", 0)
 
     # annotate live delay info in decision payload
@@ -1949,8 +1963,16 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             delay_notes.append(f"{key} ON in {int(on_deadline[key] - now)}s")
         if off_deadline[key] > now:
             delay_notes.append(f"{key} OFF in {int(off_deadline[key] - now)}s")
+            computed["resistance_shutdown_countdown_s"] = max(
+                int(computed.get("resistance_shutdown_countdown_s") or 0),
+                int(off_deadline[key] - now),
+            )
     if off_deadline.get("rg", 0.0) > now:
         delay_notes.append(f"RG OFF in {int(off_deadline['rg'] - now)}s")
+        computed["resistance_shutdown_countdown_s"] = max(
+            int(computed.get("resistance_shutdown_countdown_s") or 0),
+            int(off_deadline["rg"] - now),
+        )
     if delay_notes:
         base_reason = reasons.get("resistenze_volano", "")
         suffix = " | Delay: " + ", ".join(delay_notes)

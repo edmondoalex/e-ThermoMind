@@ -3119,6 +3119,10 @@ const alarmsList = computed(() => {
   const r13Conflict = r13On && ((r6On && r7On) || (r13On && r14On))
   const usefulPv = Number(i.extra_safe_w || 0) >= Number(sp.value?.resistance?.thresholds_w?.[0] || 1000) || Number(i.grid_export_w || 0) >= Number(sp.value?.resistance?.thresholds_w?.[0] || 1000)
   const pvAvailableResOff = usefulPv && modules.value?.resistenze_volano !== false && resStep === 0 && !c.safety?.volano_max_hit
+  const exportOffW = Number(sp.value?.resistance?.export_off_w ?? -100)
+  const resModuleOn = modules.value?.resistenze_volano !== false
+  const resShutdownCountdown = Number(c.resistance_shutdown_countdown_s || 0)
+  const resDecisionMismatch = resModuleOn && resActualOn && resShutdownCountdown > 0
   const pufferTrend = trendDelta(history.value.t_puffer, 10)
   const acsDestTrend = trendDelta(history.value.t_acs, 10)
   const transferNoRise =
@@ -3187,6 +3191,17 @@ const alarmsList = computed(() => {
       message: 'C e potenza FV utile, il modulo resistenze e ON e il volano non e a massimo, ma la logica tiene le resistenze a step 0.',
       detail: c.module_reasons?.resistenze_volano || 'Nessun dettaglio resistenze disponibile.',
       action: 'Controlla soglie step, batteria in scarica, export_off_w, extra_safe_w e potenza effettiva. Questo allarme aiuta a capire perche l energia non entra nel volano.'
+    },
+    {
+      key: 'resistances_decision_mismatch',
+      level: 'danger',
+      label: 'DISALLINEATO',
+      active: resDecisionMismatch,
+      title: 'Resistenze disallineate dalla decisione del modulo',
+      subtitle: `Spegnimento in ${resShutdownCountdown}s | Export ${fmtW(i.grid_export_w)} <= soglia ${fmtW(exportOffW)} | Step ${resStep} | Potenza ${fmtW(i.resistenze_volano_power)}`,
+      message: 'Con il modulo resistenze acceso, il modulo ha deciso OFF ed e nel countdown, ma lo stato fisico risulta ancora ON. L allarme resta finche lo stato fisico non torna allineato.',
+      detail: c.module_reasons?.resistenze_volano || 'Nessun dettaglio resistenze disponibile.',
+      action: 'Se resta attivo oltre il ritardo step-down/off, controlla rele R22/R23/R24/R0, export_off_w e automazioni esterne. Con modulo spento, l accensione manuale non genera questo allarme.'
     },
     {
       key: 'transfer_active_no_rise',
