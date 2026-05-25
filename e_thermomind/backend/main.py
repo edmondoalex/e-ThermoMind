@@ -827,20 +827,100 @@ async def _mqtt_reconfigure() -> None:
 async def _resistenze_startup_safety() -> None:
     # Safety: after restart/update, force resistances OFF once.
     await asyncio.sleep(5)
-    if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
-        return
+    await _force_resistances_off("resistenze startup safety")
+
+def _resistance_actuators() -> tuple[str | None, str | None, str | None, str | None]:
     act = cfg.get("actuators", {})
-    r22 = act.get("r22_resistenza_1_volano_pdc")
-    r23 = act.get("r23_resistenza_2_volano_pdc")
-    r24 = act.get("r24_resistenza_3_volano_pdc")
-    rg = act.get("generale_resistenze_volano_pdc")
+    return (
+        act.get("r22_resistenza_1_volano_pdc"),
+        act.get("r23_resistenza_2_volano_pdc"),
+        act.get("r24_resistenza_3_volano_pdc"),
+        act.get("generale_resistenze_volano_pdc"),
+    )
+
+async def _force_resistances_off(reason: str) -> None:
+    global off_sequence_start
+    global resistenze_export_off_start
+    r22, r23, r24, rg = _resistance_actuators()
     any_on = False
     for ent in (r22, r23, r24, rg):
+        if ent:
+            manual_overrides.pop(ent, None)
         if _state_is_on(ent):
             any_on = True
-            await _set_resistance(ent, False)
+        await _set_actuator_force(ent, False, reason)
+    off_sequence_start = 0.0
+    resistenze_export_off_start = 0.0
+    for key in off_deadline:
+        off_deadline[key] = 0.0
+    for key in on_deadline:
+        on_deadline[key] = 0.0
     if any_on:
-        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE STARTUP FORCE OFF")
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE FORCE OFF reason={reason}")
+
+async def _force_transfer_outputs_off(reason: str) -> None:
+    act = cfg.get("actuators", {})
+    r6 = act.get("r6_valve_pdc_to_integrazione_acs")
+    r7 = act.get("r7_valve_pdc_to_integrazione_puffer")
+    r13 = act.get("r13_pump_pdc_to_acs_puffer")
+    r14 = act.get("r14_pump_puffer_to_acs")
+    for name in ("volano_to_acs", "volano_to_puffer", "puffer_to_acs"):
+        transfer_desired[name] = False
+        _cancel_transfer_task(f"{name}:on")
+        _cancel_transfer_task(f"{name}:off")
+    for ent in (r6, r7, r13, r14):
+        if ent:
+            manual_overrides.pop(ent, None)
+        await _set_actuator_force(ent, False, reason)
+
+async def _force_miscelatrice_outputs_off(reason: str) -> None:
+    global miscelatrice_task, miscelatrice_pause_until, miscelatrice_last_action, miscelatrice_shutdown_until
+    act = cfg.get("actuators", {})
+    r16 = act.get("r16_cmd_miscelatrice_alza")
+    r17 = act.get("r17_cmd_miscelatrice_abbassa")
+    if miscelatrice_task and not miscelatrice_task.done():
+        miscelatrice_task.cancel()
+        miscelatrice_task = None
+    miscelatrice_pause_until = 0.0
+    miscelatrice_shutdown_until = 0.0
+    miscelatrice_last_action = "STOP"
+    await _set_actuator_force(r16, False, reason)
+    await _set_actuator_force(r17, False, reason)
+
+async def _force_gas_outputs_off(reason: str) -> None:
+    act = cfg.get("actuators", {})
+    await _set_actuator_force(act.get("gas_boiler_power"), False, reason)
+    await _set_actuator_force(act.get("gas_boiler_ta"), False, reason)
+    # R21 e la via normale: aperta quando gas emergenza non e attivo.
+    await _set_actuator_force(act.get("r21_libero"), True, reason)
+
+async def _force_legna_outputs_off(reason: str) -> None:
+    act = cfg.get("actuators", {})
+    await _set_actuator_force(act.get("r30_alimentazione_caldaia_legna"), False, reason)
+    await _set_actuator_force(act.get("r20_ta_caldaia_legna"), False, reason)
+
+async def _force_impianto_outputs_off(reason: str) -> None:
+    act = cfg.get("actuators", {})
+    for name in ("impianto:pump", "impianto:lab_pump", "gas:pump", "gas:lab_pump"):
+        transfer_desired[name] = False
+        _cancel_transfer_task(f"{name}:on")
+        _cancel_transfer_task(f"{name}:off")
+    for key in (
+        "r1_valve_comparto_laboratorio",
+        "r2_valve_comparto_mandata_imp_pt",
+        "r3_valve_comparto_mandata_imp_m1p",
+        "r4_valve_impianto_da_puffer",
+        "r5_valve_impianto_da_pdc",
+        "r11_pump_mandata_laboratorio",
+        "r12_pump_mandata_piani",
+        "r31_valve_impianto_da_volano",
+    ):
+        ent = act.get(key)
+        if ent:
+            manual_overrides.pop(ent, None)
+        await _set_actuator_force(ent, False, reason)
+    ent_cfg = cfg.get("entities", {})
+    await _set_actuator_force(ent_cfg.get("off_centralina_termoregolazione"), True, reason)
 
 def _solar_actuators() -> tuple[str | None, str | None, str | None]:
     act = cfg.get("actuators", {})
@@ -1572,7 +1652,7 @@ async def _auto_off_after_delay(entity_id: str, module_key: str | None) -> None:
         current = _get_state(entity_id)
         if current != "on":
             return
-        if module_key and not cfg.get("modules_enabled", {}).get(module_key, True):
+        if module_key and module_key != "resistenze_volano" and not cfg.get("modules_enabled", {}).get(module_key, True):
             return
         await ha.call_service(entity_id, "off")
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} AUTO-OFF {entity_id} (HA manual guard)")
@@ -1594,7 +1674,7 @@ async def _on_state_changed(entity_id: str, new_state: dict) -> None:
     if key in SOLAR_FAILSAFE_ACTUATOR_KEYS:
         return
     module_key = _module_for_actuator_key(key)
-    if module_key and not cfg.get("modules_enabled", {}).get(module_key, True):
+    if module_key and module_key != "resistenze_volano" and not cfg.get("modules_enabled", {}).get(module_key, True):
         return
     # Se non appartiene a nessun modulo, lascialo manuale (no auto-off)
     if module_key is None:
@@ -1842,6 +1922,9 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         _log_dry_run(decision_data)
         return
     if not cfg.get("modules_enabled", {}).get("resistenze_volano", True):
+        await _force_resistances_off("resistenze module off")
+        decision_data.setdefault("computed", {})["resistance_step"] = 0
+        decision_data.setdefault("computed", {})["resistance_shutdown_countdown_s"] = 0
         resistenze_disabled_forced = False
         return
     resistenze_disabled_forced = False
@@ -2055,6 +2138,7 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     force_puf_acs = bool(force_acs_puffer.get("active")) and bool(force_acs_puffer.get("can_apply"))
     force_vol_puf = bool(force_volano_puffer.get("active")) and bool(force_volano_puffer.get("can_apply"))
     if not (modules.get("volano_to_acs", True) or modules.get("volano_to_puffer", True) or modules.get("puffer_to_acs", True) or force_puf_acs):
+        await _force_transfer_outputs_off("transfer modules off")
         return
 
     want_vol_acs = bool(flags.get("volano_to_acs")) and modules.get("volano_to_acs", True)
@@ -2071,6 +2155,15 @@ async def _apply_transfer_live(decision_data: dict) -> None:
     elif want_vol_acs:
         want_vol_puf = False
         want_puf_acs = False
+
+    if not modules.get("volano_to_acs", True):
+        await _set_valve_only(r6, False)
+    if not modules.get("volano_to_puffer", True):
+        await _set_valve_only(r7, False)
+    if not modules.get("puffer_to_acs", True) and not force_puf_acs:
+        await _set_pump_only("puffer_to_acs", r14, False)
+    if not (want_vol_acs or want_vol_puf):
+        await _set_actuator_force(r13, False, "transfer volano paths inactive")
     # watchdog log: if transfer modules ON but nothing requested and actuators still ON
     try:
         if (modules.get("volano_to_acs", True) or modules.get("volano_to_puffer", True) or modules.get("puffer_to_acs", True)):
@@ -2231,6 +2324,7 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
         miscelatrice_last_action = "ALZA"
         return
     if not cfg.get("modules_enabled", {}).get("miscelatrice", True):
+        await _force_miscelatrice_outputs_off("miscelatrice module off")
         return
 
     ent = cfg.get("entities", {})
@@ -2468,6 +2562,7 @@ async def _apply_impianto_live() -> None:
         gas_emergenza_start_only = True
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO gas_emergenza OFF -> start_only")
     if not cfg.get("modules_enabled", {}).get("impianto", True):
+        await _force_impianto_outputs_off("impianto module off")
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO module OFF state={cfg.get('modules_enabled', {})}")
         return
 
@@ -2694,6 +2789,7 @@ async def _apply_gas_emergenza_live() -> None:
     r21 = act.get("r21_libero")
 
     if not cfg.get("modules_enabled", {}).get("gas_emergenza", False):
+        await _force_gas_outputs_off("gas_emergenza module off")
         return
 
     # R21 GAS MISC OFF: aperta in normale, chiusa solo durante gas emergenza attivo
@@ -2810,6 +2906,7 @@ async def _apply_caldaia_legna_live() -> None:
     enabled = cfg.get("modules_enabled", {}).get("caldaia_legna", False)
     now = time.time()
     if not enabled:
+        await _force_legna_outputs_off("caldaia_legna module off")
         caldaia_legna_state["last_enabled"] = False
         caldaia_legna_state["startup_deadline"] = 0.0
         if caldaia_legna_state.get("forced_off"):
@@ -3162,6 +3259,7 @@ async def set_modules(payload: dict, request: Request):
     if last_modules_payload == modules and (now - last_modules_save_ts) < 2.0:
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES skip (debounce) client={client} payload={modules}")
         return JSONResponse({"ok": True})
+    prev_modules = dict(cfg.get("modules_enabled", {}))
     # live-only module toggle: update runtime state without saving to config
     cfg["modules_enabled"] = modules
     last_modules_payload = modules
@@ -3171,6 +3269,18 @@ async def set_modules(payload: dict, request: Request):
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES summer block applied")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES live client={client} payload={modules}")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
+    if prev_modules.get("resistenze_volano", True) and not modules.get("resistenze_volano", True):
+        await _force_resistances_off("resistenze module toggled off")
+    if any(prev_modules.get(k, True) and not modules.get(k, True) for k in ("volano_to_acs", "volano_to_puffer", "puffer_to_acs")):
+        await _apply_transfer_live(compute_decision(cfg, ha.states))
+    if prev_modules.get("impianto", True) and not modules.get("impianto", True):
+        await _force_impianto_outputs_off("impianto module toggled off")
+    if prev_modules.get("miscelatrice", True) and not modules.get("miscelatrice", True):
+        await _force_miscelatrice_outputs_off("miscelatrice module toggled off")
+    if prev_modules.get("gas_emergenza", False) and not modules.get("gas_emergenza", False):
+        await _force_gas_outputs_off("gas_emergenza module toggled off")
+    if prev_modules.get("caldaia_legna", False) and not modules.get("caldaia_legna", False):
+        await _force_legna_outputs_off("caldaia_legna module toggled off")
     _mqtt_publish_states(force=True)
     return JSONResponse({"ok": True})
 

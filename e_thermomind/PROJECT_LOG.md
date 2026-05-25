@@ -567,3 +567,4 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-25] Release 0.8.23: corretta precedenza solare in modalita night; R10 puo attivarsi per SOLAR -> ACS, mentre R8 resta la via base fuori precedenza.
 - [2026-05-25] Release 0.8.24: hotfix solare valvole sempre comandate da watchdog, anche con modulo acceso/spento e dopo reboot/update; allarme R10 ora segue la decisione SOLAR -> ACS.
 - [2026-05-25] Release 0.8.25: diagnostica comandi attuatori con esito service call e stato locale riallineato dopo comando riuscito.
+- [2026-05-25] Release 0.8.26: fail-safe moduli OFF su resistenze, trasferimenti, miscelatrice, impianto, gas e legna; il solare resta aperto su via sicura.
