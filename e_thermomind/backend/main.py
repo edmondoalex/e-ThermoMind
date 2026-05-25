@@ -1134,6 +1134,15 @@ def _get_state(entity_id: str | None) -> str | None:
     if not entity_id:
         return None
     return ha.states.get(entity_id, {}).get("state")
+
+def _mark_local_state(entity_id: str | None, want_on: bool) -> None:
+    if not entity_id:
+        return
+    state = ha.states.setdefault(entity_id, {})
+    if isinstance(state, dict):
+        state["entity_id"] = entity_id
+        state["state"] = "on" if want_on else "off"
+
 def _get_num(entity_id: str | None) -> float | None:
     if not entity_id:
         return None
@@ -1502,12 +1511,16 @@ async def _set_actuator_force(entity_id: str | None, want_on: bool, reason: str 
     ts = time.strftime("%Y-%m-%d %H:%M:%S")
     if want_on and current != "on":
         recent_ui_actuations[entity_id] = time.time()
-        await ha.call_service(entity_id, "on")
-        action_log.append(f"{ts} FORCE ON {entity_id} reason={reason}")
+        ok = await ha.call_service(entity_id, "on")
+        if ok:
+            _mark_local_state(entity_id, True)
+        action_log.append(f"{ts} FORCE ON {entity_id} ok={ok} reason={reason}")
     if (not want_on) and current != "off":
         recent_ui_actuations[entity_id] = time.time()
-        await ha.call_service(entity_id, "off")
-        action_log.append(f"{ts} FORCE OFF {entity_id} reason={reason}")
+        ok = await ha.call_service(entity_id, "off")
+        if ok:
+            _mark_local_state(entity_id, False)
+        action_log.append(f"{ts} FORCE OFF {entity_id} ok={ok} reason={reason}")
 
 async def _set_actuator_impianto(entity_id: str | None, want_on: bool, reason: str, force: bool = False) -> None:
     if not entity_id or not ha.enabled:
@@ -1521,12 +1534,16 @@ async def _set_actuator_impianto(entity_id: str | None, want_on: bool, reason: s
     current = _get_state(entity_id)
     if want_on and current != "on":
         recent_ui_actuations[entity_id] = time.time()
-        await ha.call_service(entity_id, "on")
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO ON {entity_id} reason={reason}")
+        ok = await ha.call_service(entity_id, "on")
+        if ok:
+            _mark_local_state(entity_id, True)
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO ON {entity_id} ok={ok} reason={reason}")
     if (not want_on) and current != "off":
         recent_ui_actuations[entity_id] = time.time()
-        await ha.call_service(entity_id, "off")
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF {entity_id} reason={reason}")
+        ok = await ha.call_service(entity_id, "off")
+        if ok:
+            _mark_local_state(entity_id, False)
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} IMPIANTO OFF {entity_id} ok={ok} reason={reason}")
 
 async def _force_pump_off(name: str, pump_eid: str | None, reason: str = "") -> None:
     transfer_desired[name] = False
@@ -1675,12 +1692,16 @@ async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
     current = _get_state(entity_id)
     if want_on and current != "on":
         recent_ui_actuations[entity_id] = time.time()
-        await ha.call_service(entity_id, "on")
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id}")
+        ok = await ha.call_service(entity_id, "on")
+        if ok:
+            _mark_local_state(entity_id, True)
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id} ok={ok}")
     if (not want_on) and current != "off":
         recent_ui_actuations[entity_id] = time.time()
-        await ha.call_service(entity_id, "off")
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
+        ok = await ha.call_service(entity_id, "off")
+        if ok:
+            _mark_local_state(entity_id, False)
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id} ok={ok}")
 
 async def _set_actuator(entity_id: str | None, want_on: bool) -> None:
     if not entity_id or not ha.enabled:
@@ -1690,12 +1711,16 @@ async def _set_actuator(entity_id: str | None, want_on: bool) -> None:
     current = _get_state(entity_id)
     if want_on and current != "on":
         recent_ui_actuations[entity_id] = time.time()
-        await ha.call_service(entity_id, "on")
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id}")
+        ok = await ha.call_service(entity_id, "on")
+        if ok:
+            _mark_local_state(entity_id, True)
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id} ok={ok}")
     if (not want_on) and current != "off":
         recent_ui_actuations[entity_id] = time.time()
-        await ha.call_service(entity_id, "off")
-        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id}")
+        ok = await ha.call_service(entity_id, "off")
+        if ok:
+            _mark_local_state(entity_id, False)
+        action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id} ok={ok}")
 
 def _sun_is_night() -> bool | None:
     st = ha.states.get("sun.sun", {})
