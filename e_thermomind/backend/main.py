@@ -859,9 +859,6 @@ def _solar_selected_night_path() -> bool:
         return bool(_solar_night_debounced())
     return True
 
-def _solar_mode_fixed_night() -> bool:
-    return str(cfg.get("solare", {}).get("mode", "auto")).strip().lower() == "night"
-
 async def _force_solar_safe_open(reason: str, emergency_night: bool = False) -> None:
     if cfg.get("runtime", {}).get("mode") != "live":
         return
@@ -909,15 +906,15 @@ def _build_backend_alarms() -> list[dict[str, Any]]:
             "action": "Verifica rele e stato fisico; la logica prova a riaprire automaticamente la via sicura.",
         })
 
-    if mode == "night" and not (r8_on and not r9_on and not r10_on):
+    if mode == "night" and not (r10_on or (r8_on and not r9_on)):
         alarms.append({
             "key": "backend_solar_mode_mismatch",
             "level": "danger",
             "label": "SOLARE",
             "title": "Modalita solare non rispettata",
-            "subtitle": f"notte fissa richiede R8 ON, R9 OFF, R10 OFF | ora R8 {'ON' if r8_on else 'OFF'} R9 {'ON' if r9_on else 'OFF'} R10 {'ON' if r10_on else 'OFF'}",
+            "subtitle": f"notte fissa richiede R8 ON senza precedenza, oppure R10 ON in precedenza | ora R8 {'ON' if r8_on else 'OFF'} R9 {'ON' if r9_on else 'OFF'} R10 {'ON' if r10_on else 'OFF'}",
             "message": "La modalita selezionata deve comandare sempre le valvole solari.",
-            "detail": "Con notte fissa non deve entrare la precedenza ACS R10.",
+            "detail": "Con notte fissa la via base e R8; se il solare sta scaldando ACS, R10 puo prendere precedenza.",
             "action": "Controlla se un'automazione esterna o un rele mantiene uno stato diverso dalla modalita impostata.",
         })
     elif mode == "auto" and not r10_on:
@@ -952,7 +949,7 @@ async def _solar_failsafe_loop() -> None:
             r10_on = _state_is_on(r10)
             mode = str(cfg.get("solare", {}).get("mode", "auto")).strip().lower()
             if mode == "night":
-                if not (r8_on and not r9_on and not r10_on):
+                if not (r10_on or (r8_on and not r9_on)):
                     await _force_solar_safe_open("solar periodic fixed night failsafe")
             elif not (r8_on or r9_on or r10_on):
                 await _force_solar_safe_open("solar periodic all closed failsafe", emergency_night=True)
@@ -2082,10 +2079,6 @@ async def _apply_solar_live(decision_data: dict) -> None:
         # Fail-safe idraulico: modulo solare OFF disabilita solo la logica ACS,
         # ma mantiene una via aperta seguendo la modalita giorno/notte configurata.
         await _force_solar_safe_open("solar module off failsafe")
-        return
-
-    if _solar_mode_fixed_night():
-        await _force_solar_safe_open("solar fixed night mode")
         return
 
     # Cutback: se ACS o solare troppo caldi

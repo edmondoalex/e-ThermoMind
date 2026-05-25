@@ -564,3 +564,4 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-25] Release 0.8.20: pubblicati in MQTT/Home Assistant tutti gli allarmi della pagina ALLARMI nella sezione thermomind/alarms/..., con riepilogo e binary_sensor diagnostici per automazioni/notifiche.
 - [2026-05-25] Release 0.8.21: aggiunto allarme `resistances_decision_mismatch` per disallineamento tra decisione modulo resistenze e stato fisico durante countdown spegnimento.
 - [2026-05-25] Release 0.8.22: icona/pulsante ALLARMI nella card Stato quando ci sono allarmi attivi e log add-on con timestamp data+ora via configurazione Uvicorn.
+- [2026-05-25] Release 0.8.23: corretta precedenza solare in modalita night; R10 puo attivarsi per SOLAR -> ACS, mentre R8 resta la via base fuori precedenza.
