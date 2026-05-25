@@ -330,7 +330,7 @@ def _mqtt_extra_sensor_values(decision: dict) -> dict[str, Any]:
     force_vtp = computed.get("force_volano_puffer", {}) or {}
     easas = computed.get("energy_easas", {}) or {}
     priv = computed.get("energy_privato", {}) or {}
-    alarms = _build_backend_alarms()
+    alarms = _build_backend_alarms(decision)
     alarm_keys = {str(a.get("key") or "") for a in alarms if isinstance(a, dict)}
     alarm_titles = [str(a.get("title") or a.get("key") or "").strip() for a in alarms if isinstance(a, dict)]
     flags = computed.get("flags", {}) or {}
@@ -870,12 +870,25 @@ async def _force_solar_safe_open(reason: str, emergency_night: bool = False) -> 
     await _set_actuator_force(r8, bool(night), reason)
     await _set_actuator_force(r9, not bool(night), reason)
 
-def _build_backend_alarms() -> list[dict[str, Any]]:
+def _solar_cutback_active() -> bool:
+    ent = cfg.get("entities", {})
+    sol_cfg = cfg.get("solare", {})
+    t_acs = _get_num(ent.get("t_acs"))
+    t_sol = _get_num(ent.get("t_solare_mandata"))
+    acs_max = float(cfg.get("acs", {}).get("max_c", 60.0))
+    sol_max = float(sol_cfg.get("max_c", 90.0))
+    return (t_acs is not None and t_acs >= acs_max) or (t_sol is not None and t_sol >= sol_max)
+
+def _build_backend_alarms(decision: dict | None = None) -> list[dict[str, Any]]:
     alarms: list[dict[str, Any]] = []
     r8, r9, r10 = _solar_actuators()
     r8_on = _state_is_on(r8)
     r9_on = _state_is_on(r9)
     r10_on = _state_is_on(r10)
+    computed = (decision or {}).get("computed", {}) if isinstance(decision, dict) else {}
+    solar_active = computed.get("source_to_acs") == "SOLAR"
+    cutback = _solar_cutback_active()
+    wants_r10 = bool(solar_active and not cutback)
     ent = cfg.get("entities", {})
     t_sol = _get_num(ent.get("t_solare_mandata"))
     sol_max = float(cfg.get("solare", {}).get("max_c", 90.0))
@@ -906,15 +919,38 @@ def _build_backend_alarms() -> list[dict[str, Any]]:
             "action": "Verifica rele e stato fisico; la logica prova a riaprire automaticamente la via sicura.",
         })
 
-    if mode == "night" and not (r10_on or (r8_on and not r9_on)):
+    if wants_r10:
+        if not (r10_on and not r8_on and not r9_on):
+            alarms.append({
+                "key": "backend_solar_mode_mismatch",
+                "level": "danger",
+                "label": "SOLARE",
+                "title": "Precedenza solare non rispettata",
+                "subtitle": f"logica SOLAR->ACS richiede R10 ON solo | ora R8 {'ON' if r8_on else 'OFF'} R9 {'ON' if r9_on else 'OFF'} R10 {'ON' if r10_on else 'OFF'}",
+                "message": "Il modulo ha deciso precedenza solare ACS, ma le valvole non sono allineate.",
+                "detail": "Quando il solare sta scaldando ACS, R10 deve essere ON e R8/R9 devono essere OFF.",
+                "action": "Controlla comando HA, rele R10 e automazioni esterne sulle valvole solari.",
+            })
+    elif r10_on:
+        alarms.append({
+            "key": "backend_solar_mode_mismatch",
+            "level": "danger",
+            "label": "SOLARE",
+            "title": "Precedenza solare fuori logica",
+            "subtitle": f"logica Source={computed.get('source_to_acs') or 'OFF'} cutback={'SI' if cutback else 'NO'} | ora R10 ON",
+            "message": "R10 e acceso ma il modulo non sta chiedendo la precedenza solare ACS.",
+            "detail": "Fuori precedenza deve restare aperta la via base R8/R9 secondo la modalita selezionata.",
+            "action": "Verifica se R10 e rimasto manuale, bloccato o comandato da automazioni esterne.",
+        })
+    elif mode == "night" and not (r8_on and not r9_on):
         alarms.append({
             "key": "backend_solar_mode_mismatch",
             "level": "danger",
             "label": "SOLARE",
             "title": "Modalita solare non rispettata",
-            "subtitle": f"notte fissa richiede R8 ON senza precedenza, oppure R10 ON in precedenza | ora R8 {'ON' if r8_on else 'OFF'} R9 {'ON' if r9_on else 'OFF'} R10 {'ON' if r10_on else 'OFF'}",
+            "subtitle": f"notte fissa senza precedenza richiede R8 ON | ora R8 {'ON' if r8_on else 'OFF'} R9 {'ON' if r9_on else 'OFF'} R10 {'ON' if r10_on else 'OFF'}",
             "message": "La modalita selezionata deve comandare sempre le valvole solari.",
-            "detail": "Con notte fissa la via base e R8; se il solare sta scaldando ACS, R10 puo prendere precedenza.",
+            "detail": "Con notte fissa la via base e R8. R10 e ammesso solo quando la logica decide SOLAR -> ACS.",
             "action": "Controlla se un'automazione esterna o un rele mantiene uno stato diverso dalla modalita impostata.",
         })
     elif mode == "auto" and not r10_on:
@@ -943,15 +979,13 @@ async def _solar_failsafe_loop() -> None:
             await asyncio.sleep(30)
             if cfg.get("runtime", {}).get("mode") != "live" or not ha.enabled:
                 continue
+            data = compute_decision(cfg, ha.states)
+            await _apply_solar_live(data)
             r8, r9, r10 = _solar_actuators()
             r8_on = _state_is_on(r8)
             r9_on = _state_is_on(r9)
             r10_on = _state_is_on(r10)
-            mode = str(cfg.get("solare", {}).get("mode", "auto")).strip().lower()
-            if mode == "night":
-                if not (r10_on or (r8_on and not r9_on)):
-                    await _force_solar_safe_open("solar periodic fixed night failsafe")
-            elif not (r8_on or r9_on or r10_on):
+            if not (r8_on or r9_on or r10_on):
                 await _force_solar_safe_open("solar periodic all closed failsafe", emergency_night=True)
         except asyncio.CancelledError:
             raise
@@ -1082,7 +1116,7 @@ async def decision():
     await _apply_caldaia_legna_live()
     await _apply_miscelatrice_live(data)
     _apply_legna_timer_reason(data)
-    data.setdefault("computed", {})["alarms"] = _build_backend_alarms()
+    data.setdefault("computed", {})["alarms"] = _build_backend_alarms(data)
     data["zones"] = _build_zones_state()
     return JSONResponse(data)
 
@@ -1287,7 +1321,7 @@ async def _build_snapshot() -> dict:
     await _apply_gas_emergenza_live()
     await _apply_caldaia_legna_live()
     _apply_legna_timer_reason(data)
-    data.setdefault("computed", {})["alarms"] = _build_backend_alarms()
+    data.setdefault("computed", {})["alarms"] = _build_backend_alarms(data)
     act = {}
     for k, eid in (cfg.get("actuators", {}) or {}).items():
         if eid:
@@ -2083,6 +2117,7 @@ async def _apply_solar_live(decision_data: dict) -> None:
 
     # Cutback: se ACS o solare troppo caldi
     ent = cfg.get("entities", {})
+    sol_cfg = cfg.get("solare", {})
     t_acs = ha.states.get(ent.get("t_acs"), {}).get("state")
     t_sol = ha.states.get(ent.get("t_solare_mandata"), {}).get("state")
     try:

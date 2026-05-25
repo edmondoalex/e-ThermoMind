@@ -1980,7 +1980,7 @@
             <div class="field"><label>Δ Start Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_on_c"/></div>
             <div class="field"><label>Δ Hold Solare → ACS (C)</label><input type="number" step="0.5" v-model.number="sp.solare.delta_hold_c"/></div>
             <div class="field"><label>Solare MAX (C)</label><input type="number" step="0.5" v-model.number="sp.solare.max_c"/><div class="help">Sicurezza: sopra questo valore stop solare.</div></div>
-            <div class="help">In NOTTE: R8 ON e R9 OFF. R18/R19 restano manuali con interblocco.</div>
+            <div class="help">In NOTTE: R8 ON e R9 OFF fuori precedenza; se la logica sceglie SOLAR -> ACS comanda R10. R18/R19 restano manuali con interblocco.</div>
           </div>
 
         </div>

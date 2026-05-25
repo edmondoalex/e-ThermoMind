@@ -565,3 +565,4 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-25] Release 0.8.21: aggiunto allarme `resistances_decision_mismatch` per disallineamento tra decisione modulo resistenze e stato fisico durante countdown spegnimento.
 - [2026-05-25] Release 0.8.22: icona/pulsante ALLARMI nella card Stato quando ci sono allarmi attivi e log add-on con timestamp data+ora via configurazione Uvicorn.
 - [2026-05-25] Release 0.8.23: corretta precedenza solare in modalita night; R10 puo attivarsi per SOLAR -> ACS, mentre R8 resta la via base fuori precedenza.
+- [2026-05-25] Release 0.8.24: hotfix solare valvole sempre comandate da watchdog, anche con modulo acceso/spento e dopo reboot/update; allarme R10 ora segue la decisione SOLAR -> ACS.

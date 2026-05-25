@@ -585,3 +585,4 @@
 - [2026-05-25] Allarmi Resistenze: aggiunto allarme pagina/MQTT `resistances_decision_mismatch` quando il modulo ha deciso OFF ed e nel countdown di spegnimento ma le resistenze risultano ancora fisicamente ON. Release 0.8.21.
 - [2026-05-25] UI/Log: aggiunto pulsante allarmi in alto a destra nella card Stato quando ci sono allarmi attivi; configurato logging Uvicorn/access log con data e ora. Release 0.8.22.
 - [2026-05-25] Solare: corretta modalita night/notte fissa. La modalita resta via base R8 quando non c e precedenza, ma non blocca R10 quando la logica sceglie SOLAR -> ACS e non c e cutback. Release 0.8.23.
+- [2026-05-25] Solare watchdog: corretto bug cutback in applicazione live valvole e reso il controllo periodico attivo anche senza pagina aperta. R8/R9/R10 vengono riallineate sempre a modulo ON/OFF; R10 e valido solo quando la logica decide SOLAR -> ACS. Release 0.8.24.
