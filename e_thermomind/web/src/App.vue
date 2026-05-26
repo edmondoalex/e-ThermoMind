@@ -4166,9 +4166,8 @@ async function doAct(entity_id, action, opts = {}){
 function userToggle(entityObj, moduleKey){
   if (!entityObj?.entity_id) return
   if (status.value?.runtime_mode !== 'live') return
-  if (moduleKey && !modules.value?.[moduleKey]) return
   const action = entityObj.state === 'on' ? 'off' : 'on'
-  doAct(entityObj.entity_id, action)
+  doAct(entityObj.entity_id, action, { manual: true })
 }
 
 function userToggleManual(entityObj){

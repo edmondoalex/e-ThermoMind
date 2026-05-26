@@ -827,7 +827,7 @@ async def _mqtt_reconfigure() -> None:
 async def _resistenze_startup_safety() -> None:
     # Safety: after restart/update, force resistances OFF once.
     await asyncio.sleep(5)
-    await _force_resistances_off("resistenze startup safety")
+    await _force_resistances_off("resistenze startup safety", clear_manual=True)
 
 def _resistance_actuators() -> tuple[str | None, str | None, str | None, str | None]:
     act = cfg.get("actuators", {})
@@ -838,14 +838,17 @@ def _resistance_actuators() -> tuple[str | None, str | None, str | None, str | N
         act.get("generale_resistenze_volano_pdc"),
     )
 
-async def _force_resistances_off(reason: str) -> None:
+async def _force_resistances_off(reason: str, clear_manual: bool = False) -> None:
     global off_sequence_start
     global resistenze_export_off_start
     r22, r23, r24, rg = _resistance_actuators()
     any_on = False
     for ent in (r22, r23, r24, rg):
         if ent:
-            manual_overrides.pop(ent, None)
+            if clear_manual:
+                manual_overrides.pop(ent, None)
+            elif _is_manual(ent):
+                continue
         if _state_is_on(ent):
             any_on = True
         await _set_actuator_force(ent, False, reason)
@@ -858,7 +861,7 @@ async def _force_resistances_off(reason: str) -> None:
     if any_on:
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE FORCE OFF reason={reason}")
 
-async def _force_transfer_outputs_off(reason: str) -> None:
+async def _force_transfer_outputs_off(reason: str, clear_manual: bool = False) -> None:
     act = cfg.get("actuators", {})
     r6 = act.get("r6_valve_pdc_to_integrazione_acs")
     r7 = act.get("r7_valve_pdc_to_integrazione_puffer")
@@ -870,10 +873,13 @@ async def _force_transfer_outputs_off(reason: str) -> None:
         _cancel_transfer_task(f"{name}:off")
     for ent in (r6, r7, r13, r14):
         if ent:
-            manual_overrides.pop(ent, None)
+            if clear_manual:
+                manual_overrides.pop(ent, None)
+            elif _is_manual(ent):
+                continue
         await _set_actuator_force(ent, False, reason)
 
-async def _force_miscelatrice_outputs_off(reason: str) -> None:
+async def _force_miscelatrice_outputs_off(reason: str, clear_manual: bool = False) -> None:
     global miscelatrice_task, miscelatrice_pause_until, miscelatrice_last_action, miscelatrice_shutdown_until
     act = cfg.get("actuators", {})
     r16 = act.get("r16_cmd_miscelatrice_alza")
@@ -884,22 +890,43 @@ async def _force_miscelatrice_outputs_off(reason: str) -> None:
     miscelatrice_pause_until = 0.0
     miscelatrice_shutdown_until = 0.0
     miscelatrice_last_action = "STOP"
-    await _set_actuator_force(r16, False, reason)
-    await _set_actuator_force(r17, False, reason)
+    if clear_manual:
+        manual_overrides.pop(r16, None)
+        manual_overrides.pop(r17, None)
+    if not _is_manual(r16):
+        await _set_actuator_force(r16, False, reason)
+    if not _is_manual(r17):
+        await _set_actuator_force(r17, False, reason)
 
-async def _force_gas_outputs_off(reason: str) -> None:
+async def _force_gas_outputs_off(reason: str, clear_manual: bool = False) -> None:
     act = cfg.get("actuators", {})
-    await _set_actuator_force(act.get("gas_boiler_power"), False, reason)
-    await _set_actuator_force(act.get("gas_boiler_ta"), False, reason)
+    power = act.get("gas_boiler_power")
+    ta = act.get("gas_boiler_ta")
+    r21 = act.get("r21_libero")
+    if clear_manual:
+        for ent in (power, ta, r21):
+            manual_overrides.pop(ent, None)
+    if not _is_manual(power):
+        await _set_actuator_force(power, False, reason)
+    if not _is_manual(ta):
+        await _set_actuator_force(ta, False, reason)
     # R21 e la via normale: aperta quando gas emergenza non e attivo.
-    await _set_actuator_force(act.get("r21_libero"), True, reason)
+    if not _is_manual(r21):
+        await _set_actuator_force(r21, True, reason)
 
-async def _force_legna_outputs_off(reason: str) -> None:
+async def _force_legna_outputs_off(reason: str, clear_manual: bool = False) -> None:
     act = cfg.get("actuators", {})
-    await _set_actuator_force(act.get("r30_alimentazione_caldaia_legna"), False, reason)
-    await _set_actuator_force(act.get("r20_ta_caldaia_legna"), False, reason)
+    power = act.get("r30_alimentazione_caldaia_legna")
+    ta = act.get("r20_ta_caldaia_legna")
+    if clear_manual:
+        manual_overrides.pop(power, None)
+        manual_overrides.pop(ta, None)
+    if not _is_manual(power):
+        await _set_actuator_force(power, False, reason)
+    if not _is_manual(ta):
+        await _set_actuator_force(ta, False, reason)
 
-async def _force_impianto_outputs_off(reason: str) -> None:
+async def _force_impianto_outputs_off(reason: str, clear_manual: bool = False) -> None:
     act = cfg.get("actuators", {})
     for name in ("impianto:pump", "impianto:lab_pump", "gas:pump", "gas:lab_pump"):
         transfer_desired[name] = False
@@ -917,10 +944,34 @@ async def _force_impianto_outputs_off(reason: str) -> None:
     ):
         ent = act.get(key)
         if ent:
-            manual_overrides.pop(ent, None)
+            if clear_manual:
+                manual_overrides.pop(ent, None)
+            elif _is_manual(ent):
+                continue
         await _set_actuator_force(ent, False, reason)
     ent_cfg = cfg.get("entities", {})
-    await _set_actuator_force(ent_cfg.get("off_centralina_termoregolazione"), True, reason)
+    off_centralina = ent_cfg.get("off_centralina_termoregolazione")
+    if clear_manual:
+        manual_overrides.pop(off_centralina, None)
+    if not _is_manual(off_centralina):
+        await _set_actuator_force(off_centralina, True, reason)
+
+async def _force_pdc_outputs_off(reason: str, clear_manual: bool = False) -> None:
+    act = cfg.get("actuators", {})
+    for key in (
+        "r25_comparto_generale_pdc",
+        "r26_comparto_pdc1_avvio",
+        "r27_comparto_pdc2_avvio",
+        "r28_scarico_antigelo_mandata_pdc",
+        "r29_scarico_antigelo_ritorno_pdc",
+    ):
+        ent = act.get(key)
+        if ent:
+            if clear_manual:
+                manual_overrides.pop(ent, None)
+            elif _is_manual(ent):
+                continue
+        await _set_actuator_force(ent, False, reason)
 
 def _solar_actuators() -> tuple[str | None, str | None, str | None]:
     act = cfg.get("actuators", {})
@@ -1674,7 +1725,9 @@ async def _on_state_changed(entity_id: str, new_state: dict) -> None:
     if key in SOLAR_FAILSAFE_ACTUATOR_KEYS:
         return
     module_key = _module_for_actuator_key(key)
-    if module_key and module_key != "resistenze_volano" and not cfg.get("modules_enabled", {}).get(module_key, True):
+    if module_key and not cfg.get("modules_enabled", {}).get(module_key, True):
+        manual_overrides[entity_id] = True
+        _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MANUAL ON {entity_id} while module {module_key}=OFF")
         return
     # Se non appartiene a nessun modulo, lascialo manuale (no auto-off)
     if module_key is None:
@@ -3270,17 +3323,21 @@ async def set_modules(payload: dict, request: Request):
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES live client={client} payload={modules}")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
     if prev_modules.get("resistenze_volano", True) and not modules.get("resistenze_volano", True):
-        await _force_resistances_off("resistenze module toggled off")
+        await _force_resistances_off("resistenze module toggled off", clear_manual=True)
     if any(prev_modules.get(k, True) and not modules.get(k, True) for k in ("volano_to_acs", "volano_to_puffer", "puffer_to_acs")):
-        await _apply_transfer_live(compute_decision(cfg, ha.states))
+        await _force_transfer_outputs_off("transfer module toggled off", clear_manual=True)
     if prev_modules.get("impianto", True) and not modules.get("impianto", True):
-        await _force_impianto_outputs_off("impianto module toggled off")
+        await _force_impianto_outputs_off("impianto module toggled off", clear_manual=True)
     if prev_modules.get("miscelatrice", True) and not modules.get("miscelatrice", True):
-        await _force_miscelatrice_outputs_off("miscelatrice module toggled off")
+        await _force_miscelatrice_outputs_off("miscelatrice module toggled off", clear_manual=True)
+    if prev_modules.get("solare", True) and not modules.get("solare", True):
+        await _force_solar_safe_open("solar module toggled off")
+    if prev_modules.get("pdc", False) and not modules.get("pdc", False):
+        await _force_pdc_outputs_off("pdc module toggled off", clear_manual=True)
     if prev_modules.get("gas_emergenza", False) and not modules.get("gas_emergenza", False):
-        await _force_gas_outputs_off("gas_emergenza module toggled off")
+        await _force_gas_outputs_off("gas_emergenza module toggled off", clear_manual=True)
     if prev_modules.get("caldaia_legna", False) and not modules.get("caldaia_legna", False):
-        await _force_legna_outputs_off("caldaia_legna module toggled off")
+        await _force_legna_outputs_off("caldaia_legna module toggled off", clear_manual=True)
     _mqtt_publish_states(force=True)
     return JSONResponse({"ok": True})
 
