@@ -1285,6 +1285,16 @@ def _get_num(entity_id: str | None) -> float | None:
     except Exception:
         return None
 
+def _attr_float(attrs: dict, *keys: str) -> float | None:
+    for key in keys:
+        try:
+            val = attrs.get(key)
+            if val is not None and val != "":
+                return float(val)
+        except Exception:
+            pass
+    return None
+
 def _parse_hhmm(val: str | None) -> int | None:
     if not val or not isinstance(val, str):
         return None
@@ -1595,7 +1605,8 @@ def _zone_active(entity_id: str | None, cooling_blocked: set[str]) -> bool:
     st = ha.states.get(entity_id, {})
     state = str(st.get("state") or "").lower()
     dom = entity_id.split(".", 1)[0] if "." in entity_id else ""
-    hvac_action = str(st.get("attributes", {}).get("hvac_action") or "").lower()
+    attrs = st.get("attributes", {}) or {}
+    hvac_action = str(attrs.get("hvac_action") or "").lower()
     is_cool = state in ("cool", "cooling") or hvac_action == "cooling"
     if is_cool and entity_id in cooling_blocked:
         return False
@@ -1605,7 +1616,19 @@ def _zone_active(entity_id: str | None, cooling_blocked: set[str]) -> bool:
         # active only when really heating/cooling and not OFF
         if state in ("off", "idle", "unavailable", "unknown"):
             return False
-        return hvac_action in ("heating", "cooling")
+        if hvac_action in ("heating", "cooling"):
+            return True
+        if hvac_action in ("idle", "off"):
+            return False
+        current = _attr_float(attrs, "current_temperature")
+        target = _attr_float(attrs, "temperature", "target_temp", "target_temperature")
+        if current is None or target is None:
+            return False
+        if state in ("heat", "heating"):
+            return current < target
+        if state in ("cool", "cooling"):
+            return current > target
+        return False
     # default: treat truthy text as active
     return state in ("on", "true", "1", "yes", "heat", "heating")
 
@@ -1620,7 +1643,14 @@ def _gas_zone_demand(eid: str | None, cooling_blocked: set[str]) -> bool:
         if state in ("off", "idle", "unavailable", "unknown"):
             return False
         # in gas: richiesta solo se realmente in heating
-        return action == "heating"
+        if action == "heating":
+            return True
+        if action in ("idle", "off", "cooling"):
+            return False
+        attrs = st.get("attributes", {}) or {}
+        current = _attr_float(attrs, "current_temperature")
+        target = _attr_float(attrs, "temperature", "target_temp", "target_temperature")
+        return bool(state in ("heat", "heating") and current is not None and target is not None and current < target)
     return _zone_active(eid, cooling_blocked)
 
 async def _set_pump_delayed(name: str, pump_eid: str | None, want_on: bool, delay_on: float, delay_off: float) -> None:
@@ -2543,10 +2573,30 @@ async def _set_climate_hvac_mode(entity_id: str | None, mode: str, reason: str |
     now = time.time()
     if prev and prev[0] == mode and (now - prev[1]) < 30:
         return
-    await ha.call_service_named("climate", "set_hvac_mode", {"entity_id": entity_id, "hvac_mode": mode})
+    st = ha.states.get(entity_id, {}) or {}
+    attrs = st.get("attributes", {}) or {}
+    supported_modes = attrs.get("hvac_modes") or attrs.get("supported_hvac_modes") or []
+    if not isinstance(supported_modes, list):
+        supported_modes = []
+    supported_norm = {str(m).strip().lower() for m in supported_modes}
+    service = "set_hvac_mode"
+    ok = False
+    if not supported_norm or mode in supported_norm:
+        ok = await ha.call_service_named("climate", "set_hvac_mode", {"entity_id": entity_id, "hvac_mode": mode})
+    if not ok and mode == "off":
+        service = "turn_off"
+        ok = await ha.call_service_named("climate", "turn_off", {"entity_id": entity_id})
+    elif not ok and mode != "off":
+        service = "turn_on"
+        ok = await ha.call_service_named("climate", "turn_on", {"entity_id": entity_id})
     reason_txt = f" ({reason})" if reason else ""
-    _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode}{reason_txt}")
-    last_hvac_cmd[entity_id] = (mode, now)
+    modes_txt = ",".join(sorted(supported_norm)) if supported_norm else "n/d"
+    _log_action(
+        f"{time.strftime('%Y-%m-%d %H:%M:%S')} HVAC {entity_id} -> {mode} "
+        f"ok={ok} service={service} current={current or 'n/d'} modes={modes_txt}{reason_txt}"
+    )
+    if ok:
+        last_hvac_cmd[entity_id] = (mode, now)
 
 
 async def _set_climate_hvac_mode_guard(entity_id: str | None, mode: str, min_switch_s: float, reason: str = "") -> None:

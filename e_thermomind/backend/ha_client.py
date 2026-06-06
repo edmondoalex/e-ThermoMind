@@ -144,7 +144,14 @@ class HAClient:
         payload = data or {}
         url = f"{self._http_url}/services/{domain}/{service}"
         async with self._session.post(url, json=payload) as r:
-            return r.status == 200
+            ok = 200 <= r.status < 300
+            if not ok:
+                try:
+                    body = await r.text()
+                except Exception:
+                    body = ""
+                self._log.warning("Service %s.%s failed status=%s payload=%s body=%s", domain, service, r.status, payload, body[:500])
+            return ok
 
 
     async def api_get(self, path: str, params: Dict[str, Any] | None = None) -> Any:

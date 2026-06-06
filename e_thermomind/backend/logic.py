@@ -63,14 +63,37 @@ _LAST: Dict[str, Any] = {
     "heater_privato": False
 }
 
-def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool) -> bool:
+def _attr_float(attrs: Dict[str, Any], *keys: str) -> float | None:
+    for key in keys:
+        try:
+            val = attrs.get(key)
+            if val is not None and val != "":
+                return float(val)
+        except Exception:
+            pass
+    return None
+
+def _zone_active(state: Any, hvac_action: Any, cooling_blocked: bool, attrs: Dict[str, Any] | None = None) -> bool:
     if cooling_blocked:
         return False
     sval = str(state or "").strip().lower()
     action = str(hvac_action or "").strip().lower()
     if sval in ("off", "idle", "unavailable", "unknown"):
         return False
-    return action in ("heating", "cooling")
+    if action in ("heating", "cooling"):
+        return True
+    if action in ("idle", "off"):
+        return False
+    attrs = attrs or {}
+    current = _attr_float(attrs, "current_temperature")
+    target = _attr_float(attrs, "temperature", "target_temp", "target_temperature")
+    if current is None or target is None:
+        return False
+    if sval in ("heat", "heating"):
+        return current < target
+    if sval in ("cool", "cooling"):
+        return current > target
+    return False
 
 def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float | None = None) -> Dict[str, Any]:
     now_ts = time.time() if now is None else float(now)
@@ -681,7 +704,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     cooling_blocked = set(imp_cfg.get("cooling_blocked", []))
     def _is_zone_on(eid: str) -> bool:
         st = ha_states.get(eid, {})
-        return _zone_active(st.get("state"), st.get("attributes", {}).get("hvac_action"), eid in cooling_blocked)
+        attrs = st.get("attributes", {}) or {}
+        return _zone_active(st.get("state"), attrs.get("hvac_action"), eid in cooling_blocked, attrs)
     any_active = any(_is_zone_on(z) for z in (zones_pt + zones_p1 + zones_mans + zones_lab + ([zone_scala] if zone_scala else [])))
     if req_eid:
         zone_demand_on = _is_on_state(req_state)
@@ -886,7 +910,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     gas_pt = gas_p1 = gas_mans = gas_lab = gas_scala = False
     for z in gas_zones:
         st = ha_states.get(z, {})
-        is_active = _zone_active(st.get("state"), st.get("attributes", {}).get("hvac_action"), z in cooling_blocked)
+        attrs = st.get("attributes", {}) or {}
+        is_active = _zone_active(st.get("state"), attrs.get("hvac_action"), z in cooling_blocked, attrs)
         gas_active_any = gas_active_any or is_active
         if z == zone_scala:
             gas_scala = gas_scala or is_active
