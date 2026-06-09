@@ -59,6 +59,7 @@ _LAST: Dict[str, Any] = {
     "res_step": 0,
     "res_step_ts": 0.0,
     "res_base": None,
+    "res_battery_block_until": 0.0,
     "heater_easas": False,
     "heater_privato": False
 }
@@ -549,24 +550,32 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             )
 
     battery_block_w = float(res_cfg.get("battery_block_w", 100.0))
+    battery_block_hold_s = int(_f(res_cfg.get("battery_block_hold_s", 180), 180))
+    if battery_output_w > battery_block_w:
+        _LAST["res_battery_block_until"] = now_ts + max(0, battery_block_hold_s)
+    battery_block_until = float(_LAST.get("res_battery_block_until", 0.0) or 0.0)
+    battery_block_active = battery_output_w > battery_block_w or now_ts < battery_block_until
+    battery_block_remaining_s = max(0, int(battery_block_until - now_ts)) if battery_block_active else 0
     export_off_w = float(res_cfg.get("export_off_w", -100.0))
     last_base = _LAST.get("res_base")
+    last_step = int(_LAST.get("res_step", 0) or 0)
+    last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
     if export_w > extra_safe_w:
         effective_power_w = max(0.0, export_w + res_power_w)
         base_sel = "export"
-    elif last_base == "export" and res_power_w > 0.0:
+    elif last_base == "export" and last_step > 0 and res_power_w > 0.0:
         effective_power_w = max(0.0, export_w + res_power_w)
         base_sel = "export"
     else:
         # If resistances are already on, add their power to available
         # to avoid getting stuck below the next step threshold.
-        effective_power_w = extra_safe_w + (res_power_w if res_power_w > 0.0 else 0.0)
+        effective_power_w = extra_safe_w + (res_power_w if last_step > 0 and res_power_w > 0.0 else 0.0)
         base_sel = "possibile"
 
     desired_step = 0
     resistance_enabled = resistenze_enabled and res_cfg.get("enabled", True)
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and resistance_enabled:
-        if battery_output_w > battery_block_w:
+        if battery_block_active:
             desired_step = 0
         elif export_w <= export_off_w:
             desired_step = 0
@@ -585,9 +594,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))
     off_delay = int(_f(res_cfg.get("off_delay_s", 5), 5))
     step_down_delay = int(_f(res_cfg.get("step_down_delay_s", off_delay), off_delay))
-    last_step = int(_LAST.get("res_step", 0) or 0)
-    last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
     if not resistance_enabled:
+        step = 0
+    elif battery_block_active:
         step = 0
     elif desired_step > last_step:
         if now_ts - last_step_ts >= step_up_delay:
@@ -615,8 +624,14 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         charge_reason = f"VOLANO_MAX: {t_volano:.1f}°C >= {vol_max:.1f}°C"
     elif dest == "OFF":
         charge_reason = dest_reason
-    elif battery_output_w > battery_block_w:
-        charge_reason = f"{power_note} | battery_out {battery_output_w:.0f}W > {battery_block_w:.0f}W"
+    elif battery_block_active:
+        if battery_output_w > battery_block_w:
+            charge_reason = (
+                f"{power_note} | battery_out {battery_output_w:.0f}W > {battery_block_w:.0f}W "
+                f"| hold {battery_block_remaining_s}s"
+            )
+        else:
+            charge_reason = f"{power_note} | blocco batteria in hold {battery_block_remaining_s}s"
     elif export_w <= export_off_w or effective_power_w <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
     else:
@@ -669,8 +684,11 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         res_blockers.append(f"Dest={dest}")
     if vol_max_hit:
         res_blockers.append("VOL_MAX")
-    if battery_output_w > battery_block_w:
-        res_blockers.append(f"BatteryOut>{battery_block_w:.0f}W")
+    if battery_block_active:
+        if battery_output_w > battery_block_w:
+            res_blockers.append(f"BatteryOut>{battery_block_w:.0f}W")
+        else:
+            res_blockers.append(f"BatteryHold{battery_block_remaining_s}s")
     if export_w <= export_off_w:
         res_blockers.append(f"Export<={export_off_w:.0f}W")
     if effective_power_w <= 0.0:
@@ -1040,6 +1058,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             "charge_buffer": charge_buffer,
             "charge_reason": charge_reason,
             "resistance_step": step,
+            "resistance_battery_block_remaining_s": battery_block_remaining_s,
             "flags": {
                 "volano_to_acs": source_to_acs == "VOLANO",
                 "puffer_to_acs": source_to_acs == "PUFFER",

@@ -80,6 +80,7 @@ recent_ui_actuations: dict[str, float] = {}
 pending_auto_off: dict[str, asyncio.Task] = {}
 transfer_tasks: dict[str, asyncio.Task] = {}
 resistenze_export_off_start: float = 0.0
+resistenze_battery_block_until: float = 0.0
 transfer_desired: dict[str, bool] = {}
 manual_overrides: dict[str, bool] = {}
 last_hvac_cmd: dict[str, tuple[str, float]] = {}
@@ -2000,6 +2001,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     global resistenze_watchdog_last_log
     global off_sequence_start
     global resistenze_export_off_start
+    global resistenze_battery_block_until
     global resistenze_disabled_forced
     if cfg.get("runtime", {}).get("mode") != "live":
         _log_dry_run(decision_data)
@@ -2020,11 +2022,13 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     export_w = float(decision_data.get("inputs", {}).get("grid_export_w") or 0.0)
     extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
     battery_out_w = float(decision_data.get("inputs", {}).get("battery_output_w") or 0.0)
+    now = time.time()
     available_w = export_w
     computed_available = decision_data.get("computed", {}).get("available_power_w")
     if computed_available is not None:
         available_w = float(computed_available)
     battery_block_w = float(cfg.get("resistance", {}).get("battery_block_w", 100.0))
+    battery_block_hold_s = int(cfg.get("resistance", {}).get("battery_block_hold_s", 180))
     export_off_w = float(cfg.get("resistance", {}).get("export_off_w", -100.0))
     use_export_base = export_w > extra_safe_w
     desired = {
@@ -2034,9 +2038,15 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     }
     computed = decision_data.setdefault("computed", {})
     computed["resistance_shutdown_countdown_s"] = 0
+    if battery_out_w > battery_block_w:
+        resistenze_battery_block_until = now + max(0, battery_block_hold_s)
+    battery_block_remaining_s = max(0, int(resistenze_battery_block_until - now))
+    computed["resistance_battery_block_remaining_s"] = max(
+        int(computed.get("resistance_battery_block_remaining_s") or 0),
+        battery_block_remaining_s,
+    )
     try:
         if step == 0:
-            now = time.time()
             if now - resistenze_watchdog_last_log >= 120:
                 act_on = []
                 for key, ent_id in (("r22", r22), ("r23", r23), ("r24", r24), ("rg", rg)):
@@ -2052,8 +2062,21 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     except Exception:
         pass
 
+    if battery_out_w > battery_block_w or battery_block_remaining_s > 0:
+        if battery_block_remaining_s > 0:
+            computed["resistance_shutdown_countdown_s"] = max(
+                int(computed.get("resistance_shutdown_countdown_s") or 0),
+                battery_block_remaining_s,
+            )
+        reason = (
+            f"battery_out={battery_out_w:.0f} limit={battery_block_w:.0f} "
+            f"hold={battery_block_remaining_s}s"
+        )
+        await _force_resistances_off(reason, clear_manual=True)
+        computed["resistance_step"] = 0
+        return
+
     if export_w <= export_off_w:
-        now = time.time()
         if resistenze_export_off_start == 0.0:
             resistenze_export_off_start = now
         export_off_delay = int(cfg.get("resistance", {}).get("step_down_delay_s", cfg.get("resistance", {}).get("off_delay_s", 5)))
@@ -2062,16 +2085,10 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             decision_data.setdefault("computed", {})["resistance_shutdown_countdown_s"] = remaining_s
             # wait for debounce
             return
-        any_on = False
-        for ent in (r22, r23, r24, rg):
-            if _state_is_on(ent):
-                any_on = True
-                await _set_resistance(ent, False)
-        if any_on:
-            _log_action(
-                f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE FORCE OFF "
-                f"export={export_w:.0f} export_off={export_off_w:.0f} poss={extra_safe_w:.0f}"
-            )
+        await _force_resistances_off(
+            f"export={export_w:.0f} export_off={export_off_w:.0f} poss={extra_safe_w:.0f}",
+            clear_manual=True,
+        )
         off_sequence_start = 0.0
         for key in off_deadline:
             off_deadline[key] = 0.0
@@ -2082,27 +2099,8 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     else:
         resistenze_export_off_start = 0.0
 
-    if battery_out_w > battery_block_w:
-        any_on = False
-        for ent in (r22, r23, r24, rg):
-            if _state_is_on(ent):
-                any_on = True
-                await _set_resistance(ent, False)
-        if any_on:
-            _log_action(
-                f"{time.strftime('%Y-%m-%d %H:%M:%S')} RESISTENZE FORCE OFF "
-                f"battery_out={battery_out_w:.0f} limit={battery_block_w:.0f}"
-            )
-        off_sequence_start = 0.0
-        for key in off_deadline:
-            off_deadline[key] = 0.0
-        for key in on_deadline:
-            on_deadline[key] = 0.0
-        return
-
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
     on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))
-    now = time.time()
     any_desired = desired["r22"] or desired["r23"] or desired["r24"]
     any_actual = _get_state(r22) == "on" or _get_state(r23) == "on" or _get_state(r24) == "on"
     # If Export is the active base (Export > Possibile), ignore Possibile for OFF decisions.

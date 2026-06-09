@@ -590,3 +590,5 @@
 - [2026-05-25] Fail-safe moduli OFF: resistenze, trasferimenti, miscelatrice, impianto, gas e legna ora azzerano fisicamente le rispettive uscite quando il modulo viene spento; il solare resta eccezione idraulica e mantiene una via aperta. Release 0.8.26.
 - [2026-05-26] Manuale con moduli OFF: lo spegnimento modulo azzera subito le uscite automatiche; dopo lo spegnimento gli switch comandati dalla UI o da HA restano in override manuale. Aggiunti OFF dedicati anche per PDC; il solare resta eccezione idraulica e alla disattivazione applica la modalita selezionata. Release 0.8.27.
 - [2026-06-06] Termostati e-Therm: aggiunto fallback richiesta per climate senza `hvac_action` basato su `current_temperature` e `temperature`; log comandi HVAC con `ok`, servizio usato e modi supportati. Release 0.8.28.
+
+- [2026-06-09] Resistenze Volano: aggiunto latch anti-rimbalzo su scarica batteria (battery_block_hold_s, default 180s), hard-OFF logico durante il blocco e force-off live che cancella override manuali di sicurezza. La potenza resistenze stale non viene piu usata per riaccendere se lo step logico e gia 0. Release 0.8.29.

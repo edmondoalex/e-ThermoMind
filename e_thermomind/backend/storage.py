@@ -169,6 +169,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "enabled": True,
     "export_off_w": -100.0,
     "battery_block_w": 100.0,
+    "battery_block_hold_s": 180,
     "off_threshold_w": 0.0,
     "off_delay_s": 5,
     "step_up_delay_s": 10,
@@ -505,6 +506,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["resistance"]["export_off_w"] = _float(res["export_off_w"], cfg["resistance"]["export_off_w"])
         if "battery_block_w" in res:
             cfg["resistance"]["battery_block_w"] = _float(res["battery_block_w"], cfg["resistance"]["battery_block_w"])
+        if "battery_block_hold_s" in res:
+            cfg["resistance"]["battery_block_hold_s"] = int(_float(res["battery_block_hold_s"], cfg["resistance"]["battery_block_hold_s"]))
         if "off_threshold_w" in res:
             cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
@@ -829,6 +832,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["resistance"]["export_off_w"] = _float(res["export_off_w"], cfg["resistance"]["export_off_w"])
         if "battery_block_w" in res:
             cfg["resistance"]["battery_block_w"] = _float(res["battery_block_w"], cfg["resistance"]["battery_block_w"])
+        if "battery_block_hold_s" in res:
+            cfg["resistance"]["battery_block_hold_s"] = int(_float(res["battery_block_hold_s"], cfg["resistance"]["battery_block_hold_s"]))
         if "off_threshold_w" in res:
             cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
