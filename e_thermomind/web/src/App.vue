@@ -310,6 +310,15 @@
               </div>
               <div class="help">Minimo puffer per abilitare impianto riscaldamento.</div>
             </div>
+            <div class="section">Resistenze</div>
+            <div class="field">
+              <label>Soglia accensione export (W)</label>
+              <div class="slider-row">
+                <input type="range" min="0" max="6000" step="10" v-model.number="sp.resistance.export_on_min_w" @change="save" />
+                <span class="slider-value">{{ Math.round(Number(sp?.resistance?.export_on_min_w || 0)) }} W</span>
+              </div>
+              <div class="help">Export rete minimo per permettere accensione o salita step resistenze.</div>
+            </div>
             <div class="field">
               <label>Stagione</label>
               <select v-model="sp.impianto.season_mode" @change="save">

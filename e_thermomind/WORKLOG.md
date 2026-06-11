@@ -596,3 +596,5 @@
 - [2026-06-11] Resistenze Volano: corretto conteggio step fisico (conta R22/R23/R24 realmente ON invece di dedurre step 3 da R24) e aggiunto limite persistente export_on_min_w con campi Admin per soglia export ON, blocco batteria, hold batteria e delay discesa. Release 0.8.30.
 
 - [2026-06-11] UI Admin Resistenze: soglia accensione export resa modificabile con slider 0-6000 W allineato al campo numerico persistente export_on_min_w. Release 0.8.31.
+
+- [2026-06-11] UI User: aggiunto slider Resistenze per soglia accensione export 0-6000 W nei Setpoint Rapidi, allineato al parametro persistente export_on_min_w usato anche in Admin. Release 0.8.32.
