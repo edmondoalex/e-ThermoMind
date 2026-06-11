@@ -556,6 +556,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     battery_block_until = float(_LAST.get("res_battery_block_until", 0.0) or 0.0)
     battery_block_active = battery_output_w > battery_block_w or now_ts < battery_block_until
     battery_block_remaining_s = max(0, int(battery_block_until - now_ts)) if battery_block_active else 0
+    export_on_min_w = float(res_cfg.get("export_on_min_w", 0.0))
     export_off_w = float(res_cfg.get("export_off_w", -100.0))
     last_base = _LAST.get("res_base")
     last_step = int(_LAST.get("res_step", 0) or 0)
@@ -576,6 +577,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     resistance_enabled = resistenze_enabled and res_cfg.get("enabled", True)
     if dest in ("ACS", "PUFFER") and (not vol_max_hit) and resistance_enabled:
         if battery_block_active:
+            desired_step = 0
+        elif export_w < export_on_min_w:
             desired_step = 0
         elif export_w <= export_off_w:
             desired_step = 0
@@ -632,6 +635,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             )
         else:
             charge_reason = f"{power_note} | blocco batteria in hold {battery_block_remaining_s}s"
+    elif export_w < export_on_min_w:
+        charge_reason = f"{power_note} | Export {export_w:.0f}W < soglia ON {export_on_min_w:.0f}W"
     elif export_w <= export_off_w or effective_power_w <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
     else:
@@ -689,6 +694,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             res_blockers.append(f"BatteryOut>{battery_block_w:.0f}W")
         else:
             res_blockers.append(f"BatteryHold{battery_block_remaining_s}s")
+    if export_w < export_on_min_w:
+        res_blockers.append(f"Export<{export_on_min_w:.0f}W")
     if export_w <= export_off_w:
         res_blockers.append(f"Export<={export_off_w:.0f}W")
     if effective_power_w <= 0.0:

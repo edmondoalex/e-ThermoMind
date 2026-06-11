@@ -1819,7 +1819,10 @@
 
           <div class="set-section">
             <div class="section-title">Resistenze</div>
+            <div class="field"><label>Soglia accensione export (W)</label><input type="number" step="10" v-model.number="sp.resistance.export_on_min_w"/><div class="help">Export rete minimo per permettere accensione o salita step.</div></div>
             <div class="field"><label>Soglia spegnimento export (W)</label><input type="number" step="10" v-model.number="sp.resistance.export_off_w"/><div class="help">Se export scende sotto questo valore, spegne le resistenze.</div></div>
+            <div class="field"><label>Blocco batteria output (W)</label><input type="number" step="10" v-model.number="sp.resistance.battery_block_w"/><div class="help">Se la batteria eroga piu di questa soglia, spegne subito le resistenze.</div></div>
+            <div class="field"><label>Hold blocco batteria (s)</label><input type="number" step="1" v-model.number="sp.resistance.battery_block_hold_s"/><div class="help">Tempo minimo di blocco dopo scarica batteria.</div></div>
             <div class="field"><label>Soglia OFF resistenze (W)</label><input type="number" step="1" v-model.number="sp.resistance.off_threshold_w"/><div class="help">Sotto o uguale a questa soglia, le resistenze scendono a 0.</div></div>
             <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/><div class="help">Ritardo prima di spegnere le resistenze.</div></div>
             <div class="field"><label>Delay salita step (s)</label><input type="number" step="1" v-model.number="sp.resistance.step_up_delay_s"/><div class="help">Ritardo tra step 1→2 e 2→3.</div></div>
@@ -1968,6 +1971,7 @@
                 <option value="night">notte fissa</option>
               </select>
             </div>
+            <div class="field"><label>Delay discesa step (s)</label><input type="number" step="1" v-model.number="sp.resistance.step_down_delay_s"/><div class="help">Ritardo tra step in discesa quando non e un hard-OFF.</div></div>
             <div class="field">
               <label>FV entity (W) per giorno/notte</label>
               <input type="text" v-model="sp.solare.pv_entity" placeholder="sensor.zcs_easas_1_activepower_pv_ext"/>
@@ -3853,6 +3857,12 @@ async function load(){
   }
   if (!sp.value?.curva_climatica) {
     sp.value.curva_climatica = { x: [-15,-11.25,-7.5,-3.75,0,3.75,7.5,11.25,15], y: [60,57.6,55,52.6,50,47.6,45,42.6,40], slope: 0, offset: 0, min_c: 40, max_c: 60 }
+  }
+  if (!sp.value?.resistance) {
+    sp.value.resistance = { enabled: true, export_on_min_w: 0, export_off_w: -100, battery_block_w: 100, battery_block_hold_s: 180, off_threshold_w: 0, off_delay_s: 5, step_up_delay_s: 10, step_down_delay_s: 5, thresholds_w: [1100, 2200, 3300], invert_export_sign: false }
+  } else {
+    if (typeof sp.value.resistance.export_on_min_w === 'undefined') sp.value.resistance.export_on_min_w = 0
+    if (!Array.isArray(sp.value.resistance.thresholds_w)) sp.value.resistance.thresholds_w = [1100, 2200, 3300]
   }
   if (!sp.value?.gas_emergenza) {
     sp.value.gas_emergenza = { zones: [], volano_min_c: 35, volano_hyst_c: 2, puffer_min_c: 35, puffer_hyst_c: 2 }

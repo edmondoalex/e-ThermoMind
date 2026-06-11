@@ -2163,14 +2163,14 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             else:
                 off_deadline["rg"] = 0.0
 
-    # reflect real step from actuators for UI
-    actual_step = 0
-    if _get_state(r24) == "on":
-        actual_step = 3
-    elif _get_state(r23) == "on":
-        actual_step = 2
-    elif _get_state(r22) == "on":
-        actual_step = 1
+    # Reflect the real physical count from actuators for UI/diagnostics.
+    # Do not infer "step 3" from R24 alone: each relay is one 1 kW load.
+    actual_on = {
+        "r22": _get_state(r22) == "on",
+        "r23": _get_state(r23) == "on",
+        "r24": _get_state(r24) == "on",
+    }
+    actual_step = sum(1 for is_on in actual_on.values() if is_on)
     computed["resistance_step"] = actual_step if actual_step > 0 else computed.get("resistance_step", 0)
 
     # annotate live delay info in decision payload
@@ -2197,6 +2197,15 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         base_reason = reasons.get("resistenze_volano", "")
         suffix = " | Delay: " + ", ".join(delay_notes)
         reasons["resistenze_volano"] = (base_reason + suffix) if base_reason else ("Delay: " + ", ".join(delay_notes))
+    if actual_step != step:
+        base_reason = reasons.get("resistenze_volano", "")
+        actual_note = (
+            f" | Fisico: r22={'ON' if actual_on['r22'] else 'OFF'}, "
+            f"r23={'ON' if actual_on['r23'] else 'OFF'}, "
+            f"r24={'ON' if actual_on['r24'] else 'OFF'} "
+            f"(fisico {actual_step}/3, logica {step}/3)"
+        )
+        reasons["resistenze_volano"] = (base_reason + actual_note) if base_reason else actual_note.strip()
 
 async def _apply_transfer_live(decision_data: dict) -> None:
     global volano_watchdog_last_log

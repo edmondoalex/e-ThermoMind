@@ -592,3 +592,5 @@
 - [2026-06-06] Termostati e-Therm: aggiunto fallback richiesta per climate senza `hvac_action` basato su `current_temperature` e `temperature`; log comandi HVAC con `ok`, servizio usato e modi supportati. Release 0.8.28.
 
 - [2026-06-09] Resistenze Volano: aggiunto latch anti-rimbalzo su scarica batteria (battery_block_hold_s, default 180s), hard-OFF logico durante il blocco e force-off live che cancella override manuali di sicurezza. La potenza resistenze stale non viene piu usata per riaccendere se lo step logico e gia 0. Release 0.8.29.
+
+- [2026-06-11] Resistenze Volano: corretto conteggio step fisico (conta R22/R23/R24 realmente ON invece di dedurre step 3 da R24) e aggiunto limite persistente export_on_min_w con campi Admin per soglia export ON, blocco batteria, hold batteria e delay discesa. Release 0.8.30.

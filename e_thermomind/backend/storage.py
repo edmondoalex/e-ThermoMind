@@ -167,6 +167,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
   },
   "resistance": {
     "enabled": True,
+    "export_on_min_w": 0.0,
     "export_off_w": -100.0,
     "battery_block_w": 100.0,
     "battery_block_hold_s": 180,
@@ -502,6 +503,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(res, dict):
         if "enabled" in res:
             cfg["resistance"]["enabled"] = bool(res["enabled"])
+        if "export_on_min_w" in res:
+            cfg["resistance"]["export_on_min_w"] = _float(res["export_on_min_w"], cfg["resistance"]["export_on_min_w"])
         if "export_off_w" in res:
             cfg["resistance"]["export_off_w"] = _float(res["export_off_w"], cfg["resistance"]["export_off_w"])
         if "battery_block_w" in res:
@@ -828,6 +831,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
     if isinstance(res, dict):
         if "enabled" in res:
             cfg["resistance"]["enabled"] = bool(res["enabled"])
+        if "export_on_min_w" in res:
+            cfg["resistance"]["export_on_min_w"] = _float(res["export_on_min_w"], cfg["resistance"]["export_on_min_w"])
         if "export_off_w" in res:
             cfg["resistance"]["export_off_w"] = _float(res["export_off_w"], cfg["resistance"]["export_off_w"])
         if "battery_block_w" in res:
