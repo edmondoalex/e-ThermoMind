@@ -1819,13 +1819,22 @@
 
           <div class="set-section">
             <div class="section-title">Resistenze</div>
-            <div class="field"><label>Soglia accensione export (W)</label><input type="number" step="10" v-model.number="sp.resistance.export_on_min_w"/><div class="help">Export rete minimo per permettere accensione o salita step.</div></div>
+            <div class="field">
+              <label>Soglia accensione export (W)</label>
+              <div class="slider-row">
+                <input type="range" min="0" max="6000" step="10" v-model.number="sp.resistance.export_on_min_w" @change="save"/>
+                <span class="slider-value">{{ Math.round(Number(sp?.resistance?.export_on_min_w || 0)) }} W</span>
+              </div>
+              <input type="number" min="0" max="6000" step="10" v-model.number="sp.resistance.export_on_min_w"/>
+              <div class="help">Export rete minimo per permettere accensione o salita step.</div>
+            </div>
             <div class="field"><label>Soglia spegnimento export (W)</label><input type="number" step="10" v-model.number="sp.resistance.export_off_w"/><div class="help">Se export scende sotto questo valore, spegne le resistenze.</div></div>
             <div class="field"><label>Blocco batteria output (W)</label><input type="number" step="10" v-model.number="sp.resistance.battery_block_w"/><div class="help">Se la batteria eroga piu di questa soglia, spegne subito le resistenze.</div></div>
             <div class="field"><label>Hold blocco batteria (s)</label><input type="number" step="1" v-model.number="sp.resistance.battery_block_hold_s"/><div class="help">Tempo minimo di blocco dopo scarica batteria.</div></div>
             <div class="field"><label>Soglia OFF resistenze (W)</label><input type="number" step="1" v-model.number="sp.resistance.off_threshold_w"/><div class="help">Sotto o uguale a questa soglia, le resistenze scendono a 0.</div></div>
             <div class="field"><label>Off-delay resistenze (s)</label><input type="number" step="1" v-model.number="sp.resistance.off_delay_s"/><div class="help">Ritardo prima di spegnere le resistenze.</div></div>
             <div class="field"><label>Delay salita step (s)</label><input type="number" step="1" v-model.number="sp.resistance.step_up_delay_s"/><div class="help">Ritardo tra step 1→2 e 2→3.</div></div>
+            <div class="field"><label>Delay discesa step (s)</label><input type="number" step="1" v-model.number="sp.resistance.step_down_delay_s"/><div class="help">Ritardo tra step in discesa quando non e un hard-OFF.</div></div>
             <div class="field">
               <label>Soglie export (W) [1/2/3]</label>
               <div class="row3">
