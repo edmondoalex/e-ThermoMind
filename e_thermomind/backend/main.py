@@ -2062,6 +2062,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         available_w = float(computed_available)
     battery_block_w = float(cfg.get("resistance", {}).get("battery_block_w", 100.0))
     battery_block_hold_s = int(cfg.get("resistance", {}).get("battery_block_hold_s", 180))
+    export_on_min_w = float(cfg.get("resistance", {}).get("export_on_min_w", 0.0))
     export_off_w = float(cfg.get("resistance", {}).get("export_off_w", -100.0))
     use_export_base = export_w > extra_safe_w
     desired = {
@@ -2107,6 +2108,21 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         )
         await _force_resistances_off(reason, clear_manual=True)
         computed["resistance_step"] = 0
+        return
+
+    if export_w < export_on_min_w:
+        await _force_resistances_off(
+            f"export={export_w:.0f} export_on_min={export_on_min_w:.0f} poss={extra_safe_w:.0f}",
+            clear_manual=True,
+        )
+        off_sequence_start = 0.0
+        for key in off_deadline:
+            off_deadline[key] = 0.0
+        for key in on_deadline:
+            on_deadline[key] = 0.0
+        resistenze_export_off_start = 0.0
+        computed["resistance_step"] = 0
+        computed["resistance_shutdown_countdown_s"] = 0
         return
 
     if export_w <= export_off_w:

@@ -1257,7 +1257,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "impianto": "Regola: quando c'e una fonte calda disponibile, i termostati restano in HEAT. L'impianto parte solo sopra la soglia di avvio; se era gia partito, continua fino alla soglia di mantenimento piu bassa. Pompe e valvole si attivano solo con zone attive.",
                 "gas_emergenza": "Regola: gas attivo se zone richiedono e sorgenti fredde.",
                 "caldaia_legna": "Regola: mandata >= min e puffer < SP.",
-                "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export < -100W OFF secco; batteria scarica step-down.",
+                "resistenze_volano": "Regola: base Export se Export>Possibile o se resistenze ON da Export; altrimenti Possibile. Export + resistenze. Export sotto soglia ON o OFF secco; batteria scarica hard-OFF.",
                 "force_acs_puffer": "Regola: forzatura temporizzata ACS da PUFFER senza cambiare setpoint.",
                 "force_volano_puffer": "Regola: forzatura temporizzata VOLANO->PUFFER o dump automatico (orario/entita RUN) quando ACS e prioritaria ma non prendibile."
             },
