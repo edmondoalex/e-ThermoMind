@@ -453,6 +453,14 @@
               <div class="v">{{ fmtEntity(ent?.resistenze_volano_energy) }}</div>
             </div>
           </div>
+          <div class="field resistance-user-threshold">
+            <label>Soglia accensione export (W)</label>
+            <div class="slider-row">
+              <input type="range" min="0" max="6000" step="10" v-model.number="sp.resistance.export_on_min_w" @change="save" />
+              <span class="slider-value">{{ Math.round(Number(sp?.resistance?.export_on_min_w || 0)) }} W</span>
+            </div>
+            <div class="help">Export rete minimo per permettere accensione o salita step resistenze.</div>
+          </div>
           <div class="row2">
             <div class="kpi kpi-center" :class="historyEnabled('t_volano_alto') ? 'clickable' : ''" @click="openHistory('t_volano_alto','T Volano Alto')">
               <div class="k">T Volano Alto</div>
@@ -4556,6 +4564,7 @@ details.form summary{cursor:pointer;list-style:none}
 .set-section .field label{margin-bottom:4px}
 .set-section .field input,.set-section .field select{padding:8px;border-radius:10px}
 .set-section .help{margin-top:4px}
+.resistance-user-threshold{margin:10px 0 8px;padding:10px;border:1px solid var(--border);border-radius:10px;background:rgba(10,16,26,.55)}
 .subsection{margin-top:10px;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
 .zone-chip{cursor:pointer}
 .thermo-modal{max-width:520px}
