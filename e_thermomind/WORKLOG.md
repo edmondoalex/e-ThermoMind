@@ -602,3 +602,5 @@
 - [2026-06-11] UI User: aggiunto lo slider soglia accensione export anche nella card operativa Resistenze volano, oltre ai Setpoint Rapidi/Admin, sempre sul parametro persistente export_on_min_w. Release 0.8.33.
 
 - [2026-06-11] MQTT/HA: esposti come number persistenti tutti i parametri Resistenze configurabili da UI (export ON/OFF, blocco/hold batteria, off-delay, delay salita/discesa, soglie step 1/2/3) con unita W/s corrette. Release 0.8.34.
+
+- [2026-06-11] Resistenze Volano: la soglia export ON ora vale come riserva minima anche dopo lo step aggiuntivo; R23/R24 non vengono piu richieste se l'accensione farebbe scendere l'export sotto soglia. Release 0.8.35.
