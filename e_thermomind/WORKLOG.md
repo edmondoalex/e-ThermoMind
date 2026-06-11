@@ -600,3 +600,5 @@
 - [2026-06-11] UI User: aggiunto slider Resistenze per soglia accensione export 0-6000 W nei Setpoint Rapidi, allineato al parametro persistente export_on_min_w usato anche in Admin. Release 0.8.32.
 
 - [2026-06-11] UI User: aggiunto lo slider soglia accensione export anche nella card operativa Resistenze volano, oltre ai Setpoint Rapidi/Admin, sempre sul parametro persistente export_on_min_w. Release 0.8.33.
+
+- [2026-06-11] MQTT/HA: esposti come number persistenti tutti i parametri Resistenze configurabili da UI (export ON/OFF, blocco/hold batteria, off-delay, delay salita/discesa, soglie step 1/2/3) con unita W/s corrette. Release 0.8.34.

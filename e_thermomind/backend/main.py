@@ -238,16 +238,49 @@ def _mqtt_device_info() -> dict[str, Any]:
 
 def _mqtt_setpoint_defs() -> list[dict[str, Any]]:
     return [
-        {"key": "acs_setpoint", "name": "ACS setpoint", "section": "acs", "field": "setpoint_c", "min": 40, "max": 85, "step": 0.5},
-        {"key": "acs_max", "name": "ACS MAX", "section": "acs", "field": "max_c", "min": 50, "max": 85, "step": 0.5},
-        {"key": "volano_max", "name": "Volano MAX", "section": "volano", "field": "max_c", "min": 40, "max": 95, "step": 0.5},
-        {"key": "volano_min_to_acs", "name": "Volano min -> ACS", "section": "volano", "field": "min_to_acs_c", "min": 35, "max": 75, "step": 0.5},
-        {"key": "puffer_setpoint", "name": "Puffer setpoint", "section": "puffer", "field": "setpoint_c", "min": 40, "max": 90, "step": 0.5},
-        {"key": "puffer_max", "name": "Puffer MAX", "section": "puffer", "field": "max_c", "min": 50, "max": 90, "step": 0.5},
-        {"key": "puffer_min_to_acs", "name": "Puffer min -> ACS", "section": "puffer", "field": "min_to_acs_c", "min": 40, "max": 80, "step": 0.5},
-        {"key": "impianto_volano_min", "name": "Impianto volano min", "section": "impianto", "field": "volano_min_c", "min": 35, "max": 80, "step": 0.5},
-        {"key": "impianto_puffer_min", "name": "Impianto puffer min", "section": "impianto", "field": "puffer_min_c", "min": 35, "max": 80, "step": 0.5},
+        {"key": "acs_setpoint", "name": "ACS setpoint", "section": "acs", "field": "setpoint_c", "min": 40, "max": 85, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "acs_max", "name": "ACS MAX", "section": "acs", "field": "max_c", "min": 50, "max": 85, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "volano_max", "name": "Volano MAX", "section": "volano", "field": "max_c", "min": 40, "max": 95, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "volano_min_to_acs", "name": "Volano min -> ACS", "section": "volano", "field": "min_to_acs_c", "min": 35, "max": 75, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "puffer_setpoint", "name": "Puffer setpoint", "section": "puffer", "field": "setpoint_c", "min": 40, "max": 90, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "puffer_max", "name": "Puffer MAX", "section": "puffer", "field": "max_c", "min": 50, "max": 90, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "puffer_min_to_acs", "name": "Puffer min -> ACS", "section": "puffer", "field": "min_to_acs_c", "min": 40, "max": 80, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "impianto_volano_min", "name": "Impianto volano min", "section": "impianto", "field": "volano_min_c", "min": 35, "max": 80, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "impianto_puffer_min", "name": "Impianto puffer min", "section": "impianto", "field": "puffer_min_c", "min": 35, "max": 80, "step": 0.5, "unit": "°C", "device_class": "temperature"},
+        {"key": "res_export_on_min", "name": "Resistenze soglia export ON", "section": "resistance", "field": "export_on_min_w", "min": 0, "max": 6000, "step": 10, "unit": "W", "device_class": "power"},
+        {"key": "res_export_off", "name": "Resistenze soglia export OFF", "section": "resistance", "field": "export_off_w", "min": -3000, "max": 3000, "step": 10, "unit": "W", "device_class": "power"},
+        {"key": "res_battery_block", "name": "Resistenze blocco batteria", "section": "resistance", "field": "battery_block_w", "min": 0, "max": 6000, "step": 10, "unit": "W", "device_class": "power"},
+        {"key": "res_battery_hold", "name": "Resistenze hold batteria", "section": "resistance", "field": "battery_block_hold_s", "min": 0, "max": 1800, "step": 1, "unit": "s"},
+        {"key": "res_off_threshold", "name": "Resistenze soglia OFF", "section": "resistance", "field": "off_threshold_w", "min": 0, "max": 6000, "step": 1, "unit": "W", "device_class": "power"},
+        {"key": "res_off_delay", "name": "Resistenze off-delay", "section": "resistance", "field": "off_delay_s", "min": 0, "max": 300, "step": 1, "unit": "s"},
+        {"key": "res_step_up_delay", "name": "Resistenze delay salita", "section": "resistance", "field": "step_up_delay_s", "min": 0, "max": 300, "step": 1, "unit": "s"},
+        {"key": "res_step_down_delay", "name": "Resistenze delay discesa", "section": "resistance", "field": "step_down_delay_s", "min": 0, "max": 300, "step": 1, "unit": "s"},
+        {"key": "res_threshold_1", "name": "Resistenze soglia step 1", "section": "resistance", "field": "thresholds_w", "index": 0, "min": 0, "max": 6000, "step": 10, "unit": "W", "device_class": "power"},
+        {"key": "res_threshold_2", "name": "Resistenze soglia step 2", "section": "resistance", "field": "thresholds_w", "index": 1, "min": 0, "max": 6000, "step": 10, "unit": "W", "device_class": "power"},
+        {"key": "res_threshold_3", "name": "Resistenze soglia step 3", "section": "resistance", "field": "thresholds_w", "index": 2, "min": 0, "max": 6000, "step": 10, "unit": "W", "device_class": "power"},
     ]
+
+def _mqtt_get_setpoint_value(sp_def: dict[str, Any]) -> Any:
+    section = sp_def["section"]
+    field = sp_def["field"]
+    val = (cfg.get(section, {}) or {}).get(field)
+    if "index" in sp_def:
+        try:
+            return val[int(sp_def["index"])]
+        except Exception:
+            return None
+    return val
+
+def _mqtt_setpoint_payload(sp_def: dict[str, Any], value: float) -> dict[str, Any]:
+    section = sp_def["section"]
+    field = sp_def["field"]
+    if "index" not in sp_def:
+        return {section: {field: value}}
+    current = list((cfg.get(section, {}) or {}).get(field) or [])
+    while len(current) <= int(sp_def["index"]):
+        current.append(0.0)
+    current[int(sp_def["index"])] = value
+    return {section: {field: current}}
 
 def _mqtt_module_defs() -> list[dict[str, str]]:
     return [
@@ -556,13 +589,15 @@ def _mqtt_publish_discovery() -> int:
             "command_topic": cmd_topic,
             "availability_topic": f"{base_topic}/availability",
             "device": device,
-            "unit_of_measurement": "°C",
-            "device_class": "temperature",
             "state_class": "measurement",
             "min": sp_def["min"],
             "max": sp_def["max"],
             "step": sp_def["step"],
         }
+        if sp_def.get("unit"):
+            payload["unit_of_measurement"] = sp_def["unit"]
+        if sp_def.get("device_class"):
+            payload["device_class"] = sp_def["device_class"]
         _mqtt_publish(disc_topic, payload, retain=True)
         mqtt_discovery_topics.append(disc_topic)
         mqtt_state_topics.append(state_topic)
@@ -692,9 +727,7 @@ def _mqtt_publish_states(force: bool = False) -> None:
     active_map = _mqtt_active_map(decision)
 
     for sp_def in _mqtt_setpoint_defs():
-        section = sp_def["section"]
-        field = sp_def["field"]
-        val = (cfg.get(section, {}) or {}).get(field)
+        val = _mqtt_get_setpoint_value(sp_def)
         _mqtt_publish_value(_mqtt_topic("setpoints", sp_def["key"]), val, retain=True, force=force)
 
     season_val = (cfg.get("impianto", {}) or {}).get("season_mode", "winter")
@@ -754,7 +787,7 @@ def _mqtt_handle_message(topic: str, payload: str) -> None:
                     num = float(str(payload).strip())
                 except Exception:
                     return
-                cfg = apply_setpoints(cfg, {sp_def["section"]: {sp_def["field"]: num}})
+                cfg = apply_setpoints(cfg, _mqtt_setpoint_payload(sp_def, num))
                 save_config(cfg)
                 _mqtt_publish_states(force=True)
                 return
