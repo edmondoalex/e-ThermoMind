@@ -622,3 +622,5 @@
 - [2026-06-12] Resistenze Volano: corretto retry OFF a fine countdown; il timer non riparte piu da capo se il rele risulta ancora ON, ma resta scaduto e ritenta lo spegnimento mostrando OFF retry. Release 0.8.43.
 
 - [2026-06-12] MQTT/HA: il client ora mantiene la lista delle subscription e si risottoscrive ai topic comando dopo ogni reconnect, evitando che i number HA tornino al valore vecchio per comandi non ricevuti. Release 0.8.44.
+
+- [2026-06-12] Resistenze Volano: lo spegnimento automatico delle resistenze ora pulisce eventuale override manuale sull'attuatore; l'override resta valido per bloccare accensioni automatiche, ma non impedisce OFF di step-down/sicurezza. Release 0.8.45.

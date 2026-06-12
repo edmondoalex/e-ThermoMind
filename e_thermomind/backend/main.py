@@ -1884,8 +1884,10 @@ def _log_dry_run(decision_data: dict) -> None:
 async def _set_resistance(entity_id: str | None, want_on: bool) -> bool:
     if not entity_id or not ha.enabled:
         return False
-    if _is_manual(entity_id):
+    if _is_manual(entity_id) and want_on:
         return False
+    if _is_manual(entity_id) and not want_on:
+        manual_overrides.pop(entity_id, None)
     current = _get_state(entity_id)
     if want_on and current != "on":
         recent_ui_actuations[entity_id] = time.time()
