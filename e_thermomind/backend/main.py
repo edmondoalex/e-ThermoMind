@@ -1881,11 +1881,11 @@ def _log_dry_run(decision_data: dict) -> None:
             f"{time.strftime('%Y-%m-%d %H:%M:%S')} DRY-RUN note: no logic for {', '.join(notes)}"
         )
 
-async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
+async def _set_resistance(entity_id: str | None, want_on: bool) -> bool:
     if not entity_id or not ha.enabled:
-        return
+        return False
     if _is_manual(entity_id):
-        return
+        return False
     current = _get_state(entity_id)
     if want_on and current != "on":
         recent_ui_actuations[entity_id] = time.time()
@@ -1893,12 +1893,15 @@ async def _set_resistance(entity_id: str | None, want_on: bool) -> None:
         if ok:
             _mark_local_state(entity_id, True)
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ON {entity_id} ok={ok}")
+        return bool(ok)
     if (not want_on) and current != "off":
         recent_ui_actuations[entity_id] = time.time()
         ok = await ha.call_service(entity_id, "off")
         if ok:
             _mark_local_state(entity_id, False)
         action_log.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} OFF {entity_id} ok={ok}")
+        return bool(ok)
+    return True
 
 async def _set_actuator(entity_id: str | None, want_on: bool) -> None:
     if not entity_id or not ha.enabled:
@@ -2179,8 +2182,9 @@ async def _apply_resistance_live(decision_data: dict) -> None:
                 if off_deadline[key] == 0.0:
                     off_deadline[key] = now + _off_delay_for(key)
                 elif now >= off_deadline[key]:
-                    await _set_resistance(ent, False)
-                    off_deadline[key] = 0.0
+                    ok = await _set_resistance(ent, False)
+                    if ok or _get_state(ent) != "on":
+                        off_deadline[key] = 0.0
             else:
                 off_deadline[key] = 0.0
 
@@ -2198,8 +2202,9 @@ async def _apply_resistance_live(decision_data: dict) -> None:
                 if off_deadline["rg"] == 0.0:
                     off_deadline["rg"] = now + off_delay
                 elif now >= off_deadline["rg"]:
-                    await _set_resistance(rg, False)
-                    off_deadline["rg"] = 0.0
+                    ok = await _set_resistance(rg, False)
+                    if ok or _get_state(rg) != "on":
+                        off_deadline["rg"] = 0.0
             else:
                 off_deadline["rg"] = 0.0
 
@@ -2227,12 +2232,16 @@ async def _apply_resistance_live(decision_data: dict) -> None:
                 int(computed.get("resistance_shutdown_countdown_s") or 0),
                 int(off_deadline[key] - now),
             )
+        elif off_deadline[key] > 0.0:
+            delay_notes.append(f"{key} OFF retry")
     if off_deadline.get("rg", 0.0) > now:
         delay_notes.append(f"RG OFF in {int(off_deadline['rg'] - now)}s")
         computed["resistance_shutdown_countdown_s"] = max(
             int(computed.get("resistance_shutdown_countdown_s") or 0),
             int(off_deadline["rg"] - now),
         )
+    elif off_deadline.get("rg", 0.0) > 0.0:
+        delay_notes.append("RG OFF retry")
     if delay_notes:
         base_reason = reasons.get("resistenze_volano", "")
         suffix = " | Delay: " + ", ".join(delay_notes)
