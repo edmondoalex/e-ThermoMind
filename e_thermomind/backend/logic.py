@@ -621,6 +621,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             elif effective_power_w >= reserve_thresholds[0]:
                 desired_step = 1
 
+            # The export reserve gates only new step-ups. Once a step is
+            # already physically on, keep it while real export stays above
+            # the configured minimum; step-down is driven by export < soglia.
+            if tracked_step > desired_step:
+                desired_step = tracked_step
+
             if raw_desired_step > desired_step:
                 export_reserve_block = True
                 export_reserve_step = raw_desired_step

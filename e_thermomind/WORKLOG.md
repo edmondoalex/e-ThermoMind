@@ -616,3 +616,5 @@
 - [2026-06-12] Resistenze Volano: salita step vincolata a export+resistenze >= soglia ON + soglia step target; lo step successivo non parte se il previsto residuo scenderebbe sotto la soglia export configurata. Release 0.8.40.
 
 - [2026-06-12] Resistenze Volano: la riserva export per salita step usa sempre almeno 1100W per resistenza (1100/2200/3300W), anche se le soglie configurate sono piu basse, evitando sottostima del carico reale. Release 0.8.41.
+
+- [2026-06-12] Resistenze Volano: la riserva soglia+step ora limita solo le salite; gli step gia accesi restano mantenuti finche export reale resta sopra la soglia ON configurata. Release 0.8.42.
