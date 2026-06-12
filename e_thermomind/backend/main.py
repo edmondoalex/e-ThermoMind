@@ -2110,32 +2110,9 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         computed["resistance_step"] = 0
         return
 
-    if export_w < export_on_min_w:
+    if export_w <= 0.0:
         await _force_resistances_off(
-            f"export={export_w:.0f} export_on_min={export_on_min_w:.0f} poss={extra_safe_w:.0f}",
-            clear_manual=True,
-        )
-        off_sequence_start = 0.0
-        for key in off_deadline:
-            off_deadline[key] = 0.0
-        for key in on_deadline:
-            on_deadline[key] = 0.0
-        resistenze_export_off_start = 0.0
-        computed["resistance_step"] = 0
-        computed["resistance_shutdown_countdown_s"] = 0
-        return
-
-    if export_w <= export_off_w:
-        if resistenze_export_off_start == 0.0:
-            resistenze_export_off_start = now
-        export_off_delay = int(cfg.get("resistance", {}).get("step_down_delay_s", cfg.get("resistance", {}).get("off_delay_s", 5)))
-        remaining_s = max(0, int(export_off_delay - (now - resistenze_export_off_start)))
-        if remaining_s > 0:
-            decision_data.setdefault("computed", {})["resistance_shutdown_countdown_s"] = remaining_s
-            # wait for debounce
-            return
-        await _force_resistances_off(
-            f"export={export_w:.0f} export_off={export_off_w:.0f} poss={extra_safe_w:.0f}",
+            f"export={export_w:.0f} export_zero=0 export_on_min={export_on_min_w:.0f} poss={extra_safe_w:.0f}",
             clear_manual=True,
         )
         off_sequence_start = 0.0

@@ -606,3 +606,5 @@
 - [2026-06-11] Resistenze Volano: la soglia export ON ora vale come riserva minima anche dopo lo step aggiuntivo; R23/R24 non vengono piu richieste se l'accensione farebbe scendere l'export sotto soglia. Release 0.8.35.
 
 - [2026-06-11] Resistenze Volano: export sotto soglia ON configurata ora spegne subito le resistenze e azzera i timer pendenti, usando la soglia come il vecchio limite 0W per tutte le logiche. Release 0.8.36.
+
+- [2026-06-12] Resistenze Volano: sotto soglia export ON torna a fare step-down con delay; hard-OFF immediato solo con export reale <= 0W o blocco batteria, azzerando i timer pendenti. Release 0.8.37.
