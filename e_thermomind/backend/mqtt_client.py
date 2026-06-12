@@ -20,6 +20,7 @@ class MqttClient:
         self._lock = threading.Lock()
         self._connected = False
         self._last_error: str | None = None
+        self._subscriptions: set[str] = set()
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
@@ -32,6 +33,13 @@ class MqttClient:
         with self._lock:
             self._connected = True
             self._last_error = None
+            subscriptions = list(self._subscriptions)
+        for topic in subscriptions:
+            try:
+                client.subscribe(topic)
+            except Exception as e:
+                with self._lock:
+                    self._last_error = str(e)
 
     def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties=None):
         with self._lock:
@@ -72,4 +80,6 @@ class MqttClient:
         self._client.publish(topic, data, qos=qos, retain=retain)
 
     def subscribe(self, topic: str):
+        with self._lock:
+            self._subscriptions.add(topic)
         self._client.subscribe(topic)

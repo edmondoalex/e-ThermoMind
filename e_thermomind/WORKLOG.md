@@ -620,3 +620,5 @@
 - [2026-06-12] Resistenze Volano: la riserva soglia+step ora limita solo le salite; gli step gia accesi restano mantenuti finche export reale resta sopra la soglia ON configurata. Release 0.8.42.
 
 - [2026-06-12] Resistenze Volano: corretto retry OFF a fine countdown; il timer non riparte piu da capo se il rele risulta ancora ON, ma resta scaduto e ritenta lo spegnimento mostrando OFF retry. Release 0.8.43.
+
+- [2026-06-12] MQTT/HA: il client ora mantiene la lista delle subscription e si risottoscrive ai topic comando dopo ogni reconnect, evitando che i number HA tornino al valore vecchio per comandi non ricevuti. Release 0.8.44.
