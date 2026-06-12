@@ -2127,6 +2127,20 @@ async def _apply_resistance_live(decision_data: dict) -> None:
 
     off_delay = int(cfg.get("resistance", {}).get("off_delay_s", 5))
     on_delay = int(cfg.get("resistance", {}).get("step_up_delay_s", 10))
+    physical_on = {
+        "r22": _get_state(r22) == "on",
+        "r23": _get_state(r23) == "on",
+        "r24": _get_state(r24) == "on",
+    }
+    physical_step = sum(1 for is_on in physical_on.values() if is_on)
+    target_step = step
+    if step < physical_step:
+        target_step = max(step, physical_step - 1)
+    desired = {
+        "r22": target_step >= 1,
+        "r23": target_step >= 2,
+        "r24": target_step >= 3,
+    }
     any_desired = desired["r22"] or desired["r23"] or desired["r24"]
     any_actual = _get_state(r22) == "on" or _get_state(r23) == "on" or _get_state(r24) == "on"
     # If Export is the active base (Export > Possibile), ignore Possibile for OFF decisions.

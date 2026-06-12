@@ -561,16 +561,23 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     last_base = _LAST.get("res_base")
     last_step = int(_LAST.get("res_step", 0) or 0)
     last_step_ts = float(_LAST.get("res_step_ts", 0.0) or 0.0)
+    act_cfg = cfg.get("actuators", {}) or {}
+    actual_step = 0
+    for act_key in ("r22_resistenza_1_volano_pdc", "r23_resistenza_2_volano_pdc", "r24_resistenza_3_volano_pdc"):
+        ent_id = act_cfg.get(act_key)
+        if ent_id and _is_on_state((ha_states.get(ent_id) or {}).get("state")):
+            actual_step += 1
+    tracked_step = max(0, min(3, max(last_step, actual_step)))
     if export_w > extra_safe_w:
         effective_power_w = max(0.0, export_w + res_power_w)
         base_sel = "export"
-    elif last_base == "export" and last_step > 0 and res_power_w > 0.0:
+    elif last_base == "export" and tracked_step > 0 and res_power_w > 0.0:
         effective_power_w = max(0.0, export_w + res_power_w)
         base_sel = "export"
     else:
         # If resistances are already on, add their power to available
         # to avoid getting stuck below the next step threshold.
-        effective_power_w = extra_safe_w + (res_power_w if last_step > 0 and res_power_w > 0.0 else 0.0)
+        effective_power_w = extra_safe_w + (res_power_w if tracked_step > 0 and res_power_w > 0.0 else 0.0)
         base_sel = "possibile"
 
     desired_step = 0
@@ -595,7 +602,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 desired_step = 2
             elif effective_power_w >= thr[0]:
                 desired_step = 1
-            current_step = max(0, min(3, last_step))
+            current_step = tracked_step
             if current_step > 0 and res_power_w > 0.0:
                 step_load_w = max(1.0, res_power_w / current_step)
             else:
@@ -621,18 +628,18 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         step = 0
     elif battery_block_active:
         step = 0
-    elif desired_step > last_step:
+    elif desired_step > tracked_step:
         if now_ts - last_step_ts >= step_up_delay:
-            step = min(desired_step, last_step + 1)
+            step = min(desired_step, tracked_step + 1)
         else:
-            step = last_step
-    elif desired_step < last_step:
+            step = tracked_step
+    elif desired_step < tracked_step:
         if now_ts - last_step_ts >= step_down_delay:
-            step = max(desired_step, last_step - 1)
+            step = max(desired_step, tracked_step - 1)
         else:
-            step = last_step
+            step = tracked_step
     else:
-        step = last_step
+        step = tracked_step
 
     charge_buffer = "RESISTANCE" if step > 0 else "OFF"
     power_note = f"Export {export_w:.0f}W"
