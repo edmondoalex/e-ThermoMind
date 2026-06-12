@@ -582,10 +582,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     desired_step = 0
     thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
-    reserve_loads = [
+    reserve_total_loads = [
         max(thr[0], 1100.0),
         max(thr[1], 2200.0),
         max(thr[2], 3300.0),
+    ]
+    reserve_step_loads = [
+        reserve_total_loads[0],
+        max(reserve_total_loads[1] - reserve_total_loads[0], 1100.0),
+        max(reserve_total_loads[2] - reserve_total_loads[1], 1100.0),
     ]
     projected_export_w = export_w
     export_reserve_block = False
@@ -609,28 +614,22 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             elif effective_power_w >= thr[0]:
                 raw_desired_step = 1
 
-            reserve_thresholds = [
-                export_on_min_w + reserve_loads[0],
-                export_on_min_w + reserve_loads[1],
-                export_on_min_w + reserve_loads[2],
-            ]
-            if effective_power_w >= reserve_thresholds[2]:
-                desired_step = 3
-            elif effective_power_w >= reserve_thresholds[1]:
-                desired_step = 2
-            elif effective_power_w >= reserve_thresholds[0]:
-                desired_step = 1
-
             # The export reserve gates only new step-ups. Once a step is
             # already physically on, keep it while real export stays above
             # the configured minimum; step-down is driven by export < soglia.
-            if tracked_step > desired_step:
-                desired_step = tracked_step
-
-            if raw_desired_step > desired_step:
+            desired_step = min(raw_desired_step, tracked_step)
+            if raw_desired_step > tracked_step:
+                next_step = min(3, tracked_step + 1)
+                projected_export_w = export_w - reserve_step_loads[next_step - 1]
+                if projected_export_w >= export_on_min_w:
+                    desired_step = raw_desired_step
+                else:
+                    export_reserve_block = True
+                    export_reserve_step = next_step
+            elif raw_desired_step > desired_step:
                 export_reserve_block = True
                 export_reserve_step = raw_desired_step
-                projected_export_w = effective_power_w - reserve_loads[raw_desired_step - 1]
+                projected_export_w = export_w - reserve_step_loads[raw_desired_step - 1]
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
     step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))

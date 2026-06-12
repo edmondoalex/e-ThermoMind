@@ -624,3 +624,5 @@
 - [2026-06-12] MQTT/HA: il client ora mantiene la lista delle subscription e si risottoscrive ai topic comando dopo ogni reconnect, evitando che i number HA tornino al valore vecchio per comandi non ricevuti. Release 0.8.44.
 
 - [2026-06-12] Resistenze Volano: lo spegnimento automatico delle resistenze ora pulisce eventuale override manuale sull'attuatore; l'override resta valido per bloccare accensioni automatiche, ma non impedisce OFF di step-down/sicurezza. Release 0.8.45.
+
+- [2026-06-12] Resistenze Volano: diagnostica e riserva export in salita rese incrementali; da step 1 valuta step 2 usando solo il carico della nuova resistenza, evitando messaggi fuorvianti tipo step 3 non ammesso. Release 0.8.46.
