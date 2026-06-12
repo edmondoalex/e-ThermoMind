@@ -582,6 +582,11 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
     desired_step = 0
     thr = _thr_list(res_cfg.get("thresholds_w", [1100, 2200, 3300]))
+    reserve_loads = [
+        max(thr[0], 1100.0),
+        max(thr[1], 2200.0),
+        max(thr[2], 3300.0),
+    ]
     projected_export_w = export_w
     export_reserve_block = False
     export_reserve_step = 0
@@ -605,9 +610,9 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 raw_desired_step = 1
 
             reserve_thresholds = [
-                export_on_min_w + thr[0],
-                export_on_min_w + thr[1],
-                export_on_min_w + thr[2],
+                export_on_min_w + reserve_loads[0],
+                export_on_min_w + reserve_loads[1],
+                export_on_min_w + reserve_loads[2],
             ]
             if effective_power_w >= reserve_thresholds[2]:
                 desired_step = 3
@@ -619,7 +624,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             if raw_desired_step > desired_step:
                 export_reserve_block = True
                 export_reserve_step = raw_desired_step
-                projected_export_w = effective_power_w - thr[raw_desired_step - 1]
+                projected_export_w = effective_power_w - reserve_loads[raw_desired_step - 1]
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
     step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))

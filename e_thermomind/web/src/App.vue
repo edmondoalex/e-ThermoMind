@@ -1853,13 +1853,13 @@
             <div class="field"><label>Delay salita step (s)</label><input type="number" step="1" v-model.number="sp.resistance.step_up_delay_s"/><div class="help">Ritardo tra step 1→2 e 2→3.</div></div>
             <div class="field"><label>Delay discesa step (s)</label><input type="number" step="1" v-model.number="sp.resistance.step_down_delay_s"/><div class="help">Ritardo tra step in discesa quando non e un hard-OFF.</div></div>
             <div class="field">
-              <label>Soglie export (W) [1/2/3]</label>
+              <label>Potenza step resistenze (W) [1/2/3]</label>
               <div class="row3">
                 <input type="number" v-model.number="sp.resistance.thresholds_w[0]"/>
                 <input type="number" v-model.number="sp.resistance.thresholds_w[1]"/>
                 <input type="number" v-model.number="sp.resistance.thresholds_w[2]"/>
               </div>
-              <div class="help">Soglie potenza FV per step 1/2/3 resistenze.</div>
+              <div class="help">Potenza cumulativa stimata: 1, 2 e 3 resistenze. Usata insieme alla soglia export ON.</div>
             </div>
           </div>
 
