@@ -596,29 +596,30 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         elif effective_power_w <= 0.0:
             desired_step = 0
         else:
+            raw_desired_step = 0
             if effective_power_w >= thr[2]:
-                desired_step = 3
+                raw_desired_step = 3
             elif effective_power_w >= thr[1]:
-                desired_step = 2
+                raw_desired_step = 2
             elif effective_power_w >= thr[0]:
+                raw_desired_step = 1
+
+            reserve_thresholds = [
+                export_on_min_w + thr[0],
+                export_on_min_w + thr[1],
+                export_on_min_w + thr[2],
+            ]
+            if effective_power_w >= reserve_thresholds[2]:
+                desired_step = 3
+            elif effective_power_w >= reserve_thresholds[1]:
+                desired_step = 2
+            elif effective_power_w >= reserve_thresholds[0]:
                 desired_step = 1
-            current_step = tracked_step
-            if current_step > 0 and res_power_w > 0.0:
-                step_load_w = max(1.0, res_power_w / current_step)
-            else:
-                step_load_w = max(1.0, float(thr[0] or 1.0))
-            raw_desired_step = desired_step
-            blocked_candidate_step = 0
-            while desired_step > current_step:
-                added_steps = desired_step - current_step
-                projected_export_w = export_w - (added_steps * step_load_w)
-                if projected_export_w >= export_on_min_w:
-                    break
-                blocked_candidate_step = desired_step
-                desired_step -= 1
+
             if raw_desired_step > desired_step:
                 export_reserve_block = True
-                export_reserve_step = blocked_candidate_step or raw_desired_step
+                export_reserve_step = raw_desired_step
+                projected_export_w = effective_power_w - thr[raw_desired_step - 1]
 
     off_thr = float(res_cfg.get("off_threshold_w", 0.0))
     step_up_delay = int(_f(res_cfg.get("step_up_delay_s", 10), 10))

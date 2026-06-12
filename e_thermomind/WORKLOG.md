@@ -612,3 +612,5 @@
 - [2026-06-12] Resistenze Volano: step-down sotto soglia ON reso progressivo e rivalutato sullo stato fisico; durante le transizioni la logica usa anche R22/R23/R24 reali, evitando timer OFF prenotati su tutti gli step e messaggi di riserva incoerenti. Release 0.8.38.
 
 - [2026-06-12] Resistenze Volano: rimosso il doppio delay logico in discesa; sotto soglia ON la decisione chiede subito un solo step in meno e il delay resta solo sull'attuatore live, cosi R24 viene realmente avviata allo spegnimento. Release 0.8.39.
+
+- [2026-06-12] Resistenze Volano: salita step vincolata a export+resistenze >= soglia ON + soglia step target; lo step successivo non parte se il previsto residuo scenderebbe sotto la soglia export configurata. Release 0.8.40.
