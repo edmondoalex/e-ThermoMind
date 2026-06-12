@@ -634,10 +634,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         else:
             step = tracked_step
     elif desired_step < tracked_step:
-        if now_ts - last_step_ts >= step_down_delay:
-            step = max(desired_step, tracked_step - 1)
-        else:
-            step = tracked_step
+        step = max(desired_step, tracked_step - 1)
     else:
         step = tracked_step
 
