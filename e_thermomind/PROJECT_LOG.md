@@ -570,3 +570,4 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-05-25] Release 0.8.26: fail-safe moduli OFF su resistenze, trasferimenti, miscelatrice, impianto, gas e legna; il solare resta aperto su via sicura.
 - [2026-05-26] Release 0.8.27: ripristinato comando manuale degli switch a modulo OFF; spegnimento modulo azzera le uscite automatiche, PDC inclusa, mentre solare applica la via sicura della modalita selezionata.
 - [2026-06-06] Release 0.8.28: compatibilita con nuovi termostati climate senza `hvac_action`; la richiesta zona usa temperatura corrente e target quando necessario, e i comandi HVAC registrano esito e servizio usato.
+- [2026-06-29] Release 0.8.47: fix UI Ingress/sidebar Home Assistant con asset Vite, favicon, API e WebSocket relativi al prefisso add-on per evitare pagina bianca.

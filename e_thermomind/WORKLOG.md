@@ -626,3 +626,5 @@
 - [2026-06-12] Resistenze Volano: lo spegnimento automatico delle resistenze ora pulisce eventuale override manuale sull'attuatore; l'override resta valido per bloccare accensioni automatiche, ma non impedisce OFF di step-down/sicurezza. Release 0.8.45.
 
 - [2026-06-12] Resistenze Volano: diagnostica e riserva export in salita rese incrementali; da step 1 valuta step 2 usando solo il carico della nuova resistenza, evitando messaggi fuorvianti tipo step 3 non ammesso. Release 0.8.46.
+
+- [2026-06-29] UI Ingress: corretti asset Vite, favicon, chiamate API e WebSocket con percorsi relativi al prefisso add-on, evitando pagina bianca aprendo e-ThermoMind dalla sidebar Home Assistant. Release 0.8.47.

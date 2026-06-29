@@ -2710,6 +2710,19 @@
 import schemaImg from './assets/centrale-termica.png'
 import brandLogo from './assets/logo.png'
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+const appBasePath = (() => {
+  const p = window.location.pathname || '/'
+  return p.endsWith('/') ? p : `${p}/`
+})()
+function apiUrl(path){
+  const clean = String(path || '').replace(/^\/+/, '')
+  return `${appBasePath}${clean}`
+}
+function wsUrl(path){
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws'
+  const clean = String(path || '').replace(/^\/+/, '')
+  return `${proto}://${location.host}${appBasePath}${clean}`
+}
 const showSplash = ref(true)
 const initialTab = (() => {
   const h = (window.location.hash || '').toLowerCase()
@@ -2987,7 +3000,7 @@ async function openHistory(key, title){
   const entId = ent.value?.[key]?.entity_id
   let points = []
   if (entId) {
-    const r = await fetch(`/api/history?entity_id=${encodeURIComponent(entId)}&hours=24`)
+    const r = await fetch(apiUrl(`/api/history?entity_id=${encodeURIComponent(entId)}&hours=24`))
     if (!r.ok) return
     const data = await r.json()
     const items = Array.isArray(data?.items) ? data.items.flat() : []
@@ -3086,7 +3099,7 @@ const hvacLabel = (s) => {
   if (!zoneModal.value.entity_id) return
   const next = Math.round((Number(zoneModal.value.setpoint) + delta) * 10) / 10
   zoneModal.value.setpoint = next
-  await fetch('/api/climate_setpoint', {
+  await fetch(apiUrl('/api/climate_setpoint'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ entity_id: zoneModal.value.entity_id, temperature: next })
@@ -3741,12 +3754,12 @@ const curveYTicks = computed(() => {
 async function refresh(){
   if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0 || manualEditHold.value) return
   try {
-    const r = await fetch('/api/decision'); d.value = await r.json()
+    const r = await fetch(apiUrl('/api/decision')); d.value = await r.json()
     zones.value = d.value?.zones || []
     schedulerStatus.value = d.value?.scheduler_status || null
     updateHistoryFromDecision(d.value)
-    const s = await fetch('/api/status'); status.value = await s.json()
-    const a = await fetch('/api/actions'); actions.value = (await a.json()).items || []
+    const s = await fetch(apiUrl('/api/status')); status.value = await s.json()
+    const a = await fetch(apiUrl('/api/actions')); actions.value = (await a.json()).items || []
     await loadActuators()
     await load()
     lastUpdate.value = new Date()
@@ -3756,13 +3769,13 @@ async function refresh(){
   }
 }
 async function loadModules(){
-  const r = await fetch('/api/modules'); modules.value = await r.json()
+  const r = await fetch(apiUrl('/api/modules')); modules.value = await r.json()
 }
 async function load(){
   historyReady = false
   let payload = null
   try {
-    const r = await fetch('/api/setpoints')
+    const r = await fetch(apiUrl('/api/setpoints'))
     payload = await r.json()
     apiOffline.value = false
   } catch {
@@ -3951,7 +3964,7 @@ function saveHistoryDebounced(){
 }
 async function loadActuators(){
   if (editingCount.value > 0) return
-  const r = await fetch('/api/actuators'); act.value = await r.json()
+  const r = await fetch(apiUrl('/api/actuators')); act.value = await r.json()
 }
   async function save(){
     if (apiOffline.value) return
@@ -3975,7 +3988,7 @@ async function loadActuators(){
       }
     }
     try {
-      await fetch('/api/setpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
+      await fetch(apiUrl('/api/setpoints'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sp.value)})
       apiOffline.value = false
       manualEditHold.value = false
       if (tab.value === 'admin' || tab.value === 'energy' || editingCount.value > 0) {
@@ -3997,7 +4010,7 @@ async function loadActuators(){
     }
 }
 async function resetLegnaForcedOff(){
-  await fetch('/api/legna/reset_startup', { method: 'POST' })
+  await fetch(apiUrl('/api/legna/reset_startup'), { method: 'POST' })
   await refresh()
 }
 async function activateForceAcsPuffer(){
@@ -4005,7 +4018,7 @@ async function activateForceAcsPuffer(){
   forceAcsBusy.value = true
   try {
     const mins = Math.max(1, Math.min(240, Number(sp.value?.runtime?.force_acs_puffer_default_minutes || 30)))
-    const res = await fetch('/api/acs/force_puffer', {
+    const res = await fetch(apiUrl('/api/acs/force_puffer'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ minutes: mins })
@@ -4019,7 +4032,7 @@ async function clearForceAcsPuffer(){
   if (forceAcsBusy.value) return
   forceAcsBusy.value = true
   try {
-    const res = await fetch('/api/acs/force_puffer/clear', { method: 'POST' })
+    const res = await fetch(apiUrl('/api/acs/force_puffer/clear'), { method: 'POST' })
     if (res.ok) await refresh()
   } finally {
     forceAcsBusy.value = false
@@ -4030,7 +4043,7 @@ async function activateForceVolanoPuffer(){
   forceVolanoBusy.value = true
   try {
     const mins = Math.max(1, Math.min(240, Number(sp.value?.runtime?.force_volano_puffer_default_minutes || 30)))
-    const res = await fetch('/api/volano/force_puffer', {
+    const res = await fetch(apiUrl('/api/volano/force_puffer'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ minutes: mins })
@@ -4044,7 +4057,7 @@ async function clearForceVolanoPuffer(){
   if (forceVolanoBusy.value) return
   forceVolanoBusy.value = true
   try {
-    const res = await fetch('/api/volano/force_puffer/clear', { method: 'POST' })
+    const res = await fetch(apiUrl('/api/volano/force_puffer/clear'), { method: 'POST' })
     if (res.ok) await refresh()
   } finally {
     forceVolanoBusy.value = false
@@ -4120,7 +4133,7 @@ async function toggleModule(key){
     provided = window.prompt('PIN') || ''
   }
   const nextValue = !modules.value[key]
-  const res = await fetch('/api/modules',{
+  const res = await fetch(apiUrl('/api/modules'),{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ key, value: nextValue, pin: provided })
@@ -4138,7 +4151,7 @@ async function confirmMode(){
 }
 async function loadEntities(){
   if (editingCount.value > 0) return
-  const r = await fetch('/api/entities')
+  const r = await fetch(apiUrl('/api/entities'))
   const data = await r.json()
   const out = {}
   for (const key of Object.keys(data || {})) {
@@ -4156,7 +4169,7 @@ async function loadEntities(){
     for (const key of Object.keys(ent.value || {})) {
       payload[key] = ent.value?.[key]?.entity_id || null
     }
-    await fetch('/api/entities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entities: payload})})
+    await fetch(apiUrl('/api/entities'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entities: payload})})
     dirtyEnt.value = {}
     await refresh()
   }
@@ -4165,12 +4178,12 @@ async function loadEntities(){
     for (const item of actuatorDefs) {
       payload[item.key] = act.value?.[item.key]?.entity_id || null
     }
-    await fetch('/api/actuators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actuators: payload})})
+    await fetch(apiUrl('/api/actuators'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actuators: payload})})
     dirtyAct.value = {}
     await loadActuators()
   }
 async function exportConfig(){
-  const r = await fetch('/api/config')
+  const r = await fetch(apiUrl('/api/config'))
   const data = await r.json()
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
@@ -4186,12 +4199,12 @@ async function importConfig(ev){
   const text = await file.text()
   let data = null
   try { data = JSON.parse(text) } catch { return }
-  await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+  await fetch(apiUrl('/api/config'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
   await loadAll()
 }
 async function doAct(entity_id, action, opts = {}){
   if (!entity_id) return
-  await fetch('/api/actuate',{
+  await fetch(apiUrl('/api/actuate'),{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({entity_id, action, manual: !!opts.manual})
@@ -4242,8 +4255,7 @@ function stateClass(state){
 }
 function connectWS(){
   if (ws) ws.close()
-  const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-  ws = new WebSocket(`${proto}://${location.host}/ws`)
+  ws = new WebSocket(wsUrl('/ws'))
   ws.onmessage = (ev) => {
     let payload = null
     try { payload = JSON.parse(ev.data) } catch { return }
