@@ -572,3 +572,4 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-06-06] Release 0.8.28: compatibilita con nuovi termostati climate senza `hvac_action`; la richiesta zona usa temperatura corrente e target quando necessario, e i comandi HVAC registrano esito e servizio usato.
 - [2026-06-29] Release 0.8.47: fix UI Ingress/sidebar Home Assistant con asset Vite, favicon, API e WebSocket relativi al prefisso add-on per evitare pagina bianca.
 - [2026-06-29] Release 0.8.48: fix Resistenze Volano, tolto il falso blocco Dest=OFF per permettere carica volano da surplus FV/export quando ACS e puffer non richiedono destinazione.
+- [2026-06-29] Release 0.8.49: aggiunto CHANGELOG.md add-on e bump metadata per sbloccare il dialog update Supervisor rimasto senza changelog/stato coerente.
