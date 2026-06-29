@@ -596,7 +596,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     export_reserve_block = False
     export_reserve_step = 0
     resistance_enabled = resistenze_enabled and res_cfg.get("enabled", True)
-    if dest in ("ACS", "PUFFER") and (not vol_max_hit) and resistance_enabled:
+    if (not vol_max_hit) and resistance_enabled:
         if battery_block_active:
             desired_step = 0
         elif export_w < export_on_min_w:
@@ -660,8 +660,6 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         charge_reason = f"{power_note} | Modulo resistenze OFF"
     elif vol_max_hit:
         charge_reason = f"VOLANO_MAX: {t_volano:.1f}°C >= {vol_max:.1f}°C"
-    elif dest == "OFF":
-        charge_reason = dest_reason
     elif battery_block_active:
         if battery_output_w > battery_block_w:
             charge_reason = (
@@ -725,8 +723,6 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     res_blockers: list[str] = []
     if not resistance_enabled:
         res_blockers.append("Modulo OFF")
-    if dest not in ("ACS", "PUFFER"):
-        res_blockers.append(f"Dest={dest}")
     if vol_max_hit:
         res_blockers.append("VOL_MAX")
     if battery_block_active:
