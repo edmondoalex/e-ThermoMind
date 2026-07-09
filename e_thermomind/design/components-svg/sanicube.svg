@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 320">
+  <defs>
+    <linearGradient id="sanicubeWater" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#f05b3a" stop-opacity=".78"/>
+      <stop offset="0.44" stop-color="#f28762" stop-opacity=".62"/>
+      <stop offset="0.68" stop-color="#8bb9df" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#33a9e8" stop-opacity=".78"/>
+    </linearGradient>
+    <linearGradient id="sanicubeShell" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#cfd2d4"/>
+      <stop offset="0.12" stop-color="#f1f2f2"/>
+      <stop offset="0.88" stop-color="#f1f2f2"/>
+      <stop offset="1" stop-color="#c9ccce"/>
+    </linearGradient>
+  </defs>
+
+  <g id="sanicube">
+    <rect id="outer_shell" x="14" y="8" width="122" height="304" rx="26" fill="url(#sanicubeShell)" stroke="#85898d" stroke-width="3"/>
+    <rect id="inner_tank" x="26" y="26" width="98" height="262" rx="10" fill="url(#sanicubeWater)" stroke="#b0b0b0" stroke-width="2"/>
+
+    <path id="top_plate" d="M38 18h74v18H38z" fill="#f3f3f3" stroke="#9b9b9b" stroke-width="2"/>
+    <path id="bottom_shadow" d="M30 288c6 9 83 9 91 0" fill="none" stroke="#8fa0aa" stroke-width="4" opacity=".55"/>
+
+    <g id="top_connections" stroke-linecap="round" fill="none">
+      <path d="M47 4v42" stroke="#d9251d" stroke-width="5"/>
+      <path d="M58 4v42" stroke="#0b5bd3" stroke-width="5"/>
+      <path d="M69 4v42" stroke="#d9251d" stroke-width="5"/>
+      <path d="M105 20v50" stroke="#333" stroke-width="4"/>
+      <circle cx="105" cy="72" r="4" fill="#333" stroke="none"/>
+    </g>
+
+    <g id="vertical_pipes" fill="none" stroke-linecap="round">
+      <path d="M42 35v242" stroke="#d9251d" stroke-width="4"/>
+      <path d="M54 35v242" stroke="#0b5bd3" stroke-width="4"/>
+      <path d="M114 34v238" stroke="#d9251d" stroke-width="4"/>
+    </g>
+
+    <g id="hot_coil" fill="none" stroke="#e24b24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M66 82c34 0 34 16 0 16s-34 16 0 16s34 16 0 16s-34 16 0 16s34 16 0 16s-34 16 0 16s34 16 0 16"/>
+    </g>
+
+    <g id="cold_coil" fill="none" stroke="#1269d8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M70 186c34 0 34 16 0 16s-34 16 0 16s34 16 0 16s-34 16 0 16s34 16 0 16s-34 16 0 16"/>
+    </g>
+
+    <g id="perforated_column" fill="#53616a" opacity=".85">
+      <circle cx="34" cy="58" r="2"/>
+      <circle cx="34" cy="76" r="2"/>
+      <circle cx="34" cy="94" r="2"/>
+      <circle cx="34" cy="112" r="2"/>
+      <circle cx="34" cy="130" r="2"/>
+      <circle cx="34" cy="148" r="2"/>
+      <circle cx="34" cy="166" r="2"/>
+      <circle cx="34" cy="184" r="2"/>
+      <circle cx="34" cy="202" r="2"/>
+      <circle cx="34" cy="220" r="2"/>
+      <circle cx="34" cy="238" r="2"/>
+      <circle cx="34" cy="256" r="2"/>
+      <circle cx="34" cy="274" r="2"/>
+      <circle cx="116" cy="116" r="2"/>
+      <circle cx="116" cy="134" r="2"/>
+      <circle cx="116" cy="152" r="2"/>
+      <circle cx="116" cy="170" r="2"/>
+      <circle cx="116" cy="188" r="2"/>
+      <circle cx="116" cy="206" r="2"/>
+      <circle cx="116" cy="224" r="2"/>
+      <circle cx="116" cy="242" r="2"/>
+      <circle cx="116" cy="260" r="2"/>
+    </g>
+
+    <g id="side_handles" fill="#222">
+      <rect x="8" y="123" width="8" height="42" rx="2"/>
+      <rect x="134" y="123" width="8" height="42" rx="2"/>
+    </g>
+  </g>
+</svg>

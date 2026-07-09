@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150">
+  <defs>
+    <linearGradient id="tubeGlass" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#12181c"/>
+      <stop offset="0.22" stop-color="#5c7f93"/>
+      <stop offset="0.45" stop-color="#b9d7e8"/>
+      <stop offset="0.58" stop-color="#2d5369"/>
+      <stop offset="1" stop-color="#0c1114"/>
+    </linearGradient>
+    <linearGradient id="headerMetal" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#f6f6f6"/>
+      <stop offset="0.5" stop-color="#b8bec2"/>
+      <stop offset="1" stop-color="#6e777d"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#000" flood-opacity=".35"/>
+    </filter>
+  </defs>
+
+  <g id="solar_thermal_panel" transform="skewX(-10)" filter="url(#softShadow)">
+    <path id="panel_frame" d="M38 22h188l-18 110H20z" fill="#e5e5e5" stroke="#5d666c" stroke-width="3"/>
+    <rect id="top_header" x="40" y="16" width="190" height="14" rx="3" fill="url(#headerMetal)" stroke="#535b60" stroke-width="2"/>
+    <rect id="bottom_rail" x="18" y="128" width="190" height="6" rx="2" fill="#8d969c" stroke="#4f565a" stroke-width="1.5"/>
+
+    <g id="vacuum_tubes" stroke="#1c252b" stroke-width="1.2">
+      <rect x="34" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="44" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="54" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="64" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="74" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="84" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="94" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="104" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="114" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="124" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="134" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="144" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="154" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="164" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="174" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="184" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="194" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="204" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+      <rect x="214" y="31" width="6" height="98" rx="3" fill="url(#tubeGlass)"/>
+    </g>
+
+    <g id="tube_caps" fill="#1b1f22" stroke="#0d0f10" stroke-width="1">
+      <circle cx="37" cy="130" r="3"/>
+      <circle cx="47" cy="130" r="3"/>
+      <circle cx="57" cy="130" r="3"/>
+      <circle cx="67" cy="130" r="3"/>
+      <circle cx="77" cy="130" r="3"/>
+      <circle cx="87" cy="130" r="3"/>
+      <circle cx="97" cy="130" r="3"/>
+      <circle cx="107" cy="130" r="3"/>
+      <circle cx="117" cy="130" r="3"/>
+      <circle cx="127" cy="130" r="3"/>
+      <circle cx="137" cy="130" r="3"/>
+      <circle cx="147" cy="130" r="3"/>
+      <circle cx="157" cy="130" r="3"/>
+      <circle cx="167" cy="130" r="3"/>
+      <circle cx="177" cy="130" r="3"/>
+      <circle cx="187" cy="130" r="3"/>
+      <circle cx="197" cy="130" r="3"/>
+      <circle cx="207" cy="130" r="3"/>
+      <circle cx="217" cy="130" r="3"/>
+    </g>
+
+    <g id="solar_ports">
+      <circle cx="30" cy="128" r="5" fill="#f6d21e" stroke="#666" stroke-width="1.5"/>
+      <circle cx="230" cy="22" r="5" fill="#88c63e" stroke="#666" stroke-width="1.5"/>
+    </g>
+
+    <text id="panel_label" x="132" y="27" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="#4a4a4a">SOLARE TERMICO</text>
+  </g>
+</svg>

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150">
+  <defs>
+    <linearGradient id="valveBrass" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f3e0b7"/>
+      <stop offset="0.25" stop-color="#b99b63"/>
+      <stop offset="0.55" stop-color="#7d6842"/>
+      <stop offset="0.8" stop-color="#d5bd86"/>
+      <stop offset="1" stop-color="#8b7348"/>
+    </linearGradient>
+    <linearGradient id="actuatorGreen" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#20b574"/>
+      <stop offset="1" stop-color="#078456"/>
+    </linearGradient>
+    <linearGradient id="actuatorBlack" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#2b2d2c"/>
+      <stop offset="1" stop-color="#111211"/>
+    </linearGradient>
+  </defs>
+
+  <g id="comparato_valve_horizontal">
+    <g id="valve_body">
+      <rect x="42" y="92" width="176" height="34" rx="17" fill="url(#valveBrass)" stroke="#5b4c32" stroke-width="3"/>
+      <circle cx="93" cy="109" r="24" fill="url(#valveBrass)" stroke="#5b4c32" stroke-width="3"/>
+      <circle cx="167" cy="109" r="24" fill="url(#valveBrass)" stroke="#5b4c32" stroke-width="3"/>
+      <rect x="105" y="86" width="50" height="46" rx="8" fill="url(#valveBrass)" stroke="#5b4c32" stroke-width="3"/>
+      <rect x="20" y="96" width="42" height="26" rx="4" fill="url(#valveBrass)" stroke="#5b4c32" stroke-width="3"/>
+      <rect x="198" y="96" width="42" height="26" rx="4" fill="url(#valveBrass)" stroke="#5b4c32" stroke-width="3"/>
+      <path d="M28 101h26M28 107h26M28 113h26M206 101h26M206 107h26M206 113h26" stroke="#5b4c32" stroke-width="2"/>
+      <circle cx="130" cy="109" r="8" fill="#6d5a38" opacity=".45"/>
+      <text x="130" y="114" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#57472c">DN</text>
+    </g>
+
+    <g id="motor_mount">
+      <rect x="110" y="70" width="40" height="22" rx="5" fill="#2a2a2a" stroke="#111" stroke-width="3"/>
+      <path d="M101 77h58" stroke="#7f6d48" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="105" cy="77" r="3" fill="#e1cf9f" stroke="#5b4c32" stroke-width="1"/>
+      <circle cx="155" cy="77" r="3" fill="#e1cf9f" stroke="#5b4c32" stroke-width="1"/>
+    </g>
+
+    <g id="actuator">
+      <rect x="58" y="20" width="144" height="35" rx="9" fill="url(#actuatorGreen)" stroke="#075c3d" stroke-width="3"/>
+      <rect x="58" y="52" width="144" height="28" rx="6" fill="url(#actuatorBlack)" stroke="#111" stroke-width="3"/>
+      <path d="M70 55h120" stroke="#3d3f3e" stroke-width="2" opacity=".75"/>
+      <circle cx="130" cy="37" r="6" fill="#0b5f41" stroke="#b8e8d2" stroke-width="2"/>
+      <path d="M84 31h35M84 38h25M145 31h28M145 38h22" stroke="#7de0b4" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+    </g>
+
+    <g id="cable">
+      <path d="M68 78c-18 10-18 30-6 42" fill="none" stroke="#1c1c1c" stroke-width="7" stroke-linecap="round"/>
+      <path d="M68 78c-18 10-18 30-6 42" fill="none" stroke="#323232" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

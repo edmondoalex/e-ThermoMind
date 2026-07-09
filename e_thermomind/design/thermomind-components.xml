@@ -1,0 +1,74 @@
+<mxlibrary>[
+  {
+    "title": "Tubazione calda",
+    "w": 220,
+    "h": 30,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"pipe_hot\" value=\"\" style=\"endArrow=classic;html=1;rounded=0;strokeWidth=14;strokeColor=#c00000;edgeStyle=orthogonalEdgeStyle;\" edge=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"220\" height=\"30\" relative=\"1\" as=\"geometry\"&gt;&lt;mxPoint x=\"0\" y=\"15\" as=\"sourcePoint\"/&gt;&lt;mxPoint x=\"220\" y=\"15\" as=\"targetPoint\"/&gt;&lt;/mxGeometry&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "Tubazione fredda",
+    "w": 220,
+    "h": 30,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"pipe_cold\" value=\"\" style=\"endArrow=classic;html=1;rounded=0;strokeWidth=14;strokeColor=#00008b;edgeStyle=orthogonalEdgeStyle;\" edge=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"220\" height=\"30\" relative=\"1\" as=\"geometry\"&gt;&lt;mxPoint x=\"0\" y=\"15\" as=\"sourcePoint\"/&gt;&lt;mxPoint x=\"220\" y=\"15\" as=\"targetPoint\"/&gt;&lt;/mxGeometry&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "Accumulo / Puffer",
+    "w": 130,
+    "h": 160,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"tank_puffer\" value=\"PUFFER&amp;#xa;--.- C\" style=\"shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;gradientColor=#f05b67;strokeColor=#666666;strokeWidth=2;fontSize=15;fontStyle=1;fontColor=#001eff;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"130\" height=\"160\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "Volano caldo/freddo",
+    "w": 90,
+    "h": 220,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"tank_volano\" value=\"VOLANO&amp;#xa;--.- C\" style=\"shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#0000ff;gradientColor=#ff0000;strokeColor=#333333;strokeWidth=2;fontSize=15;fontStyle=1;fontColor=#ffffff;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"90\" height=\"220\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "Caldaia",
+    "w": 160,
+    "h": 110,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"boiler\" value=\"CALDAIA&amp;#xa;ON/OFF\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#8b817c;strokeColor=#333333;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#111111;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"160\" height=\"110\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;mxCell id=\"boiler_fire\" value=\"\" style=\"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#2c2422;strokeColor=#111111;strokeWidth=2;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry x=\"58\" y=\"35\" width=\"44\" height=\"44\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "Pompa",
+    "w": 60,
+    "h": 60,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"pump\" value=\"P\" style=\"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;fontSize=18;fontStyle=1;fontColor=#008000;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"60\" height=\"60\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;mxCell id=\"pump_arrow\" value=\"\" style=\"shape=triangle;whiteSpace=wrap;html=1;fillColor=#00a000;strokeColor=#006000;rotation=0;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry x=\"20\" y=\"18\" width=\"26\" height=\"26\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "Valvola",
+    "w": 80,
+    "h": 55,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"valve\" value=\"\" style=\"shape=mxgraph.pid2valves.valve;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;strokeColor=#666666;fillColor=#ffffff;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"80\" height=\"55\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "PDC / Frigo",
+    "w": 210,
+    "h": 115,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"pdc\" value=\"PDC\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#d9eaf7;strokeColor=#0e7ca8;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#111111;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"210\" height=\"115\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;mxCell id=\"pdc_fan_1\" value=\"\" style=\"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#00a0b8;strokeColor=#008299;strokeWidth=2;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry x=\"45\" y=\"55\" width=\"40\" height=\"40\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;mxCell id=\"pdc_fan_2\" value=\"\" style=\"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#00a0b8;strokeColor=#008299;strokeWidth=2;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry x=\"125\" y=\"55\" width=\"40\" height=\"40\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "Box temperatura",
+    "w": 110,
+    "h": 52,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"label_temp\" value=\"Mandata&amp;#xa;--.- C\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#001eff;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"110\" height=\"52\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "LED verde",
+    "w": 30,
+    "h": 30,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"led_green\" value=\"\" style=\"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#00e000;strokeColor=#333333;strokeWidth=2;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"30\" height=\"30\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "LED rosso",
+    "w": 30,
+    "h": 30,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"led_red\" value=\"\" style=\"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#ff0000;strokeColor=#333333;strokeWidth=2;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"30\" height=\"30\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  },
+  {
+    "title": "Selettore MAN/AUT",
+    "w": 76,
+    "h": 76,
+    "xml": "&lt;mxGraphModel&gt;&lt;root&gt;&lt;mxCell id=\"0\"/&gt;&lt;mxCell id=\"1\" parent=\"0\"/&gt;&lt;mxCell id=\"selector\" value=\"ON&amp;#xa;OFF  AUT\" style=\"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d9edf7;strokeColor=#666666;strokeWidth=2;fontSize=12;fontColor=#111111;\" vertex=\"1\" parent=\"1\"&gt;&lt;mxGeometry width=\"76\" height=\"76\" as=\"geometry\"/&gt;&lt;/mxCell&gt;&lt;mxCell id=\"selector_needle\" value=\"\" style=\"endArrow=none;html=1;rounded=0;strokeWidth=3;strokeColor=#111111;\" edge=\"1\" parent=\"1\"&gt;&lt;mxGeometry relative=\"1\" as=\"geometry\"&gt;&lt;mxPoint x=\"38\" y=\"38\" as=\"sourcePoint\"/&gt;&lt;mxPoint x=\"55\" y=\"58\" as=\"targetPoint\"/&gt;&lt;/mxGeometry&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;"
+  }
+]</mxlibrary>

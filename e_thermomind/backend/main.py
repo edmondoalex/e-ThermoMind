@@ -2156,7 +2156,15 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     else:
         off_sequence_start = 0.0
 
+    fast_shutdown = step == 0 and (
+        export_w < export_on_min_w
+        or export_w <= export_off_w
+        or available_w < export_on_min_w
+    )
+
     def _off_delay_for(key: str) -> int:
+        if fast_shutdown:
+            return off_delay
         if key == "r24":
             return off_delay
         if key == "r23":
@@ -2171,6 +2179,10 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         if want_on:
             off_deadline[key] = 0.0
             if current != "on":
+                if _is_manual(ent):
+                    delay_notes.append(f"{key} manuale: ON bloccato")
+                    on_deadline[key] = 0.0
+                    continue
                 if on_deadline[key] == 0.0:
                     on_deadline[key] = now + on_delay
                 elif now >= on_deadline[key]:
@@ -2198,7 +2210,10 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         if want_general:
             off_deadline["rg"] = 0.0
             if current_rg != "on":
-                await _set_resistance(rg, True)
+                if _is_manual(rg):
+                    delay_notes.append("RG manuale: ON bloccato")
+                else:
+                    await _set_resistance(rg, True)
         else:
             if current_rg == "on":
                 if off_deadline["rg"] == 0.0:
@@ -2225,6 +2240,8 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     delay_notes: list[str] = []
     if off_sequence_start > 0.0:
         delay_notes.append(f"off_seq {int(now - off_sequence_start)}s")
+    if fast_shutdown:
+        delay_notes.append("fast_OFF sotto soglia")
     for key in ("r22", "r23", "r24"):
         if on_deadline[key] > now:
             delay_notes.append(f"{key} ON in {int(on_deadline[key] - now)}s")

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 300">
+  <defs>
+    <linearGradient id="controllerCase" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#b69d73"/>
+      <stop offset="0.45" stop-color="#9e875f"/>
+      <stop offset="1" stop-color="#806b48"/>
+    </linearGradient>
+    <linearGradient id="screenBg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#c8e4ff"/>
+      <stop offset="1" stop-color="#5d92d1"/>
+    </linearGradient>
+  </defs>
+
+  <g id="solar_controller">
+    <rect id="controller_case" x="10" y="10" width="200" height="280" rx="4" fill="url(#controllerCase)" stroke="#6c5738" stroke-width="3"/>
+    <path id="screen_recess" d="M38 42h144v118H38z" fill="#715f43" opacity=".55"/>
+    <rect id="screen_frame" x="44" y="36" width="132" height="112" fill="#2d3033" stroke="#4a4031" stroke-width="3"/>
+    <rect id="screen" x="49" y="41" width="122" height="102" fill="url(#screenBg)" stroke="#111" stroke-width="1.5"/>
+
+    <rect id="screen_title_bar" x="50" y="42" width="120" height="15" fill="#d9eb1e"/>
+    <text x="56" y="54" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#111">SystaSolar Aqua II</text>
+
+    <rect id="home_icon_box" x="148" y="44" width="12" height="12" fill="#d9eb1e" stroke="#3e6b2c" stroke-width="1"/>
+    <path id="home_icon" d="M151 51l3-4 4 4v4h-7z" fill="#315b48"/>
+    <rect id="status_led" x="162" y="44" width="8" height="12" fill="#4fd14a" stroke="#3e6b2c" stroke-width="1"/>
+
+    <g id="screen_schema">
+      <rect id="screen_tank" x="96" y="86" width="15" height="44" fill="#f23b24" stroke="#9b1a0e" stroke-width="1.5"/>
+      <path id="solar_hot_line" d="M112 82h25v-24" fill="none" stroke="#d42320" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="solar_cold_line" d="M112 121h25v-24" fill="none" stroke="#2478e8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="solar_arrow_hot" d="M132 61l7-6-2 9z" fill="#d42320"/>
+      <path id="solar_arrow_cold" d="M127 100l8-7 7 7z" fill="#2478e8"/>
+      <path id="pump_symbol" d="M125 110l8-13 8 13z" fill="#2da0ff" stroke="#e5f6ff" stroke-width="1"/>
+      <text x="103" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#111">64 C</text>
+      <text x="83" y="127" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#111">72 C</text>
+    </g>
+
+    <g id="screen_bottom_buttons">
+      <rect x="54" y="128" width="15" height="11" fill="#d9eb1e" stroke="#6f7e12" stroke-width="1"/>
+      <path d="M58 136v-6h8" fill="none" stroke="#3e6b2c" stroke-width="1.5"/>
+      <rect x="88" y="128" width="15" height="11" fill="#d9eb1e" stroke="#6f7e12" stroke-width="1"/>
+      <path d="M93 130l5 4-5 4" fill="none" stroke="#3e6b2c" stroke-width="1.5"/>
+      <rect x="151" y="128" width="15" height="11" fill="#d9eb1e" stroke="#6f7e12" stroke-width="1"/>
+      <path d="M154 131h9M154 134h9M154 137h9" stroke="#3e6b2c" stroke-width="1"/>
+    </g>
+
+    <path id="case_mid_line" d="M10 174h200" stroke="#6d5736" stroke-width="3" opacity=".55"/>
+    <path id="case_highlight" d="M24 25h172" stroke="#d3bd93" stroke-width="2" opacity=".65"/>
+    <circle id="case_screw" cx="110" cy="245" r="7" fill="#6c5738" stroke="#c0aa82" stroke-width="3"/>
+    <circle cx="110" cy="245" r="2.5" fill="#222"/>
+  </g>
+</svg>

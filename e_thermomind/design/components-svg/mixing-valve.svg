@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 190">
+  <defs>
+    <linearGradient id="mixBrass" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f4dc7d"/>
+      <stop offset="0.22" stop-color="#9f7928"/>
+      <stop offset="0.5" stop-color="#d2ad43"/>
+      <stop offset="0.75" stop-color="#6e4e18"/>
+      <stop offset="1" stop-color="#f0d77a"/>
+    </linearGradient>
+    <linearGradient id="mixPlate" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#e7f0ee"/>
+      <stop offset="1" stop-color="#bcc9c7"/>
+    </linearGradient>
+    <radialGradient id="blueKnob" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#1f7cff"/>
+      <stop offset="0.45" stop-color="#034fdb"/>
+      <stop offset="1" stop-color="#012b86"/>
+    </radialGradient>
+  </defs>
+
+  <g id="mixing_valve">
+    <g id="brass_body">
+      <rect x="75" y="4" width="70" height="48" rx="12" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <rect x="75" y="138" width="70" height="48" rx="12" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <rect x="4" y="70" width="56" height="50" rx="10" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <rect x="160" y="70" width="56" height="50" rx="10" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <rect x="42" y="35" width="136" height="120" rx="16" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <circle cx="55" cy="45" r="19" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <circle cx="165" cy="45" r="19" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <circle cx="55" cy="145" r="19" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <circle cx="165" cy="145" r="19" fill="url(#mixBrass)" stroke="#6e4e18" stroke-width="3"/>
+      <circle cx="55" cy="45" r="8" fill="#ffffff" stroke="#6e4e18" stroke-width="3"/>
+      <circle cx="165" cy="45" r="8" fill="#ffffff" stroke="#6e4e18" stroke-width="3"/>
+      <circle cx="55" cy="145" r="8" fill="#ffffff" stroke="#6e4e18" stroke-width="3"/>
+      <circle cx="165" cy="145" r="8" fill="#ffffff" stroke="#6e4e18" stroke-width="3"/>
+    </g>
+
+    <g id="front_plate">
+      <rect x="54" y="48" width="112" height="92" rx="6" fill="url(#mixPlate)" stroke="#8fa3a0" stroke-width="2"/>
+      <path d="M70 79c22-32 58-32 80 0" fill="none" stroke="#0757d7" stroke-width="2"/>
+      <path d="M76 79l-8-18 14-8M92 65v-22M110 60V38M128 65v-22M144 79l8-18-14-8" stroke="#0757d7" stroke-width="2" fill="none"/>
+      <text x="69" y="81" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0757d7" transform="rotate(-28 69 81)">0</text>
+      <text x="88" y="63" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0757d7">1</text>
+      <text x="107" y="56" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0757d7">3</text>
+      <text x="126" y="63" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0757d7">5</text>
+      <text x="146" y="82" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#0757d7" transform="rotate(28 146 82)">10</text>
+      <text x="110" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="900" fill="#0757d7">MIX</text>
+    </g>
+
+    <g id="mixing_knob">
+      <circle cx="110" cy="100" r="43" fill="url(#blueKnob)" stroke="#01236f" stroke-width="4"/>
+      <circle cx="110" cy="100" r="28" fill="#0757d7" stroke="#063caa" stroke-width="3"/>
+      <path d="M78 89c18-11 45-11 64 0M78 111c18 11 45 11 64 0" fill="none" stroke="#2c8fff" stroke-width="3" opacity=".55"/>
+      <g id="knob_grip" stroke="#043caa" stroke-width="4">
+        <path d="M80 75l10 10M96 62l5 14M115 58v15M134 63l-6 14M149 77l-11 9"/>
+        <path d="M82 125l10-10M98 138l4-14M116 142v-15M136 136l-7-13M150 123l-12-8"/>
+      </g>
+      <path id="knob_pointer" d="M98 82l12-18 12 18z" fill="#e8f2ff" stroke="#01236f" stroke-width="2"/>
+      <text x="110" y="108" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="900" fill="#01338e">M</text>
+    </g>
+  </g>
+</svg>

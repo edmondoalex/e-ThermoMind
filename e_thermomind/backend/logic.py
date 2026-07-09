@@ -595,6 +595,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     projected_export_w = export_w
     export_reserve_block = False
     export_reserve_step = 0
+    export_reserve_floor_w = export_off_w
     resistance_enabled = resistenze_enabled and res_cfg.get("enabled", True)
     if (not vol_max_hit) and resistance_enabled:
         if battery_block_active:
@@ -621,7 +622,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             if raw_desired_step > tracked_step:
                 next_step = min(3, tracked_step + 1)
                 projected_export_w = export_w - reserve_step_loads[next_step - 1]
-                if projected_export_w >= export_on_min_w:
+                if projected_export_w >= export_reserve_floor_w:
                     desired_step = raw_desired_step
                 else:
                     export_reserve_block = True
@@ -673,7 +674,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     elif export_reserve_block:
         charge_reason = (
             f"{power_note} | riserva export: step {export_reserve_step} non ammesso "
-            f"(previsto {projected_export_w:.0f}W < soglia ON {export_on_min_w:.0f}W)"
+            f"(previsto {projected_export_w:.0f}W < soglia OFF {export_reserve_floor_w:.0f}W)"
         )
     elif export_w <= export_off_w or effective_power_w <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"
@@ -733,7 +734,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if export_w < export_on_min_w:
         res_blockers.append(f"Export<{export_on_min_w:.0f}W")
     if export_reserve_block:
-        res_blockers.append(f"RiservaExport<{export_on_min_w:.0f}W")
+        res_blockers.append(f"RiservaExport<{export_reserve_floor_w:.0f}W")
     if export_w <= export_off_w:
         res_blockers.append(f"Export<={export_off_w:.0f}W")
     if effective_power_w <= 0.0:

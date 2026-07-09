@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 130">
+  <g id="electric_heaters_3_horizontal">
+    <rect id="heater_terminal_box" x="214" y="26" width="50" height="78" rx="9" fill="#f7f7f7" stroke="#111" stroke-width="6"/>
+    <path id="heater_1" d="M218 38H42c-12 0-22 10-22 22s10 22 22 22h176" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path id="heater_2" d="M218 55H54c-6 0-11 5-11 11s5 11 11 11h164" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path id="heater_3" d="M218 72H66c-3 0-6 3-6 6s3 6 6 6h152" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path id="heater_active_glow" d="M218 38H42c-12 0-22 10-22 22s10 22 22 22h176" fill="none" stroke="#ff8a00" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".0"/>
+    <text x="239" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="900" fill="#111">3x</text>
+  </g>
+</svg>

@@ -632,3 +632,6 @@
 - [2026-06-29] Resistenze Volano: rimosso il blocco Dest=OFF; con surplus FV/export utile le resistenze possono caricare il volano anche quando ACS e puffer non richiedono destinazione, restando vincolate a VOLANO_MAX, soglie export e blocco batteria. Release 0.8.48.
 
 - [2026-06-29] Add-on metadata: aggiunto CHANGELOG.md per Home Assistant Supervisor e bump versione a 0.8.49, cosi il dialog update non resta senza changelog e forza un refresh netto dopo lo stato appeso precedente. Release 0.8.49.
+
+- [2026-07-09] Resistenze Volano: corretta la soglia export ON, che non viene piu usata come export residuo obbligatorio dopo l'accensione step; con export alto reale le resistenze possono partire come atteso. Spegnimento step=0 piu rapido sotto soglia e diagnostica esplicita per override manuali che bloccano ON automatico. Aggiunta libreria design draw.io/SVG per dashboard centrale termica. Release 0.8.50.
+

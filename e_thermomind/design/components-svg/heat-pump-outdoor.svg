@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 170">
+  <defs>
+    <linearGradient id="pdcCase" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.55" stop-color="#eceff0"/>
+      <stop offset="1" stop-color="#cfd5d8"/>
+    </linearGradient>
+    <radialGradient id="fanShade" cx="50%" cy="50%" r="62%">
+      <stop offset="0" stop-color="#f1f3f4"/>
+      <stop offset="0.28" stop-color="#c8ced2"/>
+      <stop offset="0.62" stop-color="#3b4145"/>
+      <stop offset="1" stop-color="#151719"/>
+    </radialGradient>
+    <filter id="pdcShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="2" dy="4" stdDeviation="2" flood-color="#000" flood-opacity=".25"/>
+    </filter>
+  </defs>
+
+  <g id="heat_pump_outdoor" filter="url(#pdcShadow)">
+    <rect id="pdc_case" x="6" y="10" width="288" height="145" rx="4" fill="url(#pdcCase)" stroke="#b7bdc1" stroke-width="3"/>
+    <rect id="fan_panel" x="16" y="24" width="145" height="118" rx="5" fill="#e8ecee" stroke="#b5bbbf" stroke-width="3"/>
+    <rect id="center_service_panel" x="168" y="18" width="58" height="130" rx="3" fill="#eceff0" stroke="#c4c9cc" stroke-width="2"/>
+    <rect id="right_top_panel" x="232" y="24" width="52" height="72" rx="4" fill="#f4f5f5" stroke="#c7cccf" stroke-width="2"/>
+    <rect id="right_bottom_panel" x="232" y="105" width="52" height="38" rx="4" fill="#f4f5f5" stroke="#c7cccf" stroke-width="2"/>
+
+    <g id="fan" transform="translate(88 83)">
+      <circle id="fan_back" r="53" fill="url(#fanShade)" stroke="#9fa6aa" stroke-width="2"/>
+      <g id="fan_blades" fill="#252a2d">
+        <path d="M0-9c28-46 55-15 18 6C9 2 5 4 0 9z"/>
+        <path d="M8 4c54 4 41 44 2 26C1 26-3 22-8 16z"/>
+        <path d="M-7 6c-31 44-59 11-21-7 9-4 14-5 20-4z"/>
+      </g>
+      <circle id="fan_hub" r="17" fill="#e9ecee" stroke="#aab0b4" stroke-width="3"/>
+      <g id="fan_grille" fill="none" stroke="#f6f7f7" stroke-width="1.4" opacity=".92">
+        <circle r="48"/>
+        <circle r="40"/>
+        <circle r="32"/>
+        <circle r="24"/>
+        <path d="M0-52v104M-52 0h104M-37-37l74 74M37-37l-74 74"/>
+        <path d="M-17-49l34 98M17-49l-34 98M-49-17l98 34M-49 17l98-34"/>
+        <path d="M-28-44l56 88M28-44l-56 88M-44-28l88 56M-44 28l88-56"/>
+      </g>
+    </g>
+
+    <g id="side_louvers" stroke="#c8ced2" stroke-width="2" stroke-linecap="round">
+      <path d="M176 75h41"/>
+      <path d="M176 84h41"/>
+      <path d="M176 93h41"/>
+      <path d="M176 102h41"/>
+      <path d="M176 111h37"/>
+      <path d="M176 120h32"/>
+    </g>
+    <path id="center_curve" d="M175 135c13-10 30-10 43 0" fill="none" stroke="#c8ced2" stroke-width="2"/>
+
+    <g id="pdc_logo">
+      <text x="258" y="51" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="900" fill="#00a99d">PDC</text>
+      <path d="M258 62c-8 11-10 18-2 24 10-5 15-13 2-24z" fill="#f29b20"/>
+      <path d="M254 66c-8 7-13 14-11 23 7-1 13-5 16-11z" fill="#8aa1d6" opacity=".9"/>
+    </g>
+
+    <g id="feet" fill="#c9ced1" stroke="#9da4a8" stroke-width="2">
+      <path d="M42 153h20l-5 8H37z"/>
+      <path d="M190 153h20l-5 8h-20z"/>
+      <path d="M250 153h20l-5 8h-20z"/>
+    </g>
+  </g>
+</svg>

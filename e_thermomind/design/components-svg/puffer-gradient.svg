@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 150">
+  <defs>
+    <linearGradient id="pufferWaterGradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#f13942"/>
+      <stop offset="0.42" stop-color="#e65062"/>
+      <stop offset="0.68" stop-color="#9e6c9a"/>
+      <stop offset="0.88" stop-color="#596fb5"/>
+      <stop offset="1" stop-color="#2456d8"/>
+    </linearGradient>
+    <linearGradient id="pufferSideShade" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#000000" stop-opacity=".16"/>
+      <stop offset="0.18" stop-color="#ffffff" stop-opacity=".08"/>
+      <stop offset="0.78" stop-color="#ffffff" stop-opacity=".03"/>
+      <stop offset="1" stop-color="#000000" stop-opacity=".22"/>
+    </linearGradient>
+  </defs>
+
+  <g id="puffer_gradient">
+    <ellipse id="puffer_top" cx="40" cy="10" rx="34" ry="8" fill="#33383d" stroke="#111" stroke-width="3"/>
+    <rect id="puffer_body_fill" x="6" y="10" width="68" height="124" fill="url(#pufferWaterGradient)"/>
+    <rect id="puffer_body_shade" x="6" y="10" width="68" height="124" fill="url(#pufferSideShade)"/>
+    <path id="puffer_left_edge" d="M6 10v124" fill="none" stroke="#111" stroke-width="3"/>
+    <path id="puffer_right_edge" d="M74 10v124" fill="none" stroke="#111" stroke-width="3"/>
+    <ellipse id="puffer_bottom_fill" cx="40" cy="134" rx="34" ry="8" fill="#69727b"/>
+    <path id="puffer_bottom_edge" d="M6 134c0 4.4 15.2 8 34 8s34-3.6 34-8" fill="none" stroke="#111" stroke-width="3"/>
+    <path id="puffer_bottom_highlight" d="M13 135c8 3 45 3 54 0" fill="none" stroke="#8c949b" stroke-width="2" opacity=".75"/>
+  </g>
+</svg>

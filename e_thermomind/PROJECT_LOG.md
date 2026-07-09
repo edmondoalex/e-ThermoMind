@@ -573,3 +573,6 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-06-29] Release 0.8.47: fix UI Ingress/sidebar Home Assistant con asset Vite, favicon, API e WebSocket relativi al prefisso add-on per evitare pagina bianca.
 - [2026-06-29] Release 0.8.48: fix Resistenze Volano, tolto il falso blocco Dest=OFF per permettere carica volano da surplus FV/export quando ACS e puffer non richiedono destinazione.
 - [2026-06-29] Release 0.8.49: aggiunto CHANGELOG.md add-on e bump metadata per sbloccare il dialog update Supervisor rimasto senza changelog/stato coerente.
+
+- [2026-07-09] Release 0.8.50: fix Resistenze Volano su accensione da export alto (export_on_min_w non e piu riserva residua), spegnimento sotto soglia piu rapido, diagnostica override manuali, e primi asset draw.io/SVG per dashboard centrale termica.
+

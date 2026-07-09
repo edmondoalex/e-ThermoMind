@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <g id="pipe_tee">
+    <rect x="15" y="8" width="10" height="28" fill="#b8b8b8" stroke="#222" stroke-width="3"/>
+    <rect x="2" y="8" width="36" height="10" fill="#b8b8b8" stroke="#222" stroke-width="3"/>
+    <rect x="10" y="8" width="20" height="20" fill="#c8c8c8" stroke="#222" stroke-width="3"/>
+    <path d="M13 11h14v14H13z" fill="#d7d7d7"/>
+    <path d="M2 8v10M38 8v10M15 36h10" stroke="#6f6f6f" stroke-width="2"/>
+  </g>
+</svg>

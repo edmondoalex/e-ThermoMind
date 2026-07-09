@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 300">
+  <g id="radiator_heat_icon" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">
+    <g id="heat_waves" fill="#000" stroke="none">
+      <path d="M68 58c18-14 2-30 14-48-28 22-4 37-14 48z"/>
+      <path d="M108 48c28-22 4-46 20-76-42 32-6 56-20 76z"/>
+      <path d="M154 58c18-14 2-30 14-48-28 22-4 37-14 48z"/>
+    </g>
+
+    <g id="radiator_body" stroke-width="12">
+      <path d="M20 104h180"/>
+      <path d="M20 250h180"/>
+      <path d="M26 104c-26 0-26 45 0 45"/>
+      <path d="M194 104c26 0 26 45 0 45"/>
+      <path d="M26 224c-26 0-26 45 0 45"/>
+      <path d="M194 224c26 0 26 45 0 45"/>
+    </g>
+
+    <g id="radiator_columns" stroke-width="13">
+      <path d="M35 88v194"/>
+      <path d="M70 88v194"/>
+      <path d="M105 88v194"/>
+      <path d="M140 88v194"/>
+      <path d="M175 88v194"/>
+    </g>
+
+    <g id="radiator_column_inner" stroke="#fff" stroke-width="5">
+      <path d="M35 105v160"/>
+      <path d="M70 105v160"/>
+      <path d="M105 105v160"/>
+      <path d="M140 105v160"/>
+      <path d="M175 105v160"/>
+    </g>
+
+    <g id="radiator_caps" fill="#000" stroke="none">
+      <circle cx="35" cy="82" r="7"/>
+      <circle cx="70" cy="82" r="7"/>
+      <circle cx="105" cy="82" r="7"/>
+      <circle cx="140" cy="82" r="7"/>
+      <circle cx="175" cy="82" r="7"/>
+      <circle cx="35" cy="288" r="7"/>
+      <circle cx="70" cy="288" r="7"/>
+      <circle cx="105" cy="288" r="7"/>
+      <circle cx="140" cy="288" r="7"/>
+      <circle cx="175" cy="288" r="7"/>
+    </g>
+  </g>
+</svg>

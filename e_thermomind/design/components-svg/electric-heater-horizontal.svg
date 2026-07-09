@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 70">
+  <g id="electric_heater_horizontal">
+    <rect id="heater_head" x="190" y="12" width="56" height="46" rx="10" fill="#f7f7f7" stroke="#111" stroke-width="7"/>
+    <path id="heater_outer" d="M194 22H34c-13 0-24 11-24 24s11 24 24 24h160" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path id="heater_inner" d="M194 34H36c-6 0-12 5-12 12s6 12 12 12h158" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path id="heater_highlight" d="M190 26H36c-10 0-18 8-18 18" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity=".65"/>
+  </g>
+</svg>

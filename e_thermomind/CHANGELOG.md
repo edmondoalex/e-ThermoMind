@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.50
+
+- Fixed Resistenze Volano start logic: `export_on_min_w` no longer acts as the required residual export after enabling a new step, so high real export can start the resistances as expected.
+- Added faster step-0 shutdown below threshold and clearer diagnostics when manual overrides block automatic resistance ON commands.
+- Added initial draw.io/SVG design assets for the central heating dashboard components.
+
 ## 0.8.49
 
 - Added a Home Assistant add-on changelog so Supervisor can show release notes instead of leaving the update dialog without changelog metadata.
