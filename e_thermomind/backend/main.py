@@ -2484,11 +2484,23 @@ async def _apply_solar_live(decision_data: dict) -> None:
     try:
         now = time.time()
         if now - solar_watchdog_last_log >= 120:
-            act_on = []
-            for key, ent_id in (("r8", r8), ("r9", r9), ("r10", r10)):
-                if _state_is_on(ent_id):
-                    act_on.append(key)
-            if act_on and not solar_active and not night:
+            r8_state = _state_is_on(r8)
+            r9_state = _state_is_on(r9)
+            r10_state = _state_is_on(r10)
+            act_on = [
+                key
+                for key, is_on in (("r8", r8_state), ("r9", r9_state), ("r10", r10_state))
+                if is_on
+            ]
+            expected_base_ok = (r8_state and not r9_state and not r10_state) if night else (r9_state and not r8_state and not r10_state)
+            mismatch = False
+            if r10_on:
+                mismatch = not (r10_state and not r8_state and not r9_state)
+            elif r10_state:
+                mismatch = True
+            elif not expected_base_ok:
+                mismatch = True
+            if mismatch:
                 _log_action(
                     f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG SOLARE "
                     f"act_on={act_on} solar_active={solar_active} night={night} cutback={cutback}"

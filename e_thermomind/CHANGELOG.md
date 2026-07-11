@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.54
+
+- Fixed Solar watchdog noise: daytime base path `R9 ON` is now treated as normal when solar ACS priority is inactive.
+
 ## 0.8.53
 
 - Hardened configuration persistence: saves a mirror copy under `/config`, keeps a previous-good copy before overwrites, and can recover from a near-default `/data` config after update/reinstall.
