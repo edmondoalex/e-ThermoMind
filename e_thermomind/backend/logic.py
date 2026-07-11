@@ -215,6 +215,12 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     if battery_soc_easas is not None:
         battery_soc = battery_soc_easas
 
+    def _entity_mapped(key: str) -> bool:
+        val = (cfg.get("entities", {}) or {}).get(key)
+        if isinstance(val, dict):
+            return bool(str(val.get("entity_id") or "").strip())
+        return bool(str(val or "").strip())
+
     def _interp_curve(temp_c: float, points: list[dict], mode: str) -> float:
         if not points:
             return 0.0
@@ -596,9 +602,14 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     export_reserve_block = False
     export_reserve_step = 0
     export_reserve_floor_w = export_off_w
+    pv_min_w = float(res_cfg.get("pv_min_w", 200.0))
+    pv_power_mapped = _entity_mapped("pv_power_w") or _entity_mapped("pv_power_w_easas") or _entity_mapped("pv_power_w_privato")
+    pv_block_active = pv_power_mapped and pv_power_w < pv_min_w
     resistance_enabled = resistenze_enabled and res_cfg.get("enabled", True)
     if (not vol_max_hit) and resistance_enabled:
         if battery_block_active:
+            desired_step = 0
+        elif pv_block_active:
             desired_step = 0
         elif export_w < export_on_min_w:
             desired_step = 0
@@ -669,6 +680,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             )
         else:
             charge_reason = f"{power_note} | blocco batteria in hold {battery_block_remaining_s}s"
+    elif pv_block_active:
+        charge_reason = f"{power_note} | FV {pv_power_w:.0f}W < minimo sicurezza {pv_min_w:.0f}W"
     elif export_w < export_on_min_w:
         charge_reason = f"{power_note} | Export {export_w:.0f}W < soglia ON {export_on_min_w:.0f}W"
     elif export_reserve_block:
@@ -731,6 +744,8 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             res_blockers.append(f"BatteryOut>{battery_block_w:.0f}W")
         else:
             res_blockers.append(f"BatteryHold{battery_block_remaining_s}s")
+    if pv_block_active:
+        res_blockers.append(f"FV<{pv_min_w:.0f}W")
     if export_w < export_on_min_w:
         res_blockers.append(f"Export<{export_on_min_w:.0f}W")
     if export_reserve_block:

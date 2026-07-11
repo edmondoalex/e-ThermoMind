@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.51
+
+- Hardened Resistenze Volano safety: below export ON threshold, battery discharge block, or mapped PV production near zero now force all resistance outputs OFF and clear manual overrides.
+- Added a PV-production guard for mapped PV sensors to avoid battery drain if an import/export sensor reports a misleading positive value at night.
+- Added a backend live-control loop so safety/off commands run even when the dashboard is closed.
+- Made the Volano transfer watchdog active: R6/R7/R13/R14 are forced OFF immediately when no transfer path is requested.
+- Fixed resistance diagnostics when manual overrides block automatic ON commands.
+
 ## 0.8.50
 
 - Fixed Resistenze Volano start logic: `export_on_min_w` no longer acts as the required residual export after enabling a new step, so high real export can start the resistances as expected.

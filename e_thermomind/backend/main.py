@@ -32,6 +32,7 @@ app = FastAPI(title="e-ThermoMind", version=APP_VERSION)
 ha = HAClient()
 cfg = load_config()
 ws_task: asyncio.Task | None = None
+control_loop_task: asyncio.Task | None = None
 mqtt_client: MqttClient | None = None
 mqtt_publish_task: asyncio.Task | None = None
 mqtt_last_values: dict[str, str] = {}
@@ -87,6 +88,7 @@ last_hvac_cmd: dict[str, tuple[str, float]] = {}
 solar_night_state: bool | None = None
 solar_night_last_change: float = 0.0
 ws_clients: set[WebSocket] = set()
+live_control_lock: asyncio.Lock | None = None
 miscelatrice_task: asyncio.Task | None = None
 miscelatrice_pause_until: float = 0.0
 miscelatrice_last_action: str = "STOP"
@@ -1157,10 +1159,41 @@ async def _solar_failsafe_loop() -> None:
         except Exception as exc:
             _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG SOLARE failsafe_loop_error={exc}")
 
+async def _apply_live_controls(data: dict) -> None:
+    global live_control_lock
+    if live_control_lock is None:
+        live_control_lock = asyncio.Lock()
+    async with live_control_lock:
+        await _apply_resistance_live(data)
+        await _apply_energy_heater_live(data)
+        await _apply_transfer_live(data)
+        await _apply_solar_live(data)
+        await _apply_impianto_live()
+        await _apply_gas_emergenza_live()
+        await _apply_caldaia_legna_live()
+        await _apply_miscelatrice_live(data)
+
+async def _live_control_loop() -> None:
+    while True:
+        try:
+            await asyncio.sleep(2)
+            if cfg.get("runtime", {}).get("mode") != "live" or not ha.enabled:
+                continue
+            _expire_force_acs_puffer()
+            _expire_force_volano_puffer()
+            data = compute_decision(cfg, ha.states)
+            await _apply_live_controls(data)
+            _apply_legna_timer_reason(data)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} WATCHDOG CONTROL loop_error={exc}")
+
 @app.on_event("startup")
 async def on_startup():
     global cfg
     global ws_task
+    global control_loop_task
     cfg = load_config()
     logging.basicConfig(
         level=str(cfg.get("log_level", "info")).upper(),
@@ -1175,13 +1208,17 @@ async def on_startup():
     asyncio.create_task(_resistenze_startup_safety())
     asyncio.create_task(_solar_startup_safety())
     asyncio.create_task(_solar_failsafe_loop())
+    control_loop_task = asyncio.create_task(_live_control_loop())
     await _mqtt_reconfigure()
 
 @app.on_event("shutdown")
 async def on_shutdown():
     global ws_task
+    global control_loop_task
     if ws_task:
         ws_task.cancel()
+    if control_loop_task:
+        control_loop_task.cancel()
     if mqtt_publish_task:
         mqtt_publish_task.cancel()
     if mqtt_client:
@@ -1272,14 +1309,7 @@ async def decision():
         "next_start": next_label,
         "enabled": bool(sched.get("enabled"))
     }
-    await _apply_resistance_live(data)
-    await _apply_energy_heater_live(data)
-    await _apply_transfer_live(data)
-    await _apply_solar_live(data)
-    await _apply_impianto_live()
-    await _apply_gas_emergenza_live()
-    await _apply_caldaia_legna_live()
-    await _apply_miscelatrice_live(data)
+    await _apply_live_controls(data)
     _apply_legna_timer_reason(data)
     data.setdefault("computed", {})["alarms"] = _build_backend_alarms(data)
     data["zones"] = _build_zones_state()
@@ -1497,13 +1527,7 @@ async def _build_snapshot() -> dict:
         "next_start": next_label,
         "enabled": bool(sched.get("enabled"))
     }
-    await _apply_resistance_live(data)
-    await _apply_energy_heater_live(data)
-    await _apply_transfer_live(data)
-    await _apply_solar_live(data)
-    await _apply_impianto_live()
-    await _apply_gas_emergenza_live()
-    await _apply_caldaia_legna_live()
+    await _apply_live_controls(data)
     _apply_legna_timer_reason(data)
     data.setdefault("computed", {})["alarms"] = _build_backend_alarms(data)
     act = {}
@@ -2060,6 +2084,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     export_w = float(decision_data.get("inputs", {}).get("grid_export_w") or 0.0)
     extra_safe_w = float(decision_data.get("inputs", {}).get("extra_safe_w") or 0.0)
     battery_out_w = float(decision_data.get("inputs", {}).get("battery_output_w") or 0.0)
+    pv_power_w = float(decision_data.get("inputs", {}).get("pv_power_w") or 0.0)
     now = time.time()
     available_w = export_w
     computed_available = decision_data.get("computed", {}).get("available_power_w")
@@ -2069,6 +2094,15 @@ async def _apply_resistance_live(decision_data: dict) -> None:
     battery_block_hold_s = int(cfg.get("resistance", {}).get("battery_block_hold_s", 180))
     export_on_min_w = float(cfg.get("resistance", {}).get("export_on_min_w", 0.0))
     export_off_w = float(cfg.get("resistance", {}).get("export_off_w", -100.0))
+    pv_min_w = float(cfg.get("resistance", {}).get("pv_min_w", 200.0))
+    ent_cfg = cfg.get("entities", {}) or {}
+    def _entity_mapped(key: str) -> bool:
+        val = ent_cfg.get(key)
+        if isinstance(val, dict):
+            return bool(str(val.get("entity_id") or "").strip())
+        return bool(str(val or "").strip())
+    pv_power_mapped = _entity_mapped("pv_power_w") or _entity_mapped("pv_power_w_easas") or _entity_mapped("pv_power_w_privato")
+    pv_block_active = pv_power_mapped and pv_power_w < pv_min_w
     use_export_base = export_w > extra_safe_w
     desired = {
         "r22": step >= 1,
@@ -2113,6 +2147,22 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         )
         await _force_resistances_off(reason, clear_manual=True)
         computed["resistance_step"] = 0
+        return
+
+    if pv_block_active:
+        reason = f"pv_power={pv_power_w:.0f}W < pv_min={pv_min_w:.0f}W export={export_w:.0f}"
+        await _force_resistances_off(reason, clear_manual=True)
+        computed["resistance_step"] = 0
+        computed["resistance_shutdown_countdown_s"] = 0
+        return
+
+    if export_w < export_on_min_w:
+        await _force_resistances_off(
+            f"export={export_w:.0f} < export_on_min={export_on_min_w:.0f} poss={extra_safe_w:.0f}",
+            clear_manual=True,
+        )
+        computed["resistance_step"] = 0
+        computed["resistance_shutdown_countdown_s"] = 0
         return
 
     if export_w <= 0.0:
@@ -2173,6 +2223,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
             return off_delay * 3
         return off_delay
 
+    delay_notes: list[str] = []
     for key, ent in (("r22", r22), ("r23", r23), ("r24", r24)):
         want_on = desired[key]
         current = _get_state(ent)
@@ -2237,7 +2288,6 @@ async def _apply_resistance_live(decision_data: dict) -> None:
 
     # annotate live delay info in decision payload
     reasons = computed.setdefault("module_reasons", {})
-    delay_notes: list[str] = []
     if off_sequence_start > 0.0:
         delay_notes.append(f"off_seq {int(now - off_sequence_start)}s")
     if fast_shutdown:
@@ -2340,6 +2390,10 @@ async def _apply_transfer_live(decision_data: dict) -> None:
                         volano_watchdog_last_log = now
     except Exception:
         pass
+
+    if not (want_vol_acs or want_vol_puf or want_puf_acs):
+        await _force_transfer_outputs_off("transfer no demand watchdog", clear_manual=True)
+        return
 
     timers = cfg.get("timers", {})
     vta_start = float(timers.get("volano_to_acs_start_s", 5))

@@ -576,3 +576,7 @@ Data export: 2026-02-08 (Europe/Rome)
 
 - [2026-07-09] Release 0.8.50: fix Resistenze Volano su accensione da export alto (export_on_min_w non e piu riserva residua), spegnimento sotto soglia piu rapido, diagnostica override manuali, e primi asset draw.io/SVG per dashboard centrale termica.
 
+
+
+- [2026-07-11] Release 0.8.51: hardening Resistenze Volano con force-OFF sotto soglia/FV zero/batteria in scarica, live-control loop backend indipendente dalla UI, watchdog Volano transfer attivo e correzione diagnostica override manuali.
+
