@@ -580,3 +580,5 @@ Data export: 2026-02-08 (Europe/Rome)
 
 - [2026-07-11] Release 0.8.51: hardening Resistenze Volano con force-OFF sotto soglia/FV zero/batteria in scarica, live-control loop backend indipendente dalla UI, watchdog Volano transfer attivo e correzione diagnostica override manuali.
 
+
+- [2026-07-11] Release 0.8.52: failsafe Solare all-closed riallineato al selettore giorno/notte; fuori precedenza ACS resta sempre aperta almeno una via base R8/R9.

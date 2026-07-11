@@ -1153,7 +1153,7 @@ async def _solar_failsafe_loop() -> None:
             r9_on = _state_is_on(r9)
             r10_on = _state_is_on(r10)
             if not (r8_on or r9_on or r10_on):
-                await _force_solar_safe_open("solar periodic all closed failsafe", emergency_night=True)
+                await _force_solar_safe_open("solar periodic all closed failsafe")
         except asyncio.CancelledError:
             raise
         except Exception as exc:
@@ -2479,7 +2479,7 @@ async def _apply_solar_live(decision_data: dict) -> None:
         await _set_actuator(r9, True)
 
     if (not r10_on) and not any(_state_is_on(eid) for eid in (r8, r9, r10)):
-        await _force_solar_safe_open("solar all closed failsafe", emergency_night=True)
+        await _force_solar_safe_open("solar all closed failsafe")
 
     try:
         now = time.time()

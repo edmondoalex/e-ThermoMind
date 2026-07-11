@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.52
+
+- Solar valve failsafe now reopens the configured safe path using the normal day/night selector instead of forcing the night path during all-closed recovery.
+- Keeps the hydraulic safety invariant: outside ACS solar priority, at least one base solar path remains open.
+
 ## 0.8.51
 
 - Hardened Resistenze Volano safety: below export ON threshold, battery discharge block, or mapped PV production near zero now force all resistance outputs OFF and clear manual overrides.
