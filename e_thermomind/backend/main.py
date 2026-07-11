@@ -3310,6 +3310,23 @@ async def list_assets():
     files = sorted([p.name for p in assets_dir.glob("*") if p.is_file()])
     return JSONResponse({"exists": True, "files": files})
 
+@app.get("/api/climate_entities")
+async def climate_entities():
+    items = []
+    for eid, st in sorted(ha.states.items()):
+        if not str(eid).startswith("climate."):
+            continue
+        attrs = st.get("attributes", {}) or {}
+        items.append({
+            "entity_id": eid,
+            "name": attrs.get("friendly_name") or eid,
+            "state": st.get("state"),
+            "hvac_action": attrs.get("hvac_action"),
+            "temperature": attrs.get("current_temperature"),
+            "setpoint": attrs.get("temperature") or attrs.get("target_temp") or attrs.get("target_temperature"),
+        })
+    return JSONResponse({"items": items})
+
 @app.get("/api/setpoints")
 async def get_setpoints():
     return JSONResponse({

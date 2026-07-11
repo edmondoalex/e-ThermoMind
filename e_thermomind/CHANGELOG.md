@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.56
+
+- Added a Home Assistant climate entity picker in Admin -> Impianto (Zone), with quick buttons to repopulate PT/1P/Mansarda/Lab/Scala after a configuration reset.
+
 ## 0.8.55
 
 - Clarified heating-system state: `richiesta` now means real heat/zone request, while `source_available` reports whether a valid heat source is available.

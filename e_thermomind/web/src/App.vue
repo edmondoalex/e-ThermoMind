@@ -1866,6 +1866,26 @@
           <div class="set-section">
             <div class="section-title">Impianto (Zone)</div>
             <div class="field">
+              <label>Termostati Home Assistant</label>
+              <div class="list">
+                <div v-if="climateSuggestions.length === 0" class="help">Nessun climate.* letto da Home Assistant.</div>
+                <div v-for="c in climateSuggestions" :key="c.entity_id" class="list-row climate-suggestion">
+                  <div>
+                    <strong>{{ c.name }}</strong>
+                    <div class="help">{{ c.entity_id }} | {{ c.state || '-' }} | {{ c.hvac_action || '-' }} | T {{ fmtNum(c.temperature) }}Â°C | SP {{ fmtNum(c.setpoint) }}Â°C</div>
+                  </div>
+                  <div class="row-actions">
+                    <button class="ghost small" @click="addClimateToZone(c.entity_id, 'zones_pt')">PT</button>
+                    <button class="ghost small" @click="addClimateToZone(c.entity_id, 'zones_p1')">1P</button>
+                    <button class="ghost small" @click="addClimateToZone(c.entity_id, 'zones_mans')">Mans</button>
+                    <button class="ghost small" @click="addClimateToZone(c.entity_id, 'zones_lab')">Lab</button>
+                    <button class="ghost small" @click="setClimateScala(c.entity_id)">Scala</button>
+                  </div>
+                </div>
+              </div>
+              <div class="help">Usa questi pulsanti per ricostruire velocemente le zone dopo un reset configurazione.</div>
+            </div>
+            <div class="field">
               <label>Zone PT</label>
               <div class="list">
                 <div v-for="(z, i) in sp.impianto.zones_pt" :key="`pt-${i}`" class="list-row">
@@ -2813,6 +2833,7 @@ let curveSaveTimer = null
 let energySaveTimer = null
 const zoneModal = ref({ open: false, entity_id: '', title: '', temperature: 0, setpoint: 0, hvac_action: '' })
 const historyModal = ref({ open: false, title: '', points: '', minY: '-', maxY: '-', rangeLabel: '', xTicks: [], yTicks: [], w: 600, h: 220, padL: 40, padR: 10, padT: 10, padB: 20 })
+const climateSuggestions = ref([])
 const maxPoints = 60
   const filterAct = ref('')
   const editingCount = ref(0)
@@ -2974,6 +2995,19 @@ function addZone(key){
   if (!sp.value?.impianto) return
   if (!Array.isArray(sp.value.impianto[key])) sp.value.impianto[key] = []
   sp.value.impianto[key].push('')
+  manualEditHold.value = true
+  stopPolling()
+}
+function addClimateToZone(entityId, key){
+  if (!entityId || !sp.value?.impianto) return
+  if (!Array.isArray(sp.value.impianto[key])) sp.value.impianto[key] = []
+  if (!sp.value.impianto[key].includes(entityId)) sp.value.impianto[key].push(entityId)
+  manualEditHold.value = true
+  stopPolling()
+}
+function setClimateScala(entityId){
+  if (!entityId || !sp.value?.impianto) return
+  sp.value.impianto.zone_scala = entityId
   manualEditHold.value = true
   stopPolling()
 }
@@ -3763,6 +3797,15 @@ async function refresh(){
 async function loadModules(){
   const r = await fetch(apiUrl('/api/modules')); modules.value = await r.json()
 }
+async function loadClimateSuggestions(){
+  try {
+    const r = await fetch(apiUrl('/api/climate_entities'))
+    const payload = await r.json()
+    climateSuggestions.value = Array.isArray(payload?.items) ? payload.items : []
+  } catch {
+    climateSuggestions.value = []
+  }
+}
 async function load(){
   historyReady = false
   let payload = null
@@ -4330,6 +4373,7 @@ async function loadAll(){
   await loadEntities()
   await loadActuators()
   await loadModules()
+  await loadClimateSuggestions()
   await refresh()
 }
 function startPolling(){
@@ -4726,6 +4770,8 @@ details.form summary{cursor:pointer;list-style:none}
 .list{display:flex;flex-direction:column;gap:6px}
 .list-row{display:flex;gap:8px;align-items:center}
 .list-row input{flex:1}
+.climate-suggestion{justify-content:space-between;align-items:flex-start}
+.row-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
 .module-reasons{display:grid;gap:8px;margin-top:6px}
 .module-extra{margin-top:6px;display:grid;gap:4px}
 .module-row{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:rgba(10,15,22,.45)}
