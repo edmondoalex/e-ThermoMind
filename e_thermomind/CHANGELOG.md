@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.55
+
+- Clarified heating-system state: `richiesta` now means real heat/zone request, while `source_available` reports whether a valid heat source is available.
+- UI, MQTT active state, and mixer runtime now use the backend `impianto.active` flag to avoid contradictory "ON but inactive" displays.
+
 ## 0.8.54
 
 - Fixed Solar watchdog noise: daytime base path `R9 ON` is now treated as normal when solar ACS priority is inactive.

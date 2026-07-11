@@ -586,3 +586,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-07-11] Release 0.8.53: hardening persistenza config con mirror /config, previous-good backup prima dei save e persistenza resistance.pv_min_w per evitare reset valori dopo update.
 
 - [2026-07-11] Release 0.8.54: corretto watchdog Solare rumoroso; R9 ON di giorno senza precedenza ACS e considerato normale, non anomalia.
+
+- [2026-07-11] Release 0.8.55: chiarito stato Impianto; richiesta indica domanda reale/zone, fonte disponibile separata, UI/MQTT/miscelatrice usano computed.impianto.active.

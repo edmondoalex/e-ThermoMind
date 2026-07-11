@@ -364,7 +364,7 @@
                 <div class="muted">{{ item.reason }}</div>
                 <div v-if="item.key === 'impianto'" class="module-extra">
                   <div class="muted">
-                    Selettore: {{ d?.computed?.impianto?.selector || '-' }} | Sorgente: {{ d?.computed?.impianto?.source || '-' }} | Richiesta: {{ d?.computed?.impianto?.richiesta ? 'ON' : 'OFF' }} | Miscelatrice: {{ d?.computed?.impianto?.miscelatrice ? 'ON' : 'OFF' }}
+                    Selettore: {{ d?.computed?.impianto?.selector || '-' }} | Sorgente: {{ d?.computed?.impianto?.source || '-' }} | Fonte: {{ d?.computed?.impianto?.source_available ? 'ON' : 'OFF' }} | Richiesta: {{ d?.computed?.impianto?.richiesta ? 'ON' : 'OFF' }} | Miscelatrice: {{ d?.computed?.impianto?.miscelatrice ? 'ON' : 'OFF' }}
                   </div>
                   <div class="muted">
                     PDC/Volano ready: {{ d?.computed?.impianto?.pdc_ready ? 'SI' : 'NO' }} | Puffer ready: {{ d?.computed?.impianto?.puffer_ready ? 'SI' : 'NO' }}
@@ -3356,11 +3356,7 @@ const moduleReasonsList = computed(() => {
       key: 'impianto',
       label: 'Impianto Riscaldamento',
       active: !!(
-        d.value?.computed?.impianto?.richiesta &&
-        d.value?.computed?.impianto?.zone_demand &&
-        d.value?.computed?.impianto?.source &&
-        d.value?.computed?.impianto?.source !== 'OFF' &&
-        !d.value?.computed?.gas_emergenza?.enabled
+        d.value?.computed?.impianto?.active
       )
     },
     {
@@ -3394,7 +3390,7 @@ const moduleBabyList = computed(() => {
   const volPufOn = !!flags.volano_to_puffer
   const resStep = Number(c.resistance_step || 0)
   const resOn = resStep > 0
-  const impOn = !!(imp.richiesta && imp.zone_demand && imp.source && imp.source !== 'OFF')
+  const impOn = !!imp.active
   const mixAction = String(c.miscelatrice?.action || 'STOP').toUpperCase()
   const mixOn = mixAction !== 'STOP'
   const tAcs = Number(i.t_acs || 0)
@@ -3524,7 +3520,7 @@ const guideModuleCards = computed(() => {
     {
       key: 'impianto',
       label: 'Impianto Riscaldamento',
-      active: !!(imp.richiesta && imp.zone_demand && imp.source && imp.source !== 'OFF'),
+      active: !!imp.active,
       what: 'Gestisce termostati, valvole e pompe dei piani.',
       start: 'Parte con richiesta zone e fonte valida (volano/puffer).',
       stop: 'Si ferma senza richiesta zone o senza fonte valida.'
@@ -3573,11 +3569,7 @@ const moduleActiveMap = computed(() => {
   const mixActive = !!d.value?.computed?.impianto?.miscelatrice
   const legnaTimer = Number(d.value?.computed?.caldaia_legna?.timer_remaining_s || 0)
   const impActive = !!(
-    d.value?.computed?.impianto?.richiesta &&
-    d.value?.computed?.impianto?.zone_demand &&
-    d.value?.computed?.impianto?.source &&
-    d.value?.computed?.impianto?.source !== 'OFF' &&
-    !d.value?.computed?.gas_emergenza?.enabled
+    d.value?.computed?.impianto?.active
   )
   return {
     solare: !!flags.solare_to_acs,

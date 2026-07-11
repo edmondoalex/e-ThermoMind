@@ -543,12 +543,7 @@ def _mqtt_active_map(decision: dict) -> dict[str, bool]:
     step = int(computed.get("resistance_step") or 0)
     mix_active = bool((computed.get("impianto") or {}).get("miscelatrice"))
     imp_block = computed.get("impianto") or {}
-    imp_active = bool(
-        imp_block.get("richiesta")
-        and imp_block.get("source")
-        and imp_block.get("source") != "OFF"
-        and not (computed.get("gas_emergenza") or {}).get("enabled")
-    )
+    imp_active = bool(imp_block.get("active"))
     return {
         "solare": bool(flags.get("solare_to_acs")),
         "volano_to_acs": bool(flags.get("volano_to_acs")),
@@ -2557,13 +2552,7 @@ async def _apply_miscelatrice_live(decision_data: dict) -> None:
     imp_cfg = cfg.get("impianto", {})
     imp = (decision_data.get("computed", {}) or {}).get("impianto", {}) or {}
 
-    imp_active = (
-        cfg.get("modules_enabled", {}).get("impianto", True)
-        and imp.get("richiesta")
-        and imp.get("zone_demand")
-        and (not imp.get("blocked_cold"))
-        and (imp.get("source") not in (None, "OFF"))
-    )
+    imp_active = bool(imp.get("active"))
 
     # miscelatrice: se impianto inattivo -> chiusura forzata 180s, poi stop
     if not imp_active:

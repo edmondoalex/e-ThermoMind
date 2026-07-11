@@ -967,7 +967,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
         impianto_reason = "Bloccato: nessuna fonte disponibile o troppo fredda."
     else:
         impianto_reason = (
-            f"Richiesta={ 'ON' if req_on else 'OFF' } | Sel={sel_norm} | "
+            f"Fonte={'ON' if req_on else 'OFF'} | Richiesta={'ON' if zone_demand_on else 'OFF'} | Sel={sel_norm} | "
         f"PDC/VOL={'ON' if pdc_vol_ready else 'OFF'} "
         f"PUF={'ON' if puf_ready else 'OFF'} "
         f"Source={source} "
@@ -1127,8 +1127,10 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
                 "volano_to_puffer": volano_to_puffer
             },
             "impianto": {
+                "active": imp_active,
                 "source": source,
-                "richiesta": req_on,
+                "source_available": req_on,
+                "richiesta": zone_demand_on,
                 "zone_demand": zone_demand_on,
                 "zones_active": any_active,
                 "miscelatrice": miscelatrice_on,
