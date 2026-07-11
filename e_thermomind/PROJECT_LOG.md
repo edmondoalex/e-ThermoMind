@@ -582,3 +582,5 @@ Data export: 2026-02-08 (Europe/Rome)
 
 
 - [2026-07-11] Release 0.8.52: failsafe Solare all-closed riallineato al selettore giorno/notte; fuori precedenza ACS resta sempre aperta almeno una via base R8/R9.
+
+- [2026-07-11] Release 0.8.53: hardening persistenza config con mirror /config, previous-good backup prima dei save e persistenza resistance.pv_min_w per evitare reset valori dopo update.

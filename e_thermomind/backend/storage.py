@@ -7,6 +7,12 @@ DATA_DIR = Path("/data")
 CONF_PATH = DATA_DIR / "thermomind_config.json"
 CONF_BACKUP = DATA_DIR / "thermomind_config.backup.json"
 CONF_TEMP = DATA_DIR / "thermomind_config.tmp.json"
+CONF_PREVIOUS = DATA_DIR / "thermomind_config.previous.json"
+MIRROR_DIR = Path("/config")
+MIRROR_PATH = MIRROR_DIR / "thermomind_config.json"
+MIRROR_BACKUP = MIRROR_DIR / "thermomind_config.backup.json"
+MIRROR_PREVIOUS = MIRROR_DIR / "thermomind_config.previous.json"
+MIRROR_TEMP = MIRROR_DIR / "thermomind_config.tmp.json"
 _LOG = logging.getLogger("thermomind.storage")
 
 DEFAULT_CONFIG: Dict[str, Any] = {
@@ -171,6 +177,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "export_off_w": -100.0,
     "battery_block_w": 100.0,
     "battery_block_hold_s": 180,
+    "pv_min_w": 200.0,
     "off_threshold_w": 0.0,
     "off_delay_s": 5,
     "step_up_delay_s": 10,
@@ -511,6 +518,8 @@ def normalize_config(raw: Dict[str, Any]) -> Dict[str, Any]:
             cfg["resistance"]["battery_block_w"] = _float(res["battery_block_w"], cfg["resistance"]["battery_block_w"])
         if "battery_block_hold_s" in res:
             cfg["resistance"]["battery_block_hold_s"] = int(_float(res["battery_block_hold_s"], cfg["resistance"]["battery_block_hold_s"]))
+        if "pv_min_w" in res:
+            cfg["resistance"]["pv_min_w"] = _float(res["pv_min_w"], cfg["resistance"]["pv_min_w"])
         if "off_threshold_w" in res:
             cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
@@ -839,6 +848,8 @@ def apply_setpoints(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
             cfg["resistance"]["battery_block_w"] = _float(res["battery_block_w"], cfg["resistance"]["battery_block_w"])
         if "battery_block_hold_s" in res:
             cfg["resistance"]["battery_block_hold_s"] = int(_float(res["battery_block_hold_s"], cfg["resistance"]["battery_block_hold_s"]))
+        if "pv_min_w" in res:
+            cfg["resistance"]["pv_min_w"] = _float(res["pv_min_w"], cfg["resistance"]["pv_min_w"])
         if "off_threshold_w" in res:
             cfg["resistance"]["off_threshold_w"] = _float(res["off_threshold_w"], cfg["resistance"]["off_threshold_w"])
         if "off_delay_s" in res:
@@ -1139,37 +1150,106 @@ def apply_actuators(cfg: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, A
                     cfg["actuators"][key] = ent.strip() or None
     return cfg
 
+def _config_score(cfg: Dict[str, Any]) -> int:
+    default = DEFAULT_CONFIG
+    score = 0
+    for section in ("entities", "actuators"):
+        for val in (cfg.get(section, {}) or {}).values():
+            if val:
+                score += 2
+    for section, values in default.items():
+        if not isinstance(values, dict) or section in ("entities", "actuators"):
+            continue
+        cur = cfg.get(section, {})
+        if not isinstance(cur, dict):
+            continue
+        for key, default_val in values.items():
+            cur_val = cur.get(key)
+            if isinstance(default_val, dict) or isinstance(default_val, list):
+                if cur_val != default_val:
+                    score += 1
+            elif cur_val != default_val:
+                score += 1
+    return score
+
+def _read_config_candidate(path: Path, label: str) -> tuple[str, Path, Dict[str, Any], int] | None:
+    if not path.exists():
+        return None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        cfg = normalize_config(raw)
+        return (label, path, cfg, _config_score(cfg))
+    except Exception as exc:
+        _LOG.warning("CONFIG_LOAD candidate_failed label=%s path=%s err=%s", label, path, exc)
+        return None
+
+def _write_atomic(path: Path, temp_path: Path, payload: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path.write_text(payload, encoding="utf-8")
+    temp_path.replace(path)
+
+def _copy_if_exists(src: Path, dst: Path) -> None:
+    try:
+        if src.exists():
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    except Exception:
+        pass
+
 def load_config() -> Dict[str, Any]:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    if not CONF_PATH.exists():
-        _LOG.warning("CONFIG_LOAD source=default reason=main_missing path=%s", CONF_PATH)
-        return json.loads(json.dumps(DEFAULT_CONFIG))
-    try:
-        raw = json.loads(CONF_PATH.read_text(encoding="utf-8"))
-        _LOG.warning("CONFIG_LOAD source=main path=%s", CONF_PATH)
-        return normalize_config(raw)
-    except Exception as e_main:
-        _LOG.warning("CONFIG_LOAD main_failed path=%s err=%s", CONF_PATH, e_main)
-        try:
-            if CONF_BACKUP.exists():
-                raw = json.loads(CONF_BACKUP.read_text(encoding="utf-8"))
-                _LOG.warning("CONFIG_LOAD source=backup path=%s", CONF_BACKUP)
-                return normalize_config(raw)
-            _LOG.warning("CONFIG_LOAD source=default reason=backup_missing path=%s", CONF_BACKUP)
-        except Exception as e_bak:
-            _LOG.warning("CONFIG_LOAD backup_failed path=%s err=%s", CONF_BACKUP, e_bak)
-            pass
-        _LOG.warning("CONFIG_LOAD source=default reason=all_failed")
-        return json.loads(json.dumps(DEFAULT_CONFIG))
+    primary_candidates = [
+        _read_config_candidate(CONF_PATH, "data_main"),
+        _read_config_candidate(CONF_BACKUP, "data_backup"),
+        _read_config_candidate(MIRROR_PATH, "config_mirror"),
+        _read_config_candidate(MIRROR_BACKUP, "config_mirror_backup"),
+    ]
+    previous_candidates = [
+        _read_config_candidate(CONF_PREVIOUS, "data_previous"),
+        _read_config_candidate(MIRROR_PREVIOUS, "config_mirror_previous"),
+    ]
+    valid = [c for c in primary_candidates if c is not None]
+    if not valid:
+        valid = [c for c in previous_candidates if c is not None]
+        if not valid:
+            _LOG.warning("CONFIG_LOAD source=default reason=all_missing_or_failed path=%s", CONF_PATH)
+            return json.loads(json.dumps(DEFAULT_CONFIG))
+
+    # Prefer the most complete persisted configuration. This protects against an
+    # update/reinstall producing a nearly-default file while an older mirror still
+    # contains the user's real mappings and setpoints.
+    label, path, cfg, score = max(valid, key=lambda item: item[3])
+    previous_valid = [c for c in previous_candidates if c is not None]
+    if score < 5 and previous_valid:
+        prev_label, prev_path, prev_cfg, prev_score = max(previous_valid, key=lambda item: item[3])
+        if prev_score > score + 5:
+            label, path, cfg, score = prev_label, prev_path, prev_cfg, prev_score
+    _LOG.warning(
+        "CONFIG_LOAD source=%s path=%s score=%s candidates=%s previous=%s",
+        label,
+        path,
+        score,
+        [(c[0], c[3]) for c in valid],
+        [(c[0], c[3]) for c in previous_valid],
+    )
+    return cfg
 
 def save_config(cfg: Dict[str, Any]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(normalize_config(cfg), indent=2, ensure_ascii=False)
-    # Write temp then replace for atomicity
-    CONF_TEMP.write_text(payload, encoding="utf-8")
-    CONF_TEMP.replace(CONF_PATH)
-    # Keep backup
+
+    # Preserve the previous good file before replacing it. The old implementation
+    # wrote backup after main, so a bad/default save could overwrite both copies.
+    _copy_if_exists(CONF_PATH, CONF_PREVIOUS)
+    _copy_if_exists(MIRROR_PATH, MIRROR_PREVIOUS)
+
+    _write_atomic(CONF_PATH, CONF_TEMP, payload)
     try:
         CONF_BACKUP.write_text(payload, encoding="utf-8")
+    except Exception:
+        pass
+    try:
+        _write_atomic(MIRROR_PATH, MIRROR_TEMP, payload)
+        MIRROR_BACKUP.write_text(payload, encoding="utf-8")
     except Exception:
         pass

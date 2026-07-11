@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.53
+
+- Hardened configuration persistence: saves a mirror copy under `/config`, keeps a previous-good copy before overwrites, and can recover from a near-default `/data` config after update/reinstall.
+- Persisted the new `resistance.pv_min_w` safety parameter so setpoint saves no longer drop it.
+
 ## 0.8.52
 
 - Solar valve failsafe now reopens the configured safe path using the normal day/night selector instead of forcing the night path during all-closed recovery.

@@ -3898,9 +3898,10 @@ async function load(){
     sp.value.curva_climatica = { x: [-15,-11.25,-7.5,-3.75,0,3.75,7.5,11.25,15], y: [60,57.6,55,52.6,50,47.6,45,42.6,40], slope: 0, offset: 0, min_c: 40, max_c: 60 }
   }
   if (!sp.value?.resistance) {
-    sp.value.resistance = { enabled: true, export_on_min_w: 0, export_off_w: -100, battery_block_w: 100, battery_block_hold_s: 180, off_threshold_w: 0, off_delay_s: 5, step_up_delay_s: 10, step_down_delay_s: 5, thresholds_w: [1100, 2200, 3300], invert_export_sign: false }
+    sp.value.resistance = { enabled: true, export_on_min_w: 0, export_off_w: -100, battery_block_w: 100, battery_block_hold_s: 180, pv_min_w: 200, off_threshold_w: 0, off_delay_s: 5, step_up_delay_s: 10, step_down_delay_s: 5, thresholds_w: [1100, 2200, 3300], invert_export_sign: false }
   } else {
     if (typeof sp.value.resistance.export_on_min_w === 'undefined') sp.value.resistance.export_on_min_w = 0
+    if (typeof sp.value.resistance.pv_min_w === 'undefined') sp.value.resistance.pv_min_w = 200
     if (!Array.isArray(sp.value.resistance.thresholds_w)) sp.value.resistance.thresholds_w = [1100, 2200, 3300]
   }
   if (!sp.value?.gas_emergenza) {
