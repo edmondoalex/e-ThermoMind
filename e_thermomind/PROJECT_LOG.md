@@ -590,3 +590,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-07-11] Release 0.8.55: chiarito stato Impianto; richiesta indica domanda reale/zone, fonte disponibile separata, UI/MQTT/miscelatrice usano computed.impianto.active.
 
 - [2026-07-11] Release 0.8.56: aggiunto picker climate.* in Admin -> Impianto Zone per ripopolare rapidamente PT/1P/Mansarda/Lab/Scala dopo reset config.
+
+- [2026-07-14] Release 0.8.57: il manuale sugli attuatori e consentito solo con modulo OFF; con modulo ON la logica automatica mantiene autorita, pulisce override vecchi e R0/resistenze non restano bloccate da RG manuale.

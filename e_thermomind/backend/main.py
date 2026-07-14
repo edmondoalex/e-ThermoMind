@@ -1159,6 +1159,7 @@ async def _apply_live_controls(data: dict) -> None:
     if live_control_lock is None:
         live_control_lock = asyncio.Lock()
     async with live_control_lock:
+        _clear_manual_overrides_for_enabled_modules()
         await _apply_resistance_live(data)
         await _apply_energy_heater_live(data)
         await _apply_transfer_live(data)
@@ -1632,7 +1633,7 @@ def _actuator_key_for_entity(entity_id: str) -> str | None:
     return None
 
 def _module_for_actuator_key(key: str) -> str | None:
-    if "resistenza" in key:
+    if "resistenza" in key or "resistenze" in key:
         return "resistenze_volano"
     if "impianto" in key or "comparto" in key or "mandata" in key:
         return "impianto"
@@ -1649,6 +1650,40 @@ def _module_for_actuator_key(key: str) -> str | None:
     if "caldaia_legna" in key:
         return "caldaia_legna"
     return None
+
+def _module_enabled(module_key: str | None) -> bool:
+    if not module_key:
+        return False
+    return bool(cfg.get("modules_enabled", {}).get(module_key, True))
+
+def _manual_allowed_for_entity(entity_id: str | None) -> tuple[bool, str | None]:
+    key = _actuator_key_for_entity(entity_id) if entity_id else None
+    module_key = _module_for_actuator_key(key) if key else None
+    if module_key and _module_enabled(module_key):
+        return False, module_key
+    return True, module_key
+
+def _clear_manual_overrides_for_module(module_key: str) -> int:
+    removed = 0
+    for key, eid in (cfg.get("actuators", {}) or {}).items():
+        if not eid:
+            continue
+        if _module_for_actuator_key(key) == module_key and eid in manual_overrides:
+            manual_overrides.pop(eid, None)
+            removed += 1
+    return removed
+
+def _clear_manual_overrides_for_enabled_modules() -> int:
+    removed = 0
+    modules = cfg.get("modules_enabled", {}) or {}
+    for key, eid in (cfg.get("actuators", {}) or {}).items():
+        if not eid:
+            continue
+        module_key = _module_for_actuator_key(key)
+        if module_key and modules.get(module_key, True) and eid in manual_overrides:
+            manual_overrides.pop(eid, None)
+            removed += 1
+    return removed
 
 
 
@@ -1775,6 +1810,10 @@ def _is_recent_ui(entity_id: str, window_s: float = 4.0) -> bool:
 
 def _is_manual(entity_id: str | None) -> bool:
     if not entity_id:
+        return False
+    allowed, _module_key = _manual_allowed_for_entity(entity_id)
+    if not allowed:
+        manual_overrides.pop(entity_id, None)
         return False
     return bool(manual_overrides.get(entity_id))
 
@@ -3519,6 +3558,11 @@ async def set_modules(payload: dict, request: Request):
         _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES summer block applied")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES live client={client} payload={modules}")
     _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES state={cfg.get('modules_enabled', {})}")
+    for module_key, enabled in modules.items():
+        if enabled and not prev_modules.get(module_key, False):
+            removed = _clear_manual_overrides_for_module(str(module_key))
+            if removed:
+                _log_action(f"{time.strftime('%Y-%m-%d %H:%M:%S')} MODULES manual overrides cleared module={module_key} count={removed}")
     if prev_modules.get("resistenze_volano", True) and not modules.get("resistenze_volano", True):
         await _force_resistances_off("resistenze module toggled off", clear_manual=True)
     if any(prev_modules.get(k, True) and not modules.get(k, True) for k in ("volano_to_acs", "volano_to_puffer", "puffer_to_acs")):
@@ -3668,8 +3712,14 @@ async def actuate(payload: dict):
         raise HTTPException(status_code=400, detail="Invalid entity_id")
     if not ha.enabled:
         raise HTTPException(status_code=400, detail="HA offline")
-    recent_ui_actuations[entity_id] = time.time()
     if manual:
+        allowed, module_key = _manual_allowed_for_entity(entity_id)
+        if not allowed:
+            manual_overrides.pop(entity_id, None)
+            raise HTTPException(
+                status_code=409,
+                detail=f"Manuale non consentito: modulo {module_key} acceso. Spegni il modulo per comandare manualmente."
+            )
         # R8/R9/R10 restano automatici: non mettere override manuale
         act = cfg.get("actuators", {})
         r8 = act.get("r8_valve_solare_notte_low_temp")
@@ -3678,6 +3728,7 @@ async def actuate(payload: dict):
         if entity_id in (r8, r9, r10):
             manual = False
 
+    recent_ui_actuations[entity_id] = time.time()
     if manual:
         # Manuale puro in Admin: non va toccato dalla logica
         if action == "on":

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.57
+
+- Manual actuator commands are now accepted only when the owning module is OFF; when the module is ON, automatic logic keeps authority and stale manual overrides are cleared.
+- Fixed actuator-to-module mapping for the general Volano resistance relay (`R0`), so it cannot remain blocked by a stale `RG manuale` override while the Resistenze Volano module is active.
+- The UI now reports a clear error when a manual actuator command is rejected because its module is enabled.
+
 ## 0.8.56
 
 - Added a Home Assistant climate entity picker in Admin -> Impianto (Zone), with quick buttons to repopulate PT/1P/Mansarda/Lab/Scala after a configuration reset.

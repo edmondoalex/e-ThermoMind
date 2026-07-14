@@ -4240,11 +4240,16 @@ async function importConfig(ev){
 }
 async function doAct(entity_id, action, opts = {}){
   if (!entity_id) return
-  await fetch(apiUrl('/api/actuate'),{
+  const res = await fetch(apiUrl('/api/actuate'),{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({entity_id, action, manual: !!opts.manual})
   })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    window.alert(err.detail || 'Comando non consentito')
+    return
+  }
   await loadActuators()
 }
 
