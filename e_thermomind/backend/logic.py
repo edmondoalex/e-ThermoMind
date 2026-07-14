@@ -601,7 +601,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     projected_export_w = export_w
     export_reserve_block = False
     export_reserve_step = 0
-    export_reserve_floor_w = export_off_w
+    export_reserve_floor_w = export_on_min_w
     pv_min_w = float(res_cfg.get("pv_min_w", 200.0))
     pv_power_mapped = _entity_mapped("pv_power_w") or _entity_mapped("pv_power_w_easas") or _entity_mapped("pv_power_w_privato")
     pv_block_active = pv_power_mapped and pv_power_w < pv_min_w
@@ -628,7 +628,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
 
             # The export reserve gates only new step-ups. Once a step is
             # already physically on, keep it while real export stays above
-            # the configured minimum; step-down is driven by export < soglia.
+            # the configured ON minimum; step-down is driven by export < soglia.
             desired_step = min(raw_desired_step, tracked_step)
             if raw_desired_step > tracked_step:
                 next_step = min(3, tracked_step + 1)
@@ -687,7 +687,7 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
     elif export_reserve_block:
         charge_reason = (
             f"{power_note} | riserva export: step {export_reserve_step} non ammesso "
-            f"(previsto {projected_export_w:.0f}W < soglia OFF {export_reserve_floor_w:.0f}W)"
+            f"(previsto {projected_export_w:.0f}W < soglia ON {export_reserve_floor_w:.0f}W)"
         )
     elif export_w <= export_off_w or effective_power_w <= 0.0:
         charge_reason = f"{power_note} <= OFF {off_thr:.0f}W | off_delay {off_delay}s | step_up_delay {step_up_delay}s"

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.58
+
+- Fixed Resistenze Volano step-up gating: the configured export ON threshold is now treated as the residual export margin that must remain after adding the next resistance.
+- Step-up reserve still uses the Admin resistance thresholds, so a 1100/2200/3300 W setup keeps 1100 W per added step.
+
 ## 0.8.57
 
 - Manual actuator commands are now accepted only when the owning module is OFF; when the module is ON, automatic logic keeps authority and stale manual overrides are cleared.
