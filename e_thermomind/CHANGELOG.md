@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.59
+
+- Fixed Resistenze Volano pending-step logic: export reserve is now checked against the next real physical relay to turn on, so a stale logical target cannot keep requesting R23/R24 when only R22 is physically active.
+- Normal export drops below the ON threshold now step down progressively; hard-OFF is reserved for export <= 0 W, battery discharge block, or PV safety block.
+
 ## 0.8.58
 
 - Fixed Resistenze Volano step-up gating: the configured export ON threshold is now treated as the residual export margin that must remain after adding the next resistance.

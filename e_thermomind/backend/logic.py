@@ -626,15 +626,15 @@ def compute_decision(cfg: Dict[str, Any], ha_states: Dict[str, Any], now: float 
             elif effective_power_w >= thr[0]:
                 raw_desired_step = 1
 
-            # The export reserve gates only new step-ups. Once a step is
-            # already physically on, keep it while real export stays above
-            # the configured ON minimum; step-down is driven by export < soglia.
-            desired_step = min(raw_desired_step, tracked_step)
-            if raw_desired_step > tracked_step:
-                next_step = min(3, tracked_step + 1)
+            # Gate every new physical step-up against the export reserve.
+            # last_step may be a pending/stale logical target; do not use it
+            # to skip the reserve check for the next real relay to turn on.
+            desired_step = min(raw_desired_step, actual_step)
+            if raw_desired_step > actual_step:
+                next_step = min(3, actual_step + 1)
                 projected_export_w = export_w - reserve_step_loads[next_step - 1]
                 if projected_export_w >= export_reserve_floor_w:
-                    desired_step = raw_desired_step
+                    desired_step = min(raw_desired_step, max(tracked_step, next_step))
                 else:
                     export_reserve_block = True
                     export_reserve_step = next_step

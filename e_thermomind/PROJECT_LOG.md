@@ -594,3 +594,5 @@ Data export: 2026-02-08 (Europe/Rome)
 - [2026-07-14] Release 0.8.57: il manuale sugli attuatori e consentito solo con modulo OFF; con modulo ON la logica automatica mantiene autorita, pulisce override vecchi e R0/resistenze non restano bloccate da RG manuale.
 
 - [2026-07-14] Release 0.8.58: corretta salita step Resistenze Volano; la soglia export ON resta margine residuo dopo il nuovo step e la riserva usa solo le soglie Admin cumulative 1100/2200/3300, quindi 1100W per step se cosi configurato.
+
+- [2026-07-14] Release 0.8.59: corretta riserva step-up Resistenze sul prossimo rele fisico reale, non sul target logico vecchio; sotto soglia ON la discesa normale resta a gradini, hard-OFF solo per export <=0, batteria o FV safety.

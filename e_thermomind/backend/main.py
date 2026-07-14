@@ -2190,15 +2190,6 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         computed["resistance_shutdown_countdown_s"] = 0
         return
 
-    if export_w < export_on_min_w:
-        await _force_resistances_off(
-            f"export={export_w:.0f} < export_on_min={export_on_min_w:.0f} poss={extra_safe_w:.0f}",
-            clear_manual=True,
-        )
-        computed["resistance_step"] = 0
-        computed["resistance_shutdown_countdown_s"] = 0
-        return
-
     if export_w <= 0.0:
         await _force_resistances_off(
             f"export={export_w:.0f} export_zero=0 export_on_min={export_on_min_w:.0f} poss={extra_safe_w:.0f}",
@@ -2241,8 +2232,7 @@ async def _apply_resistance_live(decision_data: dict) -> None:
         off_sequence_start = 0.0
 
     fast_shutdown = step == 0 and (
-        export_w < export_on_min_w
-        or export_w <= export_off_w
+        export_w <= export_off_w
         or available_w < export_on_min_w
     )
 
